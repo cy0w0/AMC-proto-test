@@ -991,7 +991,8 @@
     align-items: center;
     gap: 8px;
   }
-  .mm-row .mm-filename {
+  .mm-row .mm-filename,
+  .amc-row .mm-filename {
     flex: 1;
     min-width: 0;
     height: 32px;
@@ -1013,7 +1014,8 @@
     flex-shrink: 0;
     overflow: hidden;
   }
-  .mm-row .mm-name {
+  .mm-row .mm-name,
+  .amc-row .mm-name {
     flex: 1;
     min-width: 0;
     padding: 4px 8px;
@@ -1354,6 +1356,287 @@
   }
   .im-input-wrap input::placeholder { color: var(--fg-secondary); }
   .im-input-wrap input::selection { background: rgba(0, 147, 214, 0.15); }
+
+  /* ===== Automatic multicam panel ===== */
+  @keyframes panelIn {
+    from { opacity: 0; transform: translateX(12px); }
+    to { opacity: 1; transform: none; }
+  }
+  .panel-anim { animation: panelIn 0.25s ease; }
+
+  .amc-header {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 32px;
+    width: 100%;
+    flex-shrink: 0;
+  }
+  .amc-header .amc-title {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+  .amc-desc {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-secondary);
+    padding: 0 8px;
+    width: 100%;
+  }
+  .amc-module {
+    width: 100%;
+    background: var(--chrome-0-elevated);
+    border: 1px solid var(--grey-50-a);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .amc-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 24px;
+  }
+  .amc-row .grow { flex: 1; min-width: 0; }
+  .amc-row-header {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+  .amc-row-label {
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  /* Switch */
+  .switch {
+    width: 28px;
+    height: 16px;
+    border: 1.2px solid #715661;
+    border-radius: 9px;
+    background: transparent;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 1.2px solid #715661;
+    background: transparent;
+    transition: left 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .switch.on {
+    background: #3f2a32;
+    border-color: #3f2a32;
+  }
+  .switch.on::after {
+    left: 14px;
+    background: #fff;
+    border-color: #fff;
+  }
+
+  /* Segmented tabs */
+  .seg-tabs {
+    display: inline-flex;
+    align-items: center;
+    background: var(--input-tab-bg-group);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .seg-tab {
+    height: 24px;
+    padding: 0 10px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-secondary);
+    cursor: pointer;
+  }
+  .seg-tab.selected {
+    background: #3f2a32;
+    color: #fff8f4;
+  }
+
+  /* Labeled number fields (Min / Max) */
+  .num-field {
+    flex: 1;
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    background: rgba(139, 111, 122, 0.09);
+    border: 1px solid rgba(88, 63, 74, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .num-field .nf-label {
+    padding: 0 8px;
+    font-size: 12px;
+    line-height: 16px;
+    color: #715661;
+    flex-shrink: 0;
+  }
+  .num-field input {
+    width: 100%;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+  }
+
+  /* Camera setup collapse */
+  .amc-toggle {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .amc-toggle:hover { background: rgba(63, 42, 50, 0.06); }
+  .amc-toggle svg { transition: transform 0.2s ease; }
+  .amc-module.collapsed .amc-toggle svg { transform: rotate(-90deg); }
+  .amc-module.collapsed .amc-collapsible { display: none; }
+
+  .amc-btn {
+    width: 100%;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-elevated);
+    border: 1px solid rgba(88, 63, 74, 0.1);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .amc-btn:hover { background: #faf8f8; }
+  .amc-btn-primary {
+    width: 100%;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #3f2a32;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    color: #fff8f4;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .amc-btn-primary:hover { background: var(--fg-primary); }
+
+  /* Select Jumbo (layout pack) */
+  .select-jumbo {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    padding: 4px 4px 4px 8px;
+    cursor: pointer;
+  }
+  .select-jumbo:hover { background: #faf8f8; }
+  .select-jumbo .sj-thumb {
+    width: 71px;
+    height: 40px;
+    border: 1px solid rgba(88, 63, 74, 0.1);
+    border-radius: 5px;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    gap: 2px;
+    background: #1d1a1b;
+    padding: 2px;
+  }
+  .select-jumbo .sj-cell {
+    flex: 1;
+    border-radius: 2px;
+    background: #3a3a32;
+    position: relative;
+    overflow: hidden;
+  }
+  .select-jumbo .sj-cell::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -4px;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 22px;
+    border-radius: 9px 9px 0 0;
+    background: #8a9a6a;
+  }
+  .select-jumbo .sj-cell::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 7px;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #8a9a6a;
+    z-index: 1;
+  }
+  .select-jumbo .sj-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .select-jumbo .sj-title {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+  }
+  .select-jumbo .sj-subtitle {
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    color: var(--fg-secondary);
+  }
+  .select-jumbo .sj-chevron {
+    color: var(--fg-primary);
+    flex-shrink: 0;
+    padding-right: 4px;
+  }
 
   /* ===== Automatic multicam callout ===== */
   .callout {
@@ -2123,7 +2406,7 @@
     </main>
 
     <!-- AI Tools sidebar -->
-    <aside class="ai-sidebar">
+    <aside class="ai-sidebar" id="aiToolsSidebar">
       <div class="sb-header">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9.5 2.5 11 6l3.5 1.5L11 9l-1.5 3.5L8 9 4.5 7.5 8 6l1.5-3.5Z"/>
@@ -2215,6 +2498,92 @@
           Share a link
         </div>
       </div>
+    </aside>
+
+    <!-- Automatic multicam panel -->
+    <aside class="ai-sidebar hidden" id="amcPanel">
+      <div class="amc-header">
+        <button class="icon-btn" id="amcBack" aria-label="Back">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 8H3M7 3.5 2.5 8 7 12.5"/>
+          </svg>
+        </button>
+        <span class="amc-title">Automatic multicam</span>
+      </div>
+      <p class="amc-desc">Automatically create scenes from different cameras to show active conversations.</p>
+
+      <div class="amc-module">
+        <div class="amc-row"><span class="amc-row-header">Edit</span></div>
+        <div class="amc-row" style="height:32px;">
+          <span class="amc-row-label grow">Show only active speakers</span>
+          <button class="switch" role="switch" aria-checked="false" aria-label="Show only active speakers"></button>
+        </div>
+        <div class="amc-row">
+          <span class="amc-row-header grow">Scene count</span>
+          <div class="seg-tabs" role="tablist">
+            <button class="seg-tab" role="tab">Total</button>
+            <button class="seg-tab selected" role="tab">Per min</button>
+          </div>
+        </div>
+        <div class="amc-row">
+          <div class="num-field"><span class="nf-label">Min</span><input type="text" value="2" aria-label="Minimum scenes"></div>
+          <div class="num-field"><span class="nf-label">Max</span><input type="text" value="10" aria-label="Maximum scenes"></div>
+        </div>
+      </div>
+
+      <div class="amc-module" id="camSetupModule">
+        <div class="amc-row">
+          <span class="amc-row-header grow">Camera setup for speakers</span>
+          <button class="amc-toggle" id="camSetupToggle" aria-label="Collapse camera setup">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+          </button>
+        </div>
+        <div class="amc-collapsible" style="display:flex;flex-direction:column;gap:8px;width:100%;">
+          <div class="amc-row">
+            <div class="mm-filename grow"><span class="mm-thumb">🐹</span><span class="mm-name">Cam 1</span></div>
+            <button class="mm-select assigned"><span class="mm-select-label">Christina</span>
+              <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+            </button>
+          </div>
+          <div class="amc-row">
+            <div class="mm-filename grow"><span class="mm-thumb">🐶</span><span class="mm-name">Cam 2</span></div>
+            <button class="mm-select assigned"><span class="mm-select-label">Jack</span>
+              <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+            </button>
+          </div>
+          <div class="amc-row">
+            <div class="mm-filename grow"><span class="mm-thumb">🐑</span><span class="mm-name">Cam 3</span></div>
+            <button class="mm-select assigned"><span class="mm-select-label">Sherry</span>
+              <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+            </button>
+          </div>
+          <div class="amc-row">
+            <div class="mm-filename grow"><span class="mm-thumb">🐕</span><span class="mm-name">Cam 4</span></div>
+            <button class="mm-select assigned"><span class="mm-select-label">3 speakers</span>
+              <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+            </button>
+          </div>
+          <button class="amc-btn">Edit cameras in sequence editor</button>
+        </div>
+      </div>
+
+      <div class="amc-module">
+        <div class="amc-row">
+          <span class="amc-row-header grow">Use layout pack</span>
+          <button class="switch on" role="switch" aria-checked="true" aria-label="Use layout pack"></button>
+        </div>
+        <button class="select-jumbo">
+          <span class="sj-thumb" aria-hidden="true"><span class="sj-cell"></span><span class="sj-cell"></span></span>
+          <span class="sj-text">
+            <span class="sj-title">Multicam full screen</span>
+            <span class="sj-subtitle">6 layouts</span>
+          </span>
+          <svg class="sj-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+        </button>
+        <button class="amc-btn">Change layout pack…</button>
+      </div>
+
+      <button class="amc-btn-primary">Check preview</button>
     </aside>
 
     <!-- Dock -->
@@ -2514,6 +2883,8 @@
     const callout = document.getElementById('amcCallout');
     callout.classList.remove('visible');
     callout.classList.add('hidden');
+    document.getElementById('amcPanel').classList.add('hidden');
+    document.getElementById('aiToolsSidebar').classList.remove('hidden');
     resetModalState();
   }
 
@@ -2557,7 +2928,45 @@
   document.addEventListener('click', e => {
     if (!e.target.closest('#amcCallout')) hideCallout();
   });
-  rowAutoMulticam.addEventListener('click', hideCallout);
+
+  /* Automatic multicam panel */
+  const aiToolsSidebar = document.getElementById('aiToolsSidebar');
+  const amcPanel = document.getElementById('amcPanel');
+
+  function swapPanel(hide, show) {
+    hide.classList.add('hidden');
+    show.classList.remove('hidden');
+    show.classList.remove('panel-anim');
+    void show.offsetWidth;
+    show.classList.add('panel-anim');
+  }
+
+  rowAutoMulticam.addEventListener('click', () => {
+    hideCallout();
+    swapPanel(aiToolsSidebar, amcPanel);
+  });
+  document.getElementById('amcBack').addEventListener('click', () => {
+    swapPanel(amcPanel, aiToolsSidebar);
+  });
+
+  // Switches, segmented tabs, and the camera-setup collapse
+  amcPanel.querySelectorAll('.switch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      sw.classList.toggle('on');
+      sw.setAttribute('aria-checked', sw.classList.contains('on'));
+    });
+  });
+  amcPanel.querySelectorAll('.seg-tabs').forEach(group => {
+    group.querySelectorAll('.seg-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        group.querySelectorAll('.seg-tab').forEach(t => t.classList.remove('selected'));
+        tab.classList.add('selected');
+      });
+    });
+  });
+  document.getElementById('camSetupToggle').addEventListener('click', () => {
+    document.getElementById('camSetupModule').classList.toggle('collapsed');
+  });
 
   const mmCreate = document.getElementById('mmCreate');
   mmCreate.addEventListener('click', e => {
