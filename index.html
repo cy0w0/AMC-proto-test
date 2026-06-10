@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App Screen — New Project</title>
+<style>
+  :root {
+    /* Design tokens from Figma */
+    --chrome-0-recessed: #f4f1f0;
+    --chrome-0-elevated: #fdfcfc;
+    --surface-elevated: #ffffff;
+    --grey-50: #f1eaed;
+    --grey-50-a: rgba(88, 63, 74, 0.1);
+    --grey-400: #a28993;
+    --fg-primary: #26171d;
+    --fg-secondary: rgba(22, 5, 12, 0.6);
+    --border-medium: rgba(63, 42, 50, 0.16);
+    --input-tab-bg-group: #e4dde0;
+    --drop-shadow-medium: rgba(38, 23, 29, 0.12);
+    --drop-shadow-soft: rgba(38, 23, 29, 0.08);
+    --state-inactive: 0.3;
+    --gap-half: 2px;
+    --gap-1: 4px;
+    --gap-2: 8px;
+    --gap-3: 16px;
+    --gap-5: 32px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: #d9d4d2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    color: var(--fg-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== App window ===== */
+  .app-screen {
+    background: var(--chrome-0-recessed);
+    border-radius: 10px;
+    box-shadow:
+      0 8px 16px 0 var(--drop-shadow-medium),
+      0 8px 8px 0 var(--drop-shadow-soft);
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-2);
+    padding: var(--gap-2);
+    width: 100%;
+    max-width: 1280px;
+    height: 100%;
+    max-height: 800px;
+    overflow: hidden;
+  }
+
+  /* ===== App bar ===== */
+  .app-bar {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .app-bar .left-items,
+  .app-bar .right-items {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-1);
+  }
+
+  .app-bar .center-items {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--fg-primary);
+    flex-shrink: 0;
+  }
+  .icon-btn:hover { background: rgba(63, 42, 50, 0.08); }
+  .icon-btn.dense { width: 24px; height: 24px; border-radius: 4px; }
+  .icon-btn.round { border-radius: 50%; width: 24px; height: 24px; }
+
+  .icon-btn svg { display: block; }
+
+  /* Project name select */
+  .project-select {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-1);
+    height: 24px;
+    padding: 0 var(--gap-1) 0 var(--gap-2);
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+  }
+  .project-select:hover { background: rgba(63, 42, 50, 0.08); }
+  .project-select .chevron { color: var(--fg-secondary); }
+
+  /* Avatar group */
+  .avatar-group {
+    display: flex;
+    align-items: center;
+    padding-right: var(--gap-1);
+  }
+  .avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--chrome-0-recessed);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: #fff;
+    margin-left: -6px;
+    flex-shrink: 0;
+  }
+  .avatar:first-child { margin-left: 0; }
+  .avatar.add {
+    background: transparent;
+    color: var(--fg-primary);
+    border: 2px solid var(--chrome-0-recessed);
+    cursor: pointer;
+  }
+  .avatar.purple { background: #c7b9f4; color: #4a3a7a; }
+  .avatar.blue { background: #9ec5f0; color: #2a4a72; }
+
+  /* Export button */
+  .btn-primary {
+    height: 24px;
+    padding: 0 var(--gap-3);
+    border: none;
+    border-radius: 6px;
+    background: var(--fg-primary);
+    color: #fff;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .btn-primary:hover { background: #3a2730; }
+
+  /* ===== Surfaces row ===== */
+  .surfaces {
+    display: flex;
+    align-items: stretch;
+    gap: var(--gap-2);
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ===== Editor surface ===== */
+  .editor {
+    background: var(--chrome-0-elevated);
+    border: 1px solid var(--grey-50-a);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px 0 var(--drop-shadow-medium);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .script-canvas {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  /* ===== Empty screen ===== */
+  .empty-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-2);
+    width: 666px;
+    max-width: 90%;
+    height: 100%;
+    padding: var(--gap-2) 0;
+    overflow: hidden;
+  }
+
+  .composition-title {
+    width: 100%;
+    max-width: 680px;
+    padding-bottom: var(--gap-5);
+  }
+  .composition-title input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    font-size: 24px;
+    line-height: 32px;
+    letter-spacing: -0.24px;
+    color: var(--fg-primary);
+  }
+  .composition-title input::placeholder { color: var(--grey-400); }
+
+  /* Upload dropzone */
+  .upload-file {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 60px 44px;
+    border: 1px dashed var(--border-medium);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .upload-file:hover { background: rgba(63, 42, 50, 0.03); }
+
+  /* Illustration: fanned file cards */
+  .illustration {
+    position: relative;
+    width: 108px;
+    height: 74px;
+  }
+  .file-card {
+    position: absolute;
+    width: 47px;
+    height: 58px;
+    background: #fff;
+    border: 1px solid var(--grey-50);
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(38, 23, 29, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #cdbcc4;
+  }
+  .file-card.left  { left: 14px; top: 5px; transform: rotate(-15deg); z-index: 1; }
+  .file-card.right { left: 46px; top: 8px; transform: rotate(15deg);  z-index: 1; }
+  .file-card.front {
+    left: 27px; top: 4px;
+    width: 54px; height: 66px;
+    transform: none;
+    z-index: 2;
+    border-radius: 8px;
+    color: var(--fg-primary);
+  }
+  .file-card .corner {
+    position: absolute;
+    top: -1px; right: -1px;
+    width: 12px; height: 12px;
+    background: var(--chrome-0-elevated);
+    border-left: 1px solid var(--grey-50);
+    border-bottom: 1px solid var(--grey-50);
+    border-radius: 0 0 0 6px;
+  }
+
+  .upload-text { text-align: center; }
+  .upload-text .title {
+    font-size: 16px;
+    line-height: 32px;
+    font-weight: 500;
+    letter-spacing: -0.176px;
+    color: #000;
+  }
+  .upload-text .subtitle {
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.055px;
+    color: var(--grey-400);
+  }
+
+  /* Action buttons */
+  .actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+  }
+  .btn-secondary {
+    flex: 1;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-2);
+    padding: var(--gap-2) var(--gap-3);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--gap-2);
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.02);
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.0012px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-secondary:hover { background: #faf8f8; }
+
+  /* AI speaker facepile */
+  .facepile { position: relative; width: 36px; height: 16px; flex-shrink: 0; }
+  .facepile span {
+    position: absolute;
+    top: 1px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+  }
+  .facepile .f1 { left: 0;    background: linear-gradient(135deg, #e8b04b, #c97b3a); }
+  .facepile .f3 { left: 22px; background: linear-gradient(135deg, #b98ad1, #8a5aa8); }
+  .facepile .f2 {
+    left: 10px; top: 0;
+    width: 16px; height: 16px;
+    background: linear-gradient(135deg, #6d8fd4, #44609e);
+    border: 1px solid #fff;
+    z-index: 1;
+  }
+
+  .record-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--fg-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .record-dot::after {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #e5484d;
+  }
+
+  .zoom-badge {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    background: #4087fc;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .hint {
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.0012px;
+    color: var(--fg-secondary);
+    text-align: center;
+  }
+
+  /* ===== Timeline / playback bar ===== */
+  .timeline {
+    background: var(--chrome-0-elevated);
+    padding: var(--gap-2) 0;
+    flex-shrink: 0;
+  }
+  .playback-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--gap-1) var(--gap-2);
+  }
+  .playback-bar .pb-left,
+  .playback-bar .pb-right {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2);
+  }
+  .playback-bar .pb-right { justify-content: flex-end; }
+  .playback-bar .pb-center {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2);
+  }
+
+  .pb-left .tools {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-1);
+    padding-right: var(--gap-1);
+  }
+
+  .inactive { opacity: var(--state-inactive); pointer-events: none; }
+
+  .time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding-left: var(--gap-2);
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.0012px;
+    white-space: nowrap;
+  }
+  .time .current { color: var(--fg-primary); }
+  .time .sep, .time .total { color: var(--fg-secondary); }
+
+  .btn-light {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-1);
+    height: 24px;
+    padding: 0 var(--gap-2);
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-light:hover { background: rgba(63, 42, 50, 0.08); }
+
+  .playback-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-half);
+  }
+
+  .icon-select {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-1);
+    height: 24px;
+    padding: 0 var(--gap-1) 0 var(--gap-2);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--gap-1);
+  }
+
+  .toggle-group {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-half);
+    padding: 1px;
+    background: var(--input-tab-bg-group);
+    border-radius: var(--gap-1);
+  }
+  .toggle-group button {
+    height: 22px;
+    padding: 0 var(--gap-2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--fg-primary);
+  }
+
+  /* ===== Dock nav bar ===== */
+  .dock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gap-1);
+    flex-shrink: 0;
+    align-self: stretch;
+  }
+  .dock-tile {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    color: var(--fg-primary);
+  }
+  .dock-tile:hover { background: rgba(63, 42, 50, 0.06); }
+  .dock-tile svg { display: block; }
+
+  .dock-divider {
+    width: 100%;
+    height: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dock-divider::after {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: var(--border-medium);
+  }
+  .dock .spacer { flex: 1; }
+</style>
+</head>
+<body>
+
+<div class="app-screen">
+
+  <!-- ============ App Bar ============ -->
+  <header class="app-bar">
+    <div class="left-items">
+      <button class="icon-btn" title="Home" aria-label="Home">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2.5 6.5 8 2l5.5 4.5V13a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1V6.5Z"/>
+          <path d="M6.5 14v-4h3v4"/>
+        </svg>
+      </button>
+      <button class="icon-btn" title="Menu" aria-label="Menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="center-items">
+      <button class="project-select">
+        Untitled
+        <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 4.75 6 7.75l3-3"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="right-items">
+      <div class="avatar-group">
+        <button class="avatar add" title="Invite" aria-label="Invite">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <path d="M6 2.5v7M2.5 6h7"/>
+          </svg>
+        </button>
+        <span class="avatar purple">VM</span>
+        <span class="avatar blue">BL</span>
+      </div>
+      <button class="icon-btn" title="Comments" aria-label="Comments">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13.5 7.5a5.5 5.5 0 0 1-8 4.9L2.5 13.5l1.1-3A5.5 5.5 0 1 1 13.5 7.5Z"/>
+        </svg>
+      </button>
+      <button class="btn-primary">Export</button>
+      <button class="icon-btn" title="Help" aria-label="Help">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="8" r="6"/>
+          <path d="M6.2 6.2a1.8 1.8 0 1 1 2.4 1.7c-.5.2-.6.6-.6 1.1"/>
+          <circle cx="8" cy="11" r="0.5" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============ Surfaces ============ -->
+  <div class="surfaces">
+
+    <!-- Editor -->
+    <main class="editor">
+      <div class="script-canvas">
+        <div class="empty-screen">
+
+          <div class="composition-title">
+            <input type="text" placeholder="Name your creation" aria-label="Composition title">
+          </div>
+
+          <div class="upload-file" role="button" tabindex="0">
+            <div class="illustration" aria-hidden="true">
+              <div class="file-card left">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 12.5V4.5l6-1.5v8"/>
+                  <circle cx="4.5" cy="12.5" r="1.5"/>
+                  <circle cx="10.5" cy="11.5" r="1.5"/>
+                </svg>
+              </div>
+              <div class="file-card right">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2.5" y="3.5" width="11" height="9" rx="1.5"/>
+                  <path d="M6.8 6.2l3 1.8-3 1.8V6.2Z"/>
+                </svg>
+              </div>
+              <div class="file-card front">
+                <span class="corner"></span>
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="2.5" width="12" height="11" rx="1.5"/>
+                  <path d="M5 2.5v11M11 2.5v11M2 5.5h3M2 8h12M2 10.5h3M11 5.5h3M11 10.5h3"/>
+                </svg>
+              </div>
+            </div>
+            <div class="upload-text">
+              <div class="title">Upload file</div>
+              <div class="subtitle">Click to browse<br>or drag &amp; drop a file here</div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn-secondary">
+              <span class="facepile" aria-hidden="true"><span class="f1"></span><span class="f2"></span><span class="f3"></span></span>
+              Create with AI speaker
+            </button>
+            <button class="btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="12" height="10" rx="1.5"/>
+                <path d="M2 6h12M5.5 3v3"/>
+                <path d="M7 8.3l2.6 1.5L7 11.3V8.3Z"/>
+              </svg>
+              Import from Media Library
+            </button>
+          </div>
+
+          <div class="actions">
+            <button class="btn-secondary">
+              <span class="record-dot" aria-hidden="true"></span>
+              Record
+            </button>
+            <button class="btn-secondary">
+              <span class="zoom-badge" aria-hidden="true">
+                <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M2 5.5A1.5 1.5 0 0 1 3.5 4H9a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 9 12H3.5A1.5 1.5 0 0 1 2 10.5v-5Z"/>
+                  <path d="M11.5 7l2.5-1.8v5.6L11.5 9V7Z"/>
+                </svg>
+              </span>
+              Import from Zoom
+            </button>
+          </div>
+
+          <p class="hint">Paste from clipboard or press Enter to continue with an empty script</p>
+
+        </div>
+      </div>
+
+      <!-- Timeline / Playback bar -->
+      <div class="timeline">
+        <div class="playback-bar">
+          <div class="pb-left">
+            <div class="tools">
+              <button class="icon-btn dense inactive" aria-label="Skip back">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M7.5 4 3.5 8l4 4M12.5 4l-4 4 4 4"/>
+                </svg>
+              </button>
+              <button class="icon-btn dense inactive" aria-label="Skip forward">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8.5 4l4 4-4 4M3.5 4l4 4-4 4"/>
+                </svg>
+              </button>
+              <button class="icon-btn dense inactive" aria-label="Markers">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 2.5h5v6l-2.5-1.7L3 8.5v-6Z"/>
+                  <path d="M10.5 5.5H13M10.5 9H13M3 12.5h10"/>
+                </svg>
+              </button>
+              <div class="time inactive">
+                <span class="current">0:00</span>
+                <span class="sep">/</span>
+                <span class="total">0:00</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pb-center">
+            <button class="btn-light">
+              <span class="record-dot" aria-hidden="true" style="border-color: currentColor;"></span>
+              Record
+            </button>
+            <div class="playback-controls">
+              <button class="icon-btn dense inactive" aria-label="Play">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M4.5 3.2v9.6L12.8 8 4.5 3.2Z"/>
+                </svg>
+              </button>
+              <button class="btn-light inactive">1x</button>
+            </div>
+            <button class="btn-light inactive">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5.5 5 2.5 8l3 3M10.5 5l3 3-3 3"/>
+              </svg>
+              Split
+            </button>
+          </div>
+
+          <div class="pb-right">
+            <div class="icon-select inactive">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 2.5 12 8l-3.6.7L10 12.5l-1.8.8-1.6-3.9L4 11.5v-9Z"/>
+              </svg>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 4.75 6 7.75l3-3"/>
+              </svg>
+            </div>
+            <div class="toggle-group">
+              <button class="inactive" aria-label="Timeline view">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+                  <path d="M1.5 4.5h13M1.5 8h9M1.5 11.5h13"/>
+                </svg>
+              </button>
+              <button class="inactive" aria-label="Grid view">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
+                  <rect x="2" y="2" width="5" height="5" rx="1"/>
+                  <rect x="9" y="2" width="5" height="5" rx="1"/>
+                  <rect x="2" y="9" width="5" height="5" rx="1"/>
+                  <rect x="9" y="9" width="5" height="5" rx="1"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Dock nav bar -->
+    <nav class="dock">
+      <button class="dock-tile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1.5 3.5a1 1 0 0 1 1-1h3l1.5 2h6a1 1 0 0 1 1 1v1.5h-11l-2 6v-9.5Z"/>
+          <path d="M3.5 7h11.5l-2 6.5H1.5l2-6.5Z"/>
+        </svg>
+        Project
+      </button>
+
+      <div class="dock-divider"></div>
+
+      <button class="dock-tile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9.5 2.5 11 6l3.5 1.5L11 9l-1.5 3.5L8 9 4.5 7.5 8 6l1.5-3.5Z"/>
+          <path d="M3.5 10.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"/>
+        </svg>
+        AI Tools
+      </button>
+
+      <button class="dock-tile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <path d="M5 2v3M5 8v6M11 2v6M11 11v3"/>
+          <circle cx="5" cy="6.5" r="1.5"/>
+          <circle cx="11" cy="9.5" r="1.5"/>
+        </svg>
+        Properties
+      </button>
+
+      <div class="dock-divider"></div>
+
+      <button class="dock-tile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="7" height="7" rx="1.5"/>
+          <path d="M11.5 2v5M9 4.5h5"/>
+        </svg>
+        Elements
+      </button>
+
+      <button class="dock-tile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1.5" y="3" width="13" height="10" rx="1.5"/>
+          <path d="M5.2 10 7 6l1.8 4M5.8 8.8h2.4M10 6.5v3.5M10 10h1.5"/>
+        </svg>
+        Captions
+      </button>
+
+      <button class="dock-tile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1.5" y="2.5" width="9" height="9" rx="1.5"/>
+          <path d="M13 5.5h.5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1V12"/>
+          <path d="M4.8 5.3l2.7 1.7-2.7 1.7V5.3Z"/>
+        </svg>
+        Media
+      </button>
+
+      <div class="spacer"></div>
+
+      <button class="dock-tile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="5" width="10" height="8" rx="2"/>
+          <path d="M8 5V2.5M6.5 2.5h3"/>
+          <circle cx="6" cy="8.5" r="0.6" fill="currentColor" stroke="none"/>
+          <circle cx="10" cy="8.5" r="0.6" fill="currentColor" stroke="none"/>
+          <path d="M6.5 11h3"/>
+        </svg>
+        Underlord
+      </button>
+    </nav>
+
+  </div>
+</div>
+
+</body>
+</html>
