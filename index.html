@@ -20,6 +20,8 @@
     --drop-shadow-medium: rgba(38, 23, 29, 0.12);
     --drop-shadow-soft: rgba(38, 23, 29, 0.08);
     --state-inactive: 0.3;
+    --skeleton: #d9d2d4;
+    --skeleton-soft: #e8e2e4;
     --gap-half: 2px;
     --gap-1: 4px;
     --gap-2: 8px;
@@ -42,6 +44,8 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  .hidden { display: none !important; }
+
   /* ===== App window ===== */
   .app-screen {
     background: var(--chrome-0-recessed);
@@ -58,6 +62,7 @@
     height: 100%;
     max-height: 800px;
     overflow: hidden;
+    position: relative;
   }
 
   /* ===== App bar ===== */
@@ -187,6 +192,7 @@
     flex: 1;
     min-width: 0;
     overflow: hidden;
+    position: relative;
   }
 
   .script-canvas {
@@ -517,6 +523,11 @@
   }
   .dock-tile:hover { background: rgba(63, 42, 50, 0.06); }
   .dock-tile svg { display: block; }
+  .dock-tile.active {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-medium);
+    box-shadow: 0 2px 4px 0 var(--drop-shadow-medium);
+  }
 
   .dock-divider {
     width: 100%;
@@ -533,16 +544,510 @@
     background: var(--border-medium);
   }
   .dock .spacer { flex: 1; }
+
+  /* ===== Supertoast (Activity) ===== */
+  .supertoast {
+    position: absolute;
+    right: 16px;
+    bottom: 64px;
+    width: 344px;
+    background: var(--chrome-0-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    box-shadow:
+      0 8px 16px 0 var(--drop-shadow-medium),
+      0 8px 8px 0 var(--drop-shadow-soft);
+    overflow: hidden;
+    z-index: 20;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+  }
+  .supertoast.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .supertoast .st-header {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px 4px 16px;
+  }
+  .supertoast .st-header .st-title {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+  .supertoast .st-divider {
+    height: 1px;
+    background: var(--border-medium);
+  }
+  .supertoast .st-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 0;
+  }
+  .supertoast .st-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 16px;
+  }
+  .supertoast .st-item .st-progress {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .supertoast .st-item .st-label {
+    flex: 1;
+    min-width: 0;
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: 0.055px;
+    color: var(--fg-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .supertoast .st-item .st-value {
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.055px;
+    color: var(--fg-secondary);
+    white-space: nowrap;
+  }
+  .st-ring { transform: rotate(-90deg); }
+  .st-ring .ring-track { stroke: var(--grey-50); }
+  .st-ring .ring-fill {
+    stroke: var(--fg-primary);
+    transition: stroke-dashoffset 0.3s linear;
+  }
+  .st-check { color: #2e9e44; }
+
+  /* ===== AMC editor screen (post-upload) ===== */
+  .amc-split {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  /* Script pane */
+  .script-pane {
+    width: 38%;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--grey-50-a);
+    min-height: 0;
+  }
+  .pane-topbar {
+    height: 48px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+  }
+  .btn-write {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-2);
+    height: 32px;
+    padding: 0 var(--gap-2);
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+    cursor: pointer;
+  }
+  .btn-write:hover { background: rgba(63, 42, 50, 0.08); }
+
+  .script-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 40px 24px;
+    min-height: 0;
+  }
+  .script-title {
+    font-size: 24px;
+    line-height: 32px;
+    letter-spacing: -0.24px;
+    font-weight: 500;
+    padding-bottom: 0;
+  }
+  .speaker-label {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+  }
+  .speaker-label.s1 { color: #3b6fd4; }
+  .speaker-label.s2 { color: #b0578a; }
+  .script-paragraph {
+    font-size: 14px;
+    line-height: 26px;
+    color: var(--fg-primary);
+  }
+
+  /* Canvas pane */
+  .canvas-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+  .canvas-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    min-height: 0;
+    padding: 0 24px 24px;
+  }
+  .artboard {
+    width: 100%;
+    max-width: 440px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--grey-50-a);
+    border-radius: 4px;
+    box-shadow: 0 2px 4px 0 var(--drop-shadow-medium);
+    padding: 6px;
+  }
+  .artboard .frames {
+    display: flex;
+    gap: 6px;
+  }
+  .artboard .cam-frame {
+    flex: 1;
+    aspect-ratio: 198 / 214;
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .artboard .cam-frame svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Floating canvas toolbar */
+  .canvas-toolbar {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: 6px;
+    box-shadow: 0 2px 4px 0 var(--drop-shadow-medium);
+    padding: 0 4px;
+    gap: 4px;
+  }
+  .canvas-toolbar .tb-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 0 6px;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--fg-primary);
+    cursor: pointer;
+  }
+  .canvas-toolbar .tb-item:hover { background: rgba(63, 42, 50, 0.08); }
+  .canvas-toolbar .tb-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border-medium);
+  }
+  .canvas-toolbar .tb-tag {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: var(--input-tab-bg-group);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* AI Tools sidebar */
+  .ai-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    align-self: stretch;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+  }
+  .ai-sidebar::-webkit-scrollbar { display: none; }
+  .ai-sidebar .sb-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 8px;
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .sb-card {
+    background: var(--chrome-0-elevated);
+    border: 1px solid var(--grey-50-a);
+    border-radius: 8px;
+    padding: 8px;
+    flex-shrink: 0;
+  }
+  .sb-card .sb-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+    padding: 4px 8px 8px;
+  }
+  .sb-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+    cursor: pointer;
+  }
+  .sb-row:hover { background: rgba(63, 42, 50, 0.06); }
+  .sb-row svg { flex-shrink: 0; color: var(--fg-primary); }
+
+  /* AMC timeline (skeleton state) */
+  .amc-timeline {
+    background: var(--chrome-0-elevated);
+    border-top: 1px solid var(--grey-50-a);
+    flex-shrink: 0;
+    padding: 8px 0 0;
+  }
+  .skel {
+    background: var(--skeleton);
+    border-radius: 4px;
+    display: inline-block;
+  }
+  .skel.soft { background: var(--skeleton-soft); }
+
+  .amc-timeline .timestamps {
+    display: flex;
+    gap: 0;
+    height: 24px;
+    align-items: center;
+    overflow: hidden;
+    padding: 0 8px;
+  }
+  .amc-timeline .timestamp {
+    flex-shrink: 0;
+    width: 259px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .amc-timeline .timestamp .tick {
+    width: 1px;
+    height: 12px;
+    background: var(--border-medium);
+  }
+
+  .amc-timeline .scenes {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+  }
+  .add-scene {
+    width: 56px;
+    height: 56px;
+    border: 1px solid var(--border-medium);
+    border-radius: 6px;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .add-scene:hover { background: rgba(63, 42, 50, 0.04); }
+  .scene-thumb {
+    width: 92px;
+    height: 56px;
+    border-radius: 6px;
+    background: var(--skeleton);
+    border: 1px solid var(--grey-50-a);
+    flex-shrink: 0;
+  }
+
+  .amc-timeline .wordbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 34px;
+    padding: 0 8px;
+    border-top: 1px solid var(--grey-50-a);
+    overflow: hidden;
+  }
+
+  /* ===== Modal ===== */
+  .scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(38, 23, 29, 0.35);
+    z-index: 40;
+    border-radius: 10px;
+    opacity: 1;
+    transition: opacity 0.25s ease;
+  }
+  .scrim.dismissed { opacity: 0; pointer-events: none; }
+
+  .multicam-modal {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    width: 600px;
+    max-width: calc(100% - 48px);
+    background: var(--surface-elevated);
+    border-radius: 8px;
+    box-shadow:
+      0 8px 16px 0 var(--drop-shadow-medium),
+      0 8px 8px 0 var(--drop-shadow-soft);
+    padding: 20px;
+    z-index: 50;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .multicam-modal.dismissed {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.97);
+    pointer-events: none;
+  }
+  .multicam-modal h2 {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .multicam-modal .mm-desc {
+    font-size: 12.5px;
+    line-height: 18px;
+    color: var(--fg-secondary);
+    margin-bottom: 16px;
+  }
+  .mm-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--grey-50-a);
+    border-radius: 6px;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+  }
+  .mm-thumb {
+    width: 28px;
+    height: 22px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .mm-thumb.t1 { background: linear-gradient(135deg, #7fae6d, #4a7c3f); }
+  .mm-thumb.t2 { background: linear-gradient(135deg, #7db4e8, #3a7bc4); }
+  .mm-thumb.t3 { background: linear-gradient(135deg, #e8c95a, #c49a2e); }
+  .mm-thumb.t4 { background: linear-gradient(135deg, #6b6066, #3a3236); }
+  .mm-row .mm-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 12.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mm-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 8px 0 10px;
+    border: 1px solid var(--border-medium);
+    border-radius: 6px;
+    background: var(--surface-elevated);
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .mm-select:hover { background: #faf8f8; }
+  .mm-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+  }
+  .mm-keep {
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 12.5px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    padding: 8px 10px;
+    border-radius: 6px;
+  }
+  .mm-keep:hover { background: rgba(63, 42, 50, 0.06); }
+  .mm-create {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    background: #b9aeb3;
+    color: #fff;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 9px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .mm-create:hover { background: var(--fg-primary); }
 </style>
 </head>
 <body>
 
-<div class="app-screen">
+<!-- ════════════════ SCREEN 1 · Empty project ════════════════ -->
+<div class="app-screen" id="screenEmpty">
 
-  <!-- ============ App Bar ============ -->
   <header class="app-bar">
     <div class="left-items">
-      <button class="icon-btn" title="Home" aria-label="Home">
+      <button class="icon-btn js-home" title="Home" aria-label="Home">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M2.5 6.5 8 2l5.5 4.5V13a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1V6.5Z"/>
           <path d="M6.5 14v-4h3v4"/>
@@ -590,10 +1095,8 @@
     </div>
   </header>
 
-  <!-- ============ Surfaces ============ -->
   <div class="surfaces">
 
-    <!-- Editor -->
     <main class="editor">
       <div class="script-canvas">
         <div class="empty-screen">
@@ -602,7 +1105,7 @@
             <input type="text" placeholder="Name your creation" aria-label="Composition title">
           </div>
 
-          <div class="upload-file" role="button" tabindex="0">
+          <div class="upload-file" id="uploadZone" role="button" tabindex="0">
             <div class="illustration" aria-hidden="true">
               <div class="file-card left">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
@@ -667,7 +1170,42 @@
         </div>
       </div>
 
-      <!-- Timeline / Playback bar -->
+      <!-- Activity supertoast -->
+      <div class="supertoast" id="supertoast" aria-live="polite">
+        <div class="st-header">
+          <span class="st-title">Activity</span>
+          <button class="icon-btn dense" aria-label="Collapse">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 4.75 6 7.75l3-3"/>
+            </svg>
+          </button>
+        </div>
+        <div class="st-divider"></div>
+        <div class="st-list">
+          <div class="st-item" data-task="upload">
+            <span class="st-progress"></span>
+            <span class="st-label">Uploading (20m remaining)</span>
+            <span class="st-value">0.2gb/2.3gb</span>
+          </div>
+          <div class="st-item" data-task="transcribe">
+            <span class="st-progress"></span>
+            <span class="st-label">Transcribing filenamev2.mp4</span>
+            <span class="st-value">90%</span>
+          </div>
+          <div class="st-item" data-task="greenscreen">
+            <span class="st-progress"></span>
+            <span class="st-label">Greenscreen in progress filenamev2.mp4</span>
+            <span class="st-value">72%</span>
+          </div>
+          <div class="st-item" data-task="speech">
+            <span class="st-progress"></span>
+            <span class="st-label">AI Speech being generated (5 of 5)</span>
+            <span class="st-value"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Playback bar -->
       <div class="timeline">
         <div class="playback-bar">
           <div class="pb-left">
@@ -746,7 +1284,6 @@
       </div>
     </main>
 
-    <!-- Dock nav bar -->
     <nav class="dock">
       <button class="dock-tile">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
@@ -755,9 +1292,7 @@
         </svg>
         Project
       </button>
-
       <div class="dock-divider"></div>
-
       <button class="dock-tile">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9.5 2.5 11 6l3.5 1.5L11 9l-1.5 3.5L8 9 4.5 7.5 8 6l1.5-3.5Z"/>
@@ -765,7 +1300,6 @@
         </svg>
         AI Tools
       </button>
-
       <button class="dock-tile">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
           <path d="M5 2v3M5 8v6M11 2v6M11 11v3"/>
@@ -774,9 +1308,7 @@
         </svg>
         Properties
       </button>
-
       <div class="dock-divider"></div>
-
       <button class="dock-tile">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="7" width="7" height="7" rx="1.5"/>
@@ -784,7 +1316,6 @@
         </svg>
         Elements
       </button>
-
       <button class="dock-tile">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
           <rect x="1.5" y="3" width="13" height="10" rx="1.5"/>
@@ -792,7 +1323,6 @@
         </svg>
         Captions
       </button>
-
       <button class="dock-tile">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
           <rect x="1.5" y="2.5" width="9" height="9" rx="1.5"/>
@@ -801,9 +1331,7 @@
         </svg>
         Media
       </button>
-
       <div class="spacer"></div>
-
       <button class="dock-tile">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="5" width="10" height="8" rx="2"/>
@@ -818,6 +1346,606 @@
 
   </div>
 </div>
+
+<!-- ════════════════ SCREEN 2 · AMC editor (post-upload) ════════════════ -->
+<div class="app-screen hidden" id="screenEditor">
+
+  <header class="app-bar">
+    <div class="left-items">
+      <button class="icon-btn js-home" title="Home" aria-label="Home">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2.5 6.5 8 2l5.5 4.5V13a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1V6.5Z"/>
+          <path d="M6.5 14v-4h3v4"/>
+        </svg>
+      </button>
+      <button class="icon-btn" title="Menu" aria-label="Menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="center-items">
+      <button class="project-select">
+        Untitled
+        <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 4.75 6 7.75l3-3"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="right-items">
+      <div class="avatar-group">
+        <button class="avatar add" title="Invite" aria-label="Invite">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <path d="M6 2.5v7M2.5 6h7"/>
+          </svg>
+        </button>
+        <span class="avatar purple">VM</span>
+        <span class="avatar blue">BL</span>
+      </div>
+      <button class="icon-btn" title="Comments" aria-label="Comments">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13.5 7.5a5.5 5.5 0 0 1-8 4.9L2.5 13.5l1.1-3A5.5 5.5 0 1 1 13.5 7.5Z"/>
+        </svg>
+      </button>
+      <button class="btn-primary">Export</button>
+      <button class="icon-btn" title="Help" aria-label="Help">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="8" r="6"/>
+          <path d="M6.2 6.2a1.8 1.8 0 1 1 2.4 1.7c-.5.2-.6.6-.6 1.1"/>
+          <circle cx="8" cy="11" r="0.5" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="surfaces">
+
+    <main class="editor">
+      <div class="amc-split">
+
+        <!-- Script pane -->
+        <section class="script-pane">
+          <div class="pane-topbar">
+            <span></span>
+            <button class="btn-write">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M13.5 2.5c-4.5.5-8 2-9.5 6L2.5 13.5l1.5-.5c4.5-1.5 7.5-4 8.5-8l1-2.5Z"/>
+                <path d="M5.5 10.5c2-2.5 4-4 6.5-5.5"/>
+              </svg>
+              Write
+            </button>
+          </div>
+          <div class="script-body">
+            <h1 class="script-title">Untitled</h1>
+            <div class="speaker-label s1">Christina</div>
+            <p class="script-paragraph">Let's say I'm a biology student working on a research paper for school. As I work, I incorporate research from websites like ScienceDirect, Frontiers, and PLOS ONE to support my ideas. It's crucial that I cite these resources to maintain the integrity of my work.</p>
+            <div class="speaker-label s2">Jack</div>
+            <p class="script-paragraph">As AI tools like Grammarly and ChatGPT become more popular among students, being transparent about using them has become an important part of citing sources. Since I've used Grammarly to help create an outline and rewrite certain sections of my paper, I'll select 'Acknowledge Grammarly Usage' and, just like that, I can be transparent about showing any AI prompts I use to improve my writing.</p>
+          </div>
+        </section>
+
+        <!-- Canvas pane -->
+        <section class="canvas-pane">
+          <div class="pane-topbar">
+            <button class="icon-btn" title="Expand" aria-label="Expand canvas">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3.5" width="12" height="9" rx="1.5"/>
+                <path d="M5.5 6 4 7.5 5.5 9M10.5 6 12 7.5 10.5 9"/>
+              </svg>
+            </button>
+            <span></span>
+          </div>
+          <div class="canvas-stage">
+            <div class="artboard">
+              <div class="frames">
+                <div class="cam-frame">
+                  <!-- Cam 1: white dog, green park -->
+                  <svg viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice" aria-label="Camera 1">
+                    <defs>
+                      <radialGradient id="park" cx="30%" cy="25%" r="90%">
+                        <stop offset="0%" stop-color="#a8c88a"/>
+                        <stop offset="55%" stop-color="#6f9e54"/>
+                        <stop offset="100%" stop-color="#3f6b33"/>
+                      </radialGradient>
+                    </defs>
+                    <rect width="198" height="214" fill="url(#park)"/>
+                    <circle cx="40" cy="40" r="22" fill="#c3dba6" opacity="0.5"/>
+                    <circle cx="160" cy="28" r="16" fill="#c3dba6" opacity="0.4"/>
+                    <circle cx="120" cy="60" r="10" fill="#d7e8c0" opacity="0.4"/>
+                    <g>
+                      <ellipse cx="99" cy="200" rx="64" ry="48" fill="#f7f4ef"/>
+                      <circle cx="99" cy="150" r="44" fill="#fbf9f5"/>
+                      <path d="M62 122c-10-16-8-34 2-42 8 8 12 20 12 34" fill="#efe9e0"/>
+                      <path d="M136 122c10-16 8-34-2-42-8 8-12 20-12 34" fill="#efe9e0"/>
+                      <ellipse cx="84" cy="146" rx="5" ry="6" fill="#3a3236"/>
+                      <ellipse cx="114" cy="146" rx="5" ry="6" fill="#3a3236"/>
+                      <ellipse cx="99" cy="166" rx="8" ry="6" fill="#3a3236"/>
+                      <path d="M99 172v8M91 182c4 4 12 4 16 0" stroke="#3a3236" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    </g>
+                  </svg>
+                </div>
+                <div class="cam-frame">
+                  <!-- Cam 2: corgi, blue sky -->
+                  <svg viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice" aria-label="Camera 2">
+                    <defs>
+                      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#4d9fe0"/>
+                        <stop offset="100%" stop-color="#a8d4f2"/>
+                      </linearGradient>
+                    </defs>
+                    <rect width="198" height="214" fill="url(#sky)"/>
+                    <ellipse cx="42" cy="46" rx="26" ry="11" fill="#fff" opacity="0.85"/>
+                    <ellipse cx="62" cy="52" rx="18" ry="8" fill="#fff" opacity="0.7"/>
+                    <ellipse cx="156" cy="30" rx="22" ry="9" fill="#fff" opacity="0.8"/>
+                    <g>
+                      <path d="M56 118 42 62l34 30Z" fill="#d98c40"/>
+                      <path d="M142 118l14-56-34 30Z" fill="#d98c40"/>
+                      <path d="M60 116 49 72l26 24Z" fill="#b56a28"/>
+                      <path d="M138 116l11-44-26 24Z" fill="#b56a28"/>
+                      <circle cx="99" cy="160" r="52" fill="#e8a45c"/>
+                      <path d="M99 112c-14 0-26 10-30 24 8 18 14 42 30 42s22-24 30-42c-4-14-16-24-30-24Z" fill="#fbf6ee"/>
+                      <ellipse cx="80" cy="150" rx="5.5" ry="6.5" fill="#3a3236"/>
+                      <ellipse cx="118" cy="150" rx="5.5" ry="6.5" fill="#3a3236"/>
+                      <ellipse cx="99" cy="172" rx="9" ry="7" fill="#3a3236"/>
+                      <path d="M99 179v9M89 190c5 5 15 5 20 0" stroke="#3a3236" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="canvas-toolbar">
+              <button class="tb-item">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
+                  <rect x="2" y="2.5" width="12" height="11" rx="1.5"/>
+                  <path d="M8 2.5v11M2 8h12"/>
+                </svg>
+                Layout
+              </button>
+              <span class="tb-tag">2×</span>
+              <span class="tb-divider"></span>
+              <button class="tb-item">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="2" width="12" height="12" rx="2"/>
+                  <circle cx="6" cy="6" r="1.4"/>
+                  <path d="M14 10.5 10.5 7 4 14"/>
+                </svg>
+                Background
+              </button>
+              <span class="tb-divider"></span>
+              <button class="tb-item">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9.5 2.5 11 6l3.5 1.5L11 9l-1.5 3.5L8 9 4.5 7.5 8 6l1.5-3.5Z"/>
+                </svg>
+                Effects
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- AMC timeline (processing skeleton) -->
+      <div class="amc-timeline">
+        <div class="playback-bar">
+          <div class="pb-left">
+            <div class="tools">
+              <button class="icon-btn dense inactive" aria-label="Skip back">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M7.5 4 3.5 8l4 4M12.5 4l-4 4 4 4"/>
+                </svg>
+              </button>
+              <button class="icon-btn dense inactive" aria-label="Skip forward">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8.5 4l4 4-4 4M3.5 4l4 4-4 4"/>
+                </svg>
+              </button>
+              <button class="icon-btn dense inactive" aria-label="Markers">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 2.5h5v6l-2.5-1.7L3 8.5v-6Z"/>
+                  <path d="M10.5 5.5H13M10.5 9H13M3 12.5h10"/>
+                </svg>
+              </button>
+              <span class="skel" style="width:56px;height:10px;margin-left:8px;"></span>
+              <span class="skel soft" style="width:5px;height:10px;margin-left:4px;"></span>
+              <span class="skel soft" style="width:56px;height:10px;margin-left:4px;"></span>
+            </div>
+          </div>
+          <div class="pb-center">
+            <button class="icon-btn dense inactive" aria-label="Play">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M4.5 3.2v9.6L12.8 8 4.5 3.2Z"/>
+              </svg>
+            </button>
+            <button class="icon-btn dense inactive" aria-label="Record">
+              <span class="record-dot" style="border-color: currentColor;"></span>
+            </button>
+            <button class="btn-light inactive">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5.5 5 2.5 8l3 3M10.5 5l3 3-3 3"/>
+              </svg>
+              <span class="skel" style="width:25px;height:10px;"></span>
+            </button>
+          </div>
+          <div class="pb-right">
+            <div class="inactive" style="display:inline-flex;align-items:center;gap:2px;">
+              <button class="icon-btn dense" aria-label="Zoom out">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M3 8h10"/></svg>
+              </button>
+              <span class="skel" style="width:32px;height:10px;"></span>
+              <button class="icon-btn dense" aria-label="Zoom in">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+              </button>
+            </div>
+            <div class="icon-select inactive">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 2.5 12 8l-3.6.7L10 12.5l-1.8.8-1.6-3.9L4 11.5v-9Z"/>
+              </svg>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 4.75 6 7.75l3-3"/>
+              </svg>
+            </div>
+            <div class="toggle-group">
+              <button class="inactive" aria-label="Timeline view">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+                  <path d="M1.5 4.5h13M1.5 8h9M1.5 11.5h13"/>
+                </svg>
+              </button>
+              <button class="inactive" aria-label="Grid view">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
+                  <rect x="2" y="2" width="5" height="5" rx="1"/>
+                  <rect x="9" y="2" width="5" height="5" rx="1"/>
+                  <rect x="2" y="9" width="5" height="5" rx="1"/>
+                  <rect x="9" y="9" width="5" height="5" rx="1"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="timestamps">
+          <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+          <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+          <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+          <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+          <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+        </div>
+
+        <div class="scenes">
+          <button class="add-scene" aria-label="Add scene">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+              <path d="M8 3v10M3 8h10"/>
+            </svg>
+          </button>
+          <span class="scene-thumb"></span>
+          <span class="scene-thumb"></span>
+        </div>
+
+        <div class="wordbar">
+          <span class="skel" style="width:190px;height:10px;"></span>
+          <span class="skel" style="width:82px;height:10px;"></span>
+          <span class="skel" style="width:134px;height:10px;"></span>
+          <span class="skel" style="width:134px;height:10px;"></span>
+          <span class="skel" style="width:134px;height:10px;"></span>
+          <span class="skel" style="width:134px;height:10px;"></span>
+          <span class="skel" style="width:134px;height:10px;"></span>
+        </div>
+      </div>
+    </main>
+
+    <!-- AI Tools sidebar -->
+    <aside class="ai-sidebar">
+      <div class="sb-header">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9.5 2.5 11 6l3.5 1.5L11 9l-1.5 3.5L8 9 4.5 7.5 8 6l1.5-3.5Z"/>
+          <path d="M3.5 10.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"/>
+        </svg>
+        AI Tools
+      </div>
+
+      <div class="sb-card">
+        <div class="sb-section-title">Sound Good</div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L6 12l-3 1 1-3 7.5-7.5Z"/></svg>
+          Edit for clarity
+        </div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="1.5" width="4" height="8" rx="2"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5"/></svg>
+          Studio sound
+        </div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 8 4l2.5 4M9 11.5h4M10 9.5l2.5 4"/></svg>
+          Remove filler words
+        </div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7a5 5 0 1 0-1 4.5"/><path d="M13 3.5V7h-3.5"/></svg>
+          Remove retakes
+        </div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h4M10 8h4M6 5.5 3.5 8 6 10.5M10 5.5 12.5 8 10 10.5"/></svg>
+          Shorten word gaps
+        </div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2.5h8v11l-4-2.7-4 2.7v-11Z"/></svg>
+          Add chapters
+        </div>
+      </div>
+
+      <div class="sb-card">
+        <div class="sb-section-title">Look Good</div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z"/><circle cx="8" cy="8" r="2"/></svg>
+          Eye contact
+        </div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5V3.5A1.5 1.5 0 0 1 3.5 2H5M11 2h1.5A1.5 1.5 0 0 1 14 3.5V5M14 11v1.5a1.5 1.5 0 0 1-1.5 1.5H11M5 14H3.5A1.5 1.5 0 0 1 2 12.5V11"/><circle cx="8" cy="6.5" r="1.8"/><path d="M5 11.5c.5-1.6 1.6-2.5 3-2.5s2.5.9 3 2.5"/></svg>
+          Center active speaker
+        </div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 10l4-3 8 6"/></svg>
+          Green screen
+        </div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><rect x="1.5" y="2.5" width="6" height="5" rx="1"/><rect x="8.5" y="2.5" width="6" height="5" rx="1"/><rect x="1.5" y="8.5" width="6" height="5" rx="1"/><rect x="8.5" y="8.5" width="6" height="5" rx="1"/></svg>
+          Automatic multicam
+        </div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2"/><circle cx="6" cy="6" r="1.4"/><path d="M14 10.5 10.5 7 4 14"/></svg>
+          Generate an image
+        </div>
+      </div>
+
+      <div class="sb-card">
+        <div class="sb-section-title">Repurpose</div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="8" height="11" rx="1.5"/><path d="M13.5 4.5v9a1.5 1.5 0 0 1-1.5 1.5"/></svg>
+          Create clips
+        </div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.8 3.7 4 .6-2.9 2.8.7 4L8 11.2l-3.6 1.9.7-4L2.2 6.3l4-.6L8 2Z"/></svg>
+          Create highlight reel
+        </div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
+          Find highlights
+        </div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7M5.5 2v2M7.5 4c-.6 2.6-2.6 5-5 6M4.5 6.5c.8 1.8 2.5 3.3 4.5 4"/><path d="M9 14l2.5-6L14 14M9.9 12h3.2"/></svg>
+          Translate
+        </div>
+      </div>
+
+      <div class="sb-card">
+        <div class="sb-section-title">Publish</div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10V2.5M5 5l3-3 3 3"/><path d="M2.5 10v2.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V10"/></svg>
+          Publish to channels
+        </div>
+        <div class="sb-row">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 9.5 13 3M13 3h-3.5M13 3v3.5"/><path d="M11 9v3.5a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1H7"/></svg>
+          Share a link
+        </div>
+      </div>
+    </aside>
+
+    <!-- Dock -->
+    <nav class="dock">
+      <button class="dock-tile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1.5 3.5a1 1 0 0 1 1-1h3l1.5 2h6a1 1 0 0 1 1 1v1.5h-11l-2 6v-9.5Z"/>
+          <path d="M3.5 7h11.5l-2 6.5H1.5l2-6.5Z"/>
+        </svg>
+        Project
+      </button>
+      <div class="dock-divider"></div>
+      <button class="dock-tile active">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9.5 2.5 11 6l3.5 1.5L11 9l-1.5 3.5L8 9 4.5 7.5 8 6l1.5-3.5Z"/>
+          <path d="M3.5 10.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"/>
+        </svg>
+        AI Tools
+      </button>
+      <button class="dock-tile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+          <path d="M5 2v3M5 8v6M11 2v6M11 11v3"/>
+          <circle cx="5" cy="6.5" r="1.5"/>
+          <circle cx="11" cy="9.5" r="1.5"/>
+        </svg>
+        Properties
+      </button>
+      <div class="dock-divider"></div>
+      <button class="dock-tile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="7" height="7" rx="1.5"/>
+          <path d="M11.5 2v5M9 4.5h5"/>
+        </svg>
+        Elements
+      </button>
+      <button class="dock-tile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1.5" y="3" width="13" height="10" rx="1.5"/>
+          <path d="M5.2 10 7 6l1.8 4M5.8 8.8h2.4M10 6.5v3.5M10 10h1.5"/>
+        </svg>
+        Captions
+      </button>
+      <button class="dock-tile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1.5" y="2.5" width="9" height="9" rx="1.5"/>
+          <path d="M13 5.5h.5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1V12"/>
+          <path d="M4.8 5.3l2.7 1.7-2.7 1.7V5.3Z"/>
+        </svg>
+        Media
+      </button>
+      <div class="spacer"></div>
+      <button class="dock-tile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="5" width="10" height="8" rx="2"/>
+          <path d="M8 5V2.5M6.5 2.5h3"/>
+          <circle cx="6" cy="8.5" r="0.6" fill="currentColor" stroke="none"/>
+          <circle cx="10" cy="8.5" r="0.6" fill="currentColor" stroke="none"/>
+          <path d="M6.5 11h3"/>
+        </svg>
+        Underlord
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- Multicam modal + scrim -->
+  <div class="scrim" id="modalScrim"></div>
+  <div class="multicam-modal" id="multicamModal" role="dialog" aria-modal="true" aria-labelledby="mmTitle">
+    <h2 id="mmTitle">Multi-cam of the same recording?</h2>
+    <p class="mm-desc">A multi-cam sequence combines multiple camera angles of the same event, so you can cut between them while editing.</p>
+
+    <div class="mm-row">
+      <span class="mm-thumb t1"></span>
+      <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+      <button class="mm-select">Assign speakers
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+      </button>
+    </div>
+    <div class="mm-row">
+      <span class="mm-thumb t2"></span>
+      <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+      <button class="mm-select">Assign speakers
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+      </button>
+    </div>
+    <div class="mm-row">
+      <span class="mm-thumb t3"></span>
+      <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+      <button class="mm-select">Assign speakers
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+      </button>
+    </div>
+    <div class="mm-row">
+      <span class="mm-thumb t4"></span>
+      <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+      <button class="mm-select">Assign speakers
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+      </button>
+    </div>
+
+    <div class="mm-footer">
+      <button class="mm-keep" id="mmKeep">No, keep separate</button>
+      <button class="mm-create" id="mmCreate">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round">
+          <rect x="1.5" y="2.5" width="6" height="5" rx="1"/><rect x="8.5" y="2.5" width="6" height="5" rx="1"/><rect x="1.5" y="8.5" width="6" height="5" rx="1"/><rect x="8.5" y="8.5" width="6" height="5" rx="1"/>
+        </svg>
+        Yes, create multi-cam sequence
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const uploadZone = document.getElementById('uploadZone');
+  const supertoast = document.getElementById('supertoast');
+  const screenEmpty = document.getElementById('screenEmpty');
+  const screenEditor = document.getElementById('screenEditor');
+  const modalScrim = document.getElementById('modalScrim');
+  const multicamModal = document.getElementById('multicamModal');
+
+  const RING_R = 7;
+  const RING_C = 2 * Math.PI * RING_R;
+
+  function ringSVG(pct) {
+    return `<svg class="st-ring" width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle class="ring-track" cx="10" cy="10" r="${RING_R}" stroke-width="2.5"/>
+      <circle class="ring-fill" cx="10" cy="10" r="${RING_R}" stroke-width="2.5" stroke-linecap="round"
+        stroke-dasharray="${RING_C}" stroke-dashoffset="${RING_C * (1 - pct / 100)}"/>
+    </svg>`;
+  }
+
+  const checkSVG = `<svg class="st-check" width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="8" cy="8" r="6.5"/><path d="M5.2 8.2 7.2 10.2 10.8 6"/></svg>`;
+
+  // Each task animates from `start`% to 100% over `dur` ms
+  const tasks = [
+    { key: 'upload',      start: 8,   dur: 4200, label: p => `Uploading (${Math.max(1, Math.round(20 - p / 5))}m remaining)`, value: p => `${(0.2 + (p / 100) * 2.1).toFixed(1)}gb/2.3gb`, doneLabel: 'Uploaded 4 recordings', doneValue: '' },
+    { key: 'transcribe',  start: 60,  dur: 3000, label: () => 'Transcribing filenamev2.mp4', value: p => `${Math.round(p)}%`, doneLabel: 'Transcribed filenamev2.mp4', doneValue: '' },
+    { key: 'greenscreen', start: 40,  dur: 3600, label: () => 'Greenscreen in progress filenamev2.mp4', value: p => `${Math.round(p)}%`, doneLabel: 'Greenscreen applied', doneValue: '' },
+    { key: 'speech',      start: 100, dur: 0,    label: () => 'AI Speech being generated (5 of 5)', value: () => '', doneLabel: 'AI Speech being generated (5 of 5)', doneValue: '' },
+  ];
+
+  let running = false;
+
+  function startUploadFlow() {
+    if (running) return;
+    running = true;
+    supertoast.classList.add('visible');
+
+    const t0 = performance.now();
+    let pending = 0;
+
+    tasks.forEach(task => {
+      const row = supertoast.querySelector(`[data-task="${task.key}"]`);
+      const progEl = row.querySelector('.st-progress');
+      const labelEl = row.querySelector('.st-label');
+      const valueEl = row.querySelector('.st-value');
+
+      if (task.dur === 0) {
+        progEl.innerHTML = checkSVG;
+        labelEl.textContent = task.doneLabel;
+        valueEl.textContent = task.doneValue;
+        return;
+      }
+
+      pending++;
+      progEl.innerHTML = ringSVG(task.start);
+      const fill = progEl.querySelector('.ring-fill');
+
+      function tick(now) {
+        const p = Math.min(100, task.start + (100 - task.start) * ((now - t0) / task.dur));
+        fill.style.strokeDashoffset = RING_C * (1 - p / 100);
+        labelEl.textContent = task.label(p);
+        valueEl.textContent = task.value(p);
+        if (p < 100) {
+          requestAnimationFrame(tick);
+        } else {
+          progEl.innerHTML = checkSVG;
+          labelEl.textContent = task.doneLabel;
+          valueEl.textContent = task.doneValue;
+          if (--pending === 0) setTimeout(showEditor, 700);
+        }
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+
+  function showEditor() {
+    screenEmpty.classList.add('hidden');
+    screenEditor.classList.remove('hidden');
+  }
+
+  function resetToEmpty() {
+    running = false;
+    screenEditor.classList.add('hidden');
+    screenEmpty.classList.remove('hidden');
+    supertoast.classList.remove('visible');
+    modalScrim.classList.remove('dismissed');
+    multicamModal.classList.remove('dismissed');
+  }
+
+  function dismissModal() {
+    modalScrim.classList.add('dismissed');
+    multicamModal.classList.add('dismissed');
+  }
+
+  uploadZone.addEventListener('click', startUploadFlow);
+  uploadZone.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startUploadFlow(); }
+  });
+
+  document.getElementById('mmCreate').addEventListener('click', dismissModal);
+  document.getElementById('mmKeep').addEventListener('click', dismissModal);
+
+  // Home button restarts the demo
+  document.querySelectorAll('.js-home').forEach(btn => btn.addEventListener('click', resetToEmpty));
+})();
+</script>
 
 </body>
 </html>
