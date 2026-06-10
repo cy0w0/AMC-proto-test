@@ -1354,6 +1354,34 @@
   }
   .im-input-wrap input::placeholder { color: var(--fg-secondary); }
   .im-input-wrap input::selection { background: rgba(0, 147, 214, 0.15); }
+
+  /* Inline confirmation when a new speaker is added */
+  .im-confirm-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  .im-confirm-row .im-label { visibility: hidden; }
+  .im-confirm {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.055px;
+    color: var(--fg-secondary);
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .im-confirm.visible {
+    opacity: 1;
+    transform: none;
+  }
+  .im-confirm svg { color: #2e9e44; flex-shrink: 0; }
   .pop-play {
     width: 22px;
     height: 22px;
@@ -2256,6 +2284,16 @@
       </div>
     </div>
 
+    <div class="im-confirm-row">
+      <span class="im-label" aria-hidden="true">Who's speaking</span>
+      <span class="im-confirm" id="imConfirm" aria-live="polite">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="8" r="6.5"/><path d="M5.2 8.2 7.2 10.2 10.8 6"/>
+        </svg>
+        <span id="imConfirmText"></span>
+      </span>
+    </div>
+
     <!-- Identified speakers menu for the input -->
     <div class="mm-popover hidden" id="imMenu" role="menu">
       <div class="pop-header">Identified speakers</div>
@@ -2590,6 +2628,7 @@
     closePopover();
     clipIdx = 0;
     updateCarousel(true);
+    hideSpeakerConfirm();
     multicamModal.classList.add('away');
     identifyModal.classList.remove('dismissed');
   }
@@ -2597,6 +2636,7 @@
   function backToMulticam() {
     commitTypedSpeaker();
     closeImMenu();
+    hideSpeakerConfirm();
     identifyModal.classList.add('dismissed');
     multicamModal.classList.remove('away');
   }
@@ -2621,12 +2661,32 @@
   imPrev.addEventListener('click', () => goToClip(clipIdx - 1));
   imBack.addEventListener('click', backToMulticam);
 
+  const imConfirm = document.getElementById('imConfirm');
+  const imConfirmText = document.getElementById('imConfirmText');
+  let confirmTimer = null;
+
+  function showSpeakerConfirm(name) {
+    imConfirmText.textContent = `${name} added as a new speaker`;
+    imConfirm.classList.add('visible');
+    clearTimeout(confirmTimer);
+    confirmTimer = setTimeout(() => imConfirm.classList.remove('visible'), 2600);
+  }
+
+  function hideSpeakerConfirm() {
+    clearTimeout(confirmTimer);
+    imConfirm.classList.remove('visible');
+  }
+
   // Add a typed name as a new speaker and assign it to the current clip
   function commitTypedSpeaker() {
     const v = imInput.value.trim();
     if (!v) { clipSpeakers[clipIdx] = null; return; }
     let idx = speakers.findIndex(s => s.toLowerCase() === v.toLowerCase());
-    if (idx === -1) { speakers.push(v); idx = speakers.length - 1; }
+    if (idx === -1) {
+      speakers.push(v);
+      idx = speakers.length - 1;
+      showSpeakerConfirm(v);
+    }
     clipSpeakers[clipIdx] = idx;
   }
 
@@ -2696,6 +2756,7 @@
     clipSpeakers = [null, null];
     imInput.value = '';
     closeImMenu();
+    hideSpeakerConfirm();
     identifyModal.classList.add('dismissed');
     multicamModal.classList.remove('away');
   };
