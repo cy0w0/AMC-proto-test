@@ -1152,11 +1152,55 @@
     border-radius: 3px;
     padding: 1px 2px;
   }
-  .pop-name[contenteditable="true"] {
-    outline: 1.5px solid #4087fc;
-    background: #fff;
-    white-space: nowrap;
+
+  /* List item · Input variant (inline rename) */
+  .pop-row.editing { padding: 0 4px; gap: 6px; height: 32px; cursor: default; }
+  .pop-row.editing:hover { background: transparent; }
+  .edit-field {
+    flex: 1;
+    min-width: 32px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    background: rgba(139, 111, 122, 0.09);
+    border: 1px solid rgba(88, 63, 74, 0.1);
+    border-radius: 8px;
+    padding: 0 8px;
   }
+  .edit-field input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.0012px;
+    color: var(--fg-primary);
+  }
+  .edit-btn {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .edit-btn:hover { background: rgba(63, 42, 50, 0.08); }
+
+  /* Camera name inline rename */
+  .mm-row .mm-name { cursor: text; }
+  .mm-name-edit {
+    flex: 1;
+    min-width: 0;
+    margin: 0 4px;
+  }
+  .mm-name-edit .edit-field { height: 26px; }
   .pop-play {
     width: 22px;
     height: 22px;
@@ -2136,20 +2180,71 @@
   let openRow = null;
 
   const playSVG = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><path d="M4.5 3.2v9.6L12.8 8 4.5 3.2Z"/></svg>`;
+  const pauseSVG = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><path d="M5 3v10M11 3v10" stroke-linecap="round"/></svg>`;
+  const xSVG = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>`;
+  const tickSVG = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 6.5 12 13 4.5"/></svg>`;
   const checkMark = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5 5 9l4.5-5"/></svg>`;
+
+  let editingIdx = null;
+  let playingIdx = null;
+  let playTimer = null;
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function stopPlaying() {
+    clearTimeout(playTimer);
+    playingIdx = null;
+  }
 
   function renderPopover() {
     popList.innerHTML = '';
     speakers.forEach((name, i) => {
       const row = document.createElement('div');
+
+      // Input variant: rename field with cancel/confirm
+      if (editingIdx === i) {
+        row.className = 'pop-row editing';
+        row.innerHTML = `
+          <span class="edit-field"><input type="text" value="${escapeHtml(name)}" maxlength="40" aria-label="Speaker name"></span>
+          <button class="edit-btn cancel" aria-label="Cancel rename">${xSVG}</button>
+          <button class="edit-btn confirm" aria-label="Confirm rename">${tickSVG}</button>`;
+
+        const input = row.querySelector('input');
+        const commit = () => {
+          const v = input.value.trim();
+          if (v) speakers[i] = v;
+          editingIdx = null;
+          renderPopover();
+          selects.forEach((_, r) => updateSelectLabel(r));
+        };
+        const cancel = () => { editingIdx = null; renderPopover(); };
+
+        // mousedown (not click) so the input's blur doesn't fire first
+        row.querySelector('.confirm').addEventListener('mousedown', e => { e.preventDefault(); commit(); });
+        row.querySelector('.cancel').addEventListener('mousedown', e => { e.preventDefault(); cancel(); });
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Enter') { e.preventDefault(); commit(); }
+          if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+        });
+        input.addEventListener('blur', commit);
+        setTimeout(() => { input.focus(); input.select(); }, 0);
+
+        popList.appendChild(row);
+        return;
+      }
+
+      // Default / playing variant
+      const isPlaying = playingIdx === i;
       row.className = 'pop-row' + (assignments[openRow].has(i) ? ' checked' : '');
       row.innerHTML = `
         <span class="pop-check">${checkMark}</span>
-        <span class="pop-name" title="Double-click to rename">${name}</span>
-        <button class="pop-play" aria-label="Play sample">${playSVG}</button>`;
+        <span class="pop-name" title="Double-click to rename">${escapeHtml(name)}</span>
+        <button class="pop-play${isPlaying ? ' playing' : ''}" aria-label="${isPlaying ? 'Pause sample' : 'Play sample'}">${isPlaying ? pauseSVG : playSVG}</button>`;
 
       row.addEventListener('click', e => {
-        if (e.target.closest('.pop-play') || e.target.closest('.pop-name[contenteditable="true"]')) return;
+        if (e.target.closest('.pop-play')) return;
         assignments[openRow].has(i) ? assignments[openRow].delete(i) : assignments[openRow].add(i);
         row.classList.toggle('checked');
         updateSelectLabel(openRow);
@@ -2158,29 +2253,22 @@
 
       row.querySelector('.pop-play').addEventListener('click', e => {
         e.stopPropagation();
-        const btn = e.currentTarget;
-        btn.classList.add('playing');
-        setTimeout(() => btn.classList.remove('playing'), 1800);
+        if (playingIdx === i) {
+          stopPlaying();
+        } else {
+          stopPlaying();
+          playingIdx = i;
+          playTimer = setTimeout(() => { stopPlaying(); renderPopover(); }, 2500);
+        }
+        renderPopover();
       });
 
       // double-click to rename (per design annotation)
-      const nameEl = row.querySelector('.pop-name');
-      nameEl.addEventListener('dblclick', e => {
+      row.querySelector('.pop-name').addEventListener('dblclick', e => {
         e.stopPropagation();
-        nameEl.contentEditable = 'true';
-        nameEl.focus();
-        document.execCommand('selectAll', false, null);
-      });
-      function commitRename() {
-        nameEl.contentEditable = 'false';
-        const v = nameEl.textContent.trim();
-        if (v) speakers[i] = v; else nameEl.textContent = speakers[i];
-        selects.forEach((_, r) => updateSelectLabel(r));
-      }
-      nameEl.addEventListener('blur', commitRename);
-      nameEl.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); nameEl.blur(); }
-        if (e.key === 'Escape') { nameEl.textContent = speakers[i]; nameEl.blur(); }
+        stopPlaying();
+        editingIdx = i;
+        renderPopover();
       });
 
       popList.appendChild(row);
@@ -2220,13 +2308,49 @@
 
   function closePopover() {
     openRow = null;
+    editingIdx = null;
+    stopPlaying();
     popover.classList.add('hidden');
     selects.forEach(s => s.classList.remove('open'));
   }
 
+  /* Camera name rename: double-click swaps to an inline input field */
+  const cameraNames = Array.from(multicamModal.querySelectorAll('.mm-name'));
+  const originalCameraNames = cameraNames.map(el => el.textContent);
+
+  cameraNames.forEach(span => {
+    span.title = 'Double-click to rename';
+    span.addEventListener('dblclick', () => {
+      if (span.dataset.editing) return;
+      span.dataset.editing = '1';
+      const old = span.textContent;
+      const wrap = document.createElement('span');
+      wrap.className = 'mm-name-edit';
+      wrap.innerHTML = `<span class="edit-field"><input type="text" maxlength="80" aria-label="Recording name"></span>`;
+      const input = wrap.querySelector('input');
+      input.value = old.replace(/ /g, ' ');
+
+      const finish = text => {
+        span.textContent = text;
+        delete span.dataset.editing;
+        wrap.replaceWith(span);
+      };
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+        if (e.key === 'Escape') { input.value = old; input.blur(); }
+      });
+      input.addEventListener('blur', () => finish(input.value.trim() || old));
+
+      span.replaceWith(wrap);
+      input.focus();
+      input.select();
+    });
+  });
+
   function resetModalState() {
     speakers = ['Speaker 1', 'Speaker 2', 'Speaker 3'];
     assignments = selects.map(() => new Set());
+    cameraNames.forEach((el, i) => { el.textContent = originalCameraNames[i]; });
     selects.forEach((_, r) => updateSelectLabel(r));
     updateConfirm();
     closePopover();
