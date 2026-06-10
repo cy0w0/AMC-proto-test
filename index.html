@@ -934,14 +934,18 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%) scale(1);
-    width: 600px;
+    width: 452px;
     max-width: calc(100% - 48px);
-    background: var(--surface-elevated);
+    background: var(--chrome-0-elevated);
+    border: 1px solid var(--border-medium);
     border-radius: 8px;
     box-shadow:
       0 8px 16px 0 var(--drop-shadow-medium),
       0 8px 8px 0 var(--drop-shadow-soft);
-    padding: 20px;
+    padding: 8px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     z-index: 50;
     transition: opacity 0.2s ease, transform 0.2s ease;
   }
@@ -950,41 +954,71 @@
     transform: translate(-50%, -50%) scale(0.97);
     pointer-events: none;
   }
-  .multicam-modal h2 {
-    font-size: 14px;
-    line-height: 20px;
+  .mm-header {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 12px;
+    line-height: 16px;
     font-weight: 600;
-    margin-bottom: 10px;
   }
   .multicam-modal .mm-desc {
-    font-size: 12.5px;
-    line-height: 18px;
-    color: var(--fg-secondary);
-    margin-bottom: 16px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+    padding: 8px 16px;
+  }
+  .mm-rows {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 24px 8px 16px;
+  }
+  .mm-rows .mm-scrollbar {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    width: 4px;
+    height: 100px;
+    border-radius: 2px;
+    background: var(--border-medium);
   }
   .mm-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    border: 1px solid var(--grey-50-a);
-    border-radius: 6px;
-    padding: 6px 8px;
-    margin-bottom: 8px;
+    gap: 8px;
+  }
+  .mm-row .mm-filename {
+    flex: 1;
+    min-width: 0;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    border-radius: 7px;
   }
   .mm-thumb {
-    width: 28px;
-    height: 22px;
-    border-radius: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: #f2e277;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
     flex-shrink: 0;
+    overflow: hidden;
   }
-  .mm-thumb.t1 { background: linear-gradient(135deg, #7fae6d, #4a7c3f); }
-  .mm-thumb.t2 { background: linear-gradient(135deg, #7db4e8, #3a7bc4); }
-  .mm-thumb.t3 { background: linear-gradient(135deg, #e8c95a, #c49a2e); }
-  .mm-thumb.t4 { background: linear-gradient(135deg, #6b6066, #3a3236); }
   .mm-row .mm-name {
     flex: 1;
     min-width: 0;
-    font-size: 12.5px;
+    padding: 4px 8px;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.0012px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -994,28 +1028,46 @@
     align-items: center;
     gap: 6px;
     height: 28px;
+    max-width: 170px;
     padding: 0 8px 0 10px;
     border: 1px solid var(--border-medium);
     border-radius: 6px;
     background: var(--surface-elevated);
     font-family: inherit;
     font-size: 12px;
-    color: var(--fg-primary);
+    color: var(--fg-secondary);
     cursor: pointer;
     flex-shrink: 0;
   }
   .mm-select:hover { background: #faf8f8; }
+  .mm-select .mm-select-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mm-select .chev {
+    transition: transform 0.15s ease;
+    flex-shrink: 0;
+  }
+  .mm-select.open {
+    border-color: #4087fc;
+    box-shadow: 0 0 0 1px #4087fc;
+  }
+  .mm-select.open .chev { transform: rotate(180deg); }
+  .mm-select.assigned { color: var(--fg-primary); }
   .mm-footer {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-top: 16px;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 0 8px;
+    margin-top: 4px;
   }
   .mm-keep {
     border: none;
     background: transparent;
     font-family: inherit;
-    font-size: 12.5px;
+    font-size: 12px;
     color: var(--fg-primary);
     cursor: pointer;
     padding: 8px 10px;
@@ -1027,17 +1079,120 @@
     align-items: center;
     gap: 8px;
     border: none;
-    background: #b9aeb3;
+    background: var(--fg-primary);
     color: #fff;
     font-family: inherit;
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 500;
     padding: 9px 14px;
     border-radius: 6px;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: background 0.15s ease, opacity 0.15s ease;
   }
-  .mm-create:hover { background: var(--fg-primary); }
+  .mm-create:hover { background: #3a2730; }
+  .mm-create[disabled] {
+    opacity: 0.3;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  /* Identified speakers popover */
+  .mm-popover {
+    position: absolute;
+    width: 208px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--grey-50-a);
+    border-radius: 8px;
+    box-shadow:
+      0 8px 16px 0 var(--drop-shadow-medium),
+      0 8px 8px 0 var(--drop-shadow-soft);
+    padding: 8px;
+    z-index: 60;
+  }
+  .mm-popover .pop-header {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    padding: 4px 8px 8px;
+  }
+  .pop-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .pop-row:hover { background: rgba(63, 42, 50, 0.06); }
+  .pop-check {
+    width: 14px;
+    height: 14px;
+    border: 1.2px solid rgba(63, 42, 50, 0.45);
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--surface-elevated);
+    color: transparent;
+  }
+  .pop-row.checked .pop-check {
+    background: var(--fg-primary);
+    border-color: var(--fg-primary);
+    color: #fff;
+  }
+  .pop-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-radius: 3px;
+    padding: 1px 2px;
+  }
+  .pop-name[contenteditable="true"] {
+    outline: 1.5px solid #4087fc;
+    background: #fff;
+    white-space: nowrap;
+  }
+  .pop-play {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .pop-play:hover { background: rgba(63, 42, 50, 0.08); }
+  .pop-play.playing { animation: pop-pulse 0.9s ease infinite; }
+  @keyframes pop-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .pop-divider {
+    height: 1px;
+    background: var(--grey-50-a);
+    margin: 6px 4px;
+  }
+  .pop-add {
+    width: 100%;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--fg-primary);
+    cursor: pointer;
+  }
+  .pop-add:hover { background: rgba(63, 42, 50, 0.06); }
 </style>
 </head>
 <body>
@@ -1795,46 +1950,69 @@
   <!-- Multicam modal + scrim -->
   <div class="scrim" id="modalScrim"></div>
   <div class="multicam-modal" id="multicamModal" role="dialog" aria-modal="true" aria-labelledby="mmTitle">
-    <h2 id="mmTitle">Multi-cam of the same recording?</h2>
+    <div class="mm-header" id="mmTitle">Multi-cam of the same recording?</div>
     <p class="mm-desc">A multi-cam sequence combines multiple camera angles of the same event, so you can cut between them while editing.</p>
 
-    <div class="mm-row">
-      <span class="mm-thumb t1"></span>
-      <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
-      <button class="mm-select">Assign speakers
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
-      </button>
-    </div>
-    <div class="mm-row">
-      <span class="mm-thumb t2"></span>
-      <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
-      <button class="mm-select">Assign speakers
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
-      </button>
-    </div>
-    <div class="mm-row">
-      <span class="mm-thumb t3"></span>
-      <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
-      <button class="mm-select">Assign speakers
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
-      </button>
-    </div>
-    <div class="mm-row">
-      <span class="mm-thumb t4"></span>
-      <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
-      <button class="mm-select">Assign speakers
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
-      </button>
+    <div class="mm-rows" id="mmRows">
+      <div class="mm-row">
+        <div class="mm-filename">
+          <span class="mm-thumb">🐹</span>
+          <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+        </div>
+        <button class="mm-select" data-row="0" aria-haspopup="menu">
+          <span class="mm-select-label">Assign speakers</span>
+          <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+        </button>
+      </div>
+      <div class="mm-row">
+        <div class="mm-filename">
+          <span class="mm-thumb">🐶</span>
+          <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+        </div>
+        <button class="mm-select" data-row="1" aria-haspopup="menu">
+          <span class="mm-select-label">Assign speakers</span>
+          <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+        </button>
+      </div>
+      <div class="mm-row">
+        <div class="mm-filename">
+          <span class="mm-thumb">🐑</span>
+          <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+        </div>
+        <button class="mm-select" data-row="2" aria-haspopup="menu">
+          <span class="mm-select-label">Assign speakers</span>
+          <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+        </button>
+      </div>
+      <div class="mm-row">
+        <div class="mm-filename">
+          <span class="mm-thumb">🐕</span>
+          <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+        </div>
+        <button class="mm-select" data-row="3" aria-haspopup="menu">
+          <span class="mm-select-label">Assign speakers</span>
+          <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+        </button>
+      </div>
+      <span class="mm-scrollbar" aria-hidden="true"></span>
     </div>
 
     <div class="mm-footer">
       <button class="mm-keep" id="mmKeep">No, keep separate</button>
-      <button class="mm-create" id="mmCreate">
+      <button class="mm-create" id="mmCreate" disabled>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round">
           <rect x="1.5" y="2.5" width="6" height="5" rx="1"/><rect x="8.5" y="2.5" width="6" height="5" rx="1"/><rect x="1.5" y="8.5" width="6" height="5" rx="1"/><rect x="8.5" y="8.5" width="6" height="5" rx="1"/>
         </svg>
         Yes, create multi-cam sequence
       </button>
+    </div>
+
+    <!-- Identified speakers popover -->
+    <div class="mm-popover hidden" id="mmPopover" role="menu">
+      <div class="pop-header">Identified speakers</div>
+      <div class="pop-list" id="popList"></div>
+      <div class="pop-divider"></div>
+      <button class="pop-add" id="popAdd">Add new speaker</button>
     </div>
   </div>
 </div>
@@ -1927,9 +2105,11 @@
     supertoast.classList.remove('visible');
     modalScrim.classList.remove('dismissed');
     multicamModal.classList.remove('dismissed');
+    resetModalState();
   }
 
   function dismissModal() {
+    closePopover();
     modalScrim.classList.add('dismissed');
     multicamModal.classList.add('dismissed');
   }
@@ -1939,11 +2119,136 @@
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startUploadFlow(); }
   });
 
-  document.getElementById('mmCreate').addEventListener('click', dismissModal);
+  const mmCreate = document.getElementById('mmCreate');
+  mmCreate.addEventListener('click', dismissModal);
   document.getElementById('mmKeep').addEventListener('click', dismissModal);
 
   // Home button restarts the demo
   document.querySelectorAll('.js-home').forEach(btn => btn.addEventListener('click', resetToEmpty));
+
+  /* ===== Identified speakers dropdown ===== */
+  const popover = document.getElementById('mmPopover');
+  const popList = document.getElementById('popList');
+  const selects = Array.from(multicamModal.querySelectorAll('.mm-select'));
+
+  let speakers = ['Speaker 1', 'Speaker 2', 'Speaker 3'];
+  let assignments = selects.map(() => new Set());
+  let openRow = null;
+
+  const playSVG = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><path d="M4.5 3.2v9.6L12.8 8 4.5 3.2Z"/></svg>`;
+  const checkMark = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5 5 9l4.5-5"/></svg>`;
+
+  function renderPopover() {
+    popList.innerHTML = '';
+    speakers.forEach((name, i) => {
+      const row = document.createElement('div');
+      row.className = 'pop-row' + (assignments[openRow].has(i) ? ' checked' : '');
+      row.innerHTML = `
+        <span class="pop-check">${checkMark}</span>
+        <span class="pop-name" title="Double-click to rename">${name}</span>
+        <button class="pop-play" aria-label="Play sample">${playSVG}</button>`;
+
+      row.addEventListener('click', e => {
+        if (e.target.closest('.pop-play') || e.target.closest('.pop-name[contenteditable="true"]')) return;
+        assignments[openRow].has(i) ? assignments[openRow].delete(i) : assignments[openRow].add(i);
+        row.classList.toggle('checked');
+        updateSelectLabel(openRow);
+        updateConfirm();
+      });
+
+      row.querySelector('.pop-play').addEventListener('click', e => {
+        e.stopPropagation();
+        const btn = e.currentTarget;
+        btn.classList.add('playing');
+        setTimeout(() => btn.classList.remove('playing'), 1800);
+      });
+
+      // double-click to rename (per design annotation)
+      const nameEl = row.querySelector('.pop-name');
+      nameEl.addEventListener('dblclick', e => {
+        e.stopPropagation();
+        nameEl.contentEditable = 'true';
+        nameEl.focus();
+        document.execCommand('selectAll', false, null);
+      });
+      function commitRename() {
+        nameEl.contentEditable = 'false';
+        const v = nameEl.textContent.trim();
+        if (v) speakers[i] = v; else nameEl.textContent = speakers[i];
+        selects.forEach((_, r) => updateSelectLabel(r));
+      }
+      nameEl.addEventListener('blur', commitRename);
+      nameEl.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); nameEl.blur(); }
+        if (e.key === 'Escape') { nameEl.textContent = speakers[i]; nameEl.blur(); }
+      });
+
+      popList.appendChild(row);
+    });
+  }
+
+  function updateSelectLabel(rowIdx) {
+    const btn = selects[rowIdx];
+    const label = btn.querySelector('.mm-select-label');
+    const names = [...assignments[rowIdx]].sort().map(i => speakers[i]);
+    if (names.length) {
+      label.textContent = names.join(', ');
+      btn.classList.add('assigned');
+    } else {
+      label.textContent = 'Assign speakers';
+      btn.classList.remove('assigned');
+    }
+  }
+
+  function updateConfirm() {
+    const any = assignments.some(s => s.size > 0);
+    if (any) mmCreate.removeAttribute('disabled');
+    else mmCreate.setAttribute('disabled', '');
+  }
+
+  function openPopover(rowIdx, anchor) {
+    openRow = rowIdx;
+    renderPopover();
+    popover.classList.remove('hidden');
+    selects.forEach(s => s.classList.remove('open'));
+    anchor.classList.add('open');
+    const modalW = multicamModal.clientWidth;
+    const left = Math.min(anchor.offsetLeft, modalW - popover.offsetWidth - 12);
+    popover.style.left = `${Math.max(8, left)}px`;
+    popover.style.top = `${anchor.offsetTop + anchor.offsetHeight + 4}px`;
+  }
+
+  function closePopover() {
+    openRow = null;
+    popover.classList.add('hidden');
+    selects.forEach(s => s.classList.remove('open'));
+  }
+
+  function resetModalState() {
+    speakers = ['Speaker 1', 'Speaker 2', 'Speaker 3'];
+    assignments = selects.map(() => new Set());
+    selects.forEach((_, r) => updateSelectLabel(r));
+    updateConfirm();
+    closePopover();
+  }
+
+  selects.forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const rowIdx = Number(btn.dataset.row);
+      if (openRow === rowIdx) closePopover();
+      else openPopover(rowIdx, btn);
+    });
+  });
+
+  document.getElementById('popAdd').addEventListener('click', e => {
+    e.stopPropagation();
+    speakers.push(`Speaker ${speakers.length + 1}`);
+    renderPopover();
+  });
+
+  popover.addEventListener('click', e => e.stopPropagation());
+  document.addEventListener('click', () => { if (openRow !== null) closePopover(); });
 })();
 </script>
 
