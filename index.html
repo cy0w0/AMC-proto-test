@@ -2701,12 +2701,11 @@
 
   const imMenuHeader = imMenu.querySelector('.pop-header');
 
-  // Commit the typed/selected speaker, then move on to the next clip
+  // Commit the typed/selected speaker; stay on the current clip
   function submitSpeaker() {
     commitTypedSpeaker();
     closeImMenu();
-    if (clipIdx < CLIP_COUNT - 1) goToClip(clipIdx + 1);
-    else imInput.blur();
+    imInput.blur();
   }
 
   function renderImMenu() {
