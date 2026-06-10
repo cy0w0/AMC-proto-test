@@ -1527,6 +1527,12 @@
   .amc-toggle:hover { background: rgba(63, 42, 50, 0.06); }
   .amc-toggle svg { transition: transform 0.2s ease; }
   .amc-module.collapsed .amc-toggle svg { transform: rotate(-90deg); }
+  .amc-collapsible {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
   .amc-module.collapsed .amc-collapsible { display: none; }
 
   .amc-btn {
@@ -2543,26 +2549,28 @@
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
           </button>
         </div>
-        <div class="amc-collapsible" style="display:flex;flex-direction:column;gap:8px;width:100%;">
+        <div class="amc-collapsible">
           <div id="camSetupRows" style="display:flex;flex-direction:column;gap:8px;width:100%;"></div>
           <button class="amc-btn">Edit cameras in sequence editor</button>
         </div>
       </div>
 
-      <div class="amc-module">
+      <div class="amc-module collapsed" id="layoutPackModule">
         <div class="amc-row">
           <span class="amc-row-header grow">Use layout pack</span>
-          <button class="switch on" role="switch" aria-checked="true" aria-label="Use layout pack"></button>
+          <button class="switch" id="layoutPackSwitch" role="switch" aria-checked="false" aria-label="Use layout pack"></button>
         </div>
-        <button class="select-jumbo">
-          <span class="sj-thumb" aria-hidden="true"><span class="sj-cell"></span><span class="sj-cell"></span></span>
-          <span class="sj-text">
-            <span class="sj-title">Multicam full screen</span>
-            <span class="sj-subtitle">6 layouts</span>
-          </span>
-          <svg class="sj-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
-        </button>
-        <button class="amc-btn">Change layout pack…</button>
+        <div class="amc-collapsible">
+          <button class="select-jumbo">
+            <span class="sj-thumb" aria-hidden="true"><span class="sj-cell"></span><span class="sj-cell"></span></span>
+            <span class="sj-text">
+              <span class="sj-title">Multicam full screen</span>
+              <span class="sj-subtitle">6 layouts</span>
+            </span>
+            <svg class="sj-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+          </button>
+          <button class="amc-btn">Change layout pack…</button>
+        </div>
       </div>
 
       <button class="amc-btn-primary">Check preview</button>
@@ -2963,6 +2971,10 @@
       sw.classList.toggle('on');
       sw.setAttribute('aria-checked', sw.classList.contains('on'));
     });
+  });
+  // Layout pack content shows only while the switch is on
+  document.getElementById('layoutPackSwitch').addEventListener('click', e => {
+    document.getElementById('layoutPackModule').classList.toggle('collapsed', !e.currentTarget.classList.contains('on'));
   });
   amcPanel.querySelectorAll('.seg-tabs').forEach(group => {
     group.querySelectorAll('.seg-tab').forEach(tab => {
