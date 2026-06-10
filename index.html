@@ -1355,6 +1355,105 @@
   .im-input-wrap input::placeholder { color: var(--fg-secondary); }
   .im-input-wrap input::selection { background: rgba(0, 147, 214, 0.15); }
 
+  /* ===== Automatic multicam callout ===== */
+  .callout {
+    position: absolute;
+    width: 248px;
+    background: #3f2a32;
+    border: 1px solid rgba(255, 248, 244, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 2px 2px rgba(38, 23, 29, 0.12);
+    z-index: 45;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+  }
+  .callout.visible {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .callout::after {
+    content: "";
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    background: #3f2a32;
+    border-top: 1px solid rgba(255, 248, 244, 0.1);
+    border-right: 1px solid rgba(255, 248, 244, 0.1);
+    transform: translateY(-50%) rotate(45deg);
+  }
+  .co-image {
+    aspect-ratio: 199 / 95;
+    width: 100%;
+    border: 1px solid rgba(255, 248, 244, 0.16);
+    border-radius: 8px;
+    background: linear-gradient(135deg, #d3b2f7, #b48ef0);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 10px 14px;
+    overflow: hidden;
+  }
+  .co-card {
+    width: 100%;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(38, 23, 29, 0.18);
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .co-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e8a45c, #b06a30);
+    flex-shrink: 0;
+  }
+  .co-script {
+    font-size: 7.5px;
+    line-height: 11px;
+    color: #3a3236;
+  }
+  .co-script .filler {
+    background: #f6d8a8;
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+  .co-delete {
+    background: #fff;
+    border: 1px solid rgba(63, 42, 50, 0.2);
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(38, 23, 29, 0.15);
+    font-size: 8px;
+    line-height: 14px;
+    color: #3a3236;
+    padding: 1px 10px;
+  }
+  .co-title {
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.0012px;
+    color: #fff8f4;
+  }
+  .co-subtitle {
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    color: rgba(255, 248, 244, 0.6);
+  }
+
   /* Inline confirmation when a new speaker is added */
   .im-confirm-row {
     display: flex;
@@ -2075,7 +2174,7 @@
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 10l4-3 8 6"/></svg>
           Green screen
         </div>
-        <div class="sb-row">
+        <div class="sb-row" id="rowAutoMulticam">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><rect x="1.5" y="2.5" width="6" height="5" rx="1"/><rect x="8.5" y="2.5" width="6" height="5" rx="1"/><rect x="1.5" y="8.5" width="6" height="5" rx="1"/><rect x="8.5" y="8.5" width="6" height="5" rx="1"/></svg>
           Automatic multicam
         </div>
@@ -2179,6 +2278,19 @@
       </button>
     </nav>
 
+  </div>
+
+  <!-- Automatic multicam callout -->
+  <div class="callout hidden" id="amcCallout" role="note">
+    <div class="co-image" aria-hidden="true">
+      <div class="co-card">
+        <span class="co-avatar"></span>
+        <span class="co-script">Surfing is a journey <span class="filler">um</span> <span class="filler">um</span> <span class="filler">um</span><br>through the <span class="filler">uh</span> waves.</span>
+      </div>
+      <span class="co-delete">Delete</span>
+    </div>
+    <div class="co-title">Use Automatic multicam</div>
+    <div class="co-subtitle">Automatically cut between camera angles based on who's speaking.</div>
   </div>
 
   <!-- Multicam modal + scrim -->
@@ -2399,6 +2511,9 @@
     supertoast.classList.remove('visible');
     modalScrim.classList.remove('dismissed');
     multicamModal.classList.remove('dismissed');
+    const callout = document.getElementById('amcCallout');
+    callout.classList.remove('visible');
+    callout.classList.add('hidden');
     resetModalState();
   }
 
@@ -2413,8 +2528,43 @@
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startUploadFlow(); }
   });
 
+  /* Automatic multicam callout */
+  const amcCallout = document.getElementById('amcCallout');
+  const rowAutoMulticam = document.getElementById('rowAutoMulticam');
+
+  function positionCallout() {
+    const screenRect = screenEditor.getBoundingClientRect();
+    const rowRect = rowAutoMulticam.getBoundingClientRect();
+    amcCallout.style.left = `${rowRect.left - screenRect.left - amcCallout.offsetWidth - 14}px`;
+    amcCallout.style.top = `${rowRect.top - screenRect.top + rowRect.height / 2 - amcCallout.offsetHeight / 2}px`;
+  }
+
+  function showCallout() {
+    amcCallout.classList.remove('hidden');
+    positionCallout();
+    requestAnimationFrame(() => amcCallout.classList.add('visible'));
+  }
+
+  function hideCallout() {
+    if (!amcCallout.classList.contains('visible')) return;
+    amcCallout.classList.remove('visible');
+    setTimeout(() => amcCallout.classList.add('hidden'), 250);
+  }
+
+  window.addEventListener('resize', () => {
+    if (amcCallout.classList.contains('visible')) positionCallout();
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#amcCallout')) hideCallout();
+  });
+  rowAutoMulticam.addEventListener('click', hideCallout);
+
   const mmCreate = document.getElementById('mmCreate');
-  mmCreate.addEventListener('click', dismissModal);
+  mmCreate.addEventListener('click', e => {
+    e.stopPropagation();
+    dismissModal();
+    setTimeout(showCallout, 350);
+  });
   document.getElementById('mmKeep').addEventListener('click', dismissModal);
 
   // Home button restarts the demo
