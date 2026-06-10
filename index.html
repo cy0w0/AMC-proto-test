@@ -949,7 +949,8 @@
     z-index: 50;
     transition: opacity 0.2s ease, transform 0.2s ease;
   }
-  .multicam-modal.dismissed {
+  .multicam-modal.dismissed,
+  .multicam-modal.away {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.97);
     pointer-events: none;
@@ -1201,6 +1202,158 @@
     margin: 0 4px;
   }
   .mm-name-edit .edit-field { height: 26px; }
+
+  /* ===== Identify speakers dialog ===== */
+  .identify-modal {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    width: 420px;
+    max-width: calc(100% - 48px);
+    background: var(--chrome-0-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    box-shadow:
+      0 8px 16px 0 var(--drop-shadow-medium),
+      0 8px 8px 0 var(--drop-shadow-soft);
+    padding: 8px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 50;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .identify-modal.dismissed {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.97);
+    pointer-events: none;
+  }
+  .im-header {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+  .im-title {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+  .im-carousel {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+  }
+  .im-track {
+    display: flex;
+    width: 200%;
+    transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .im-slide {
+    width: 50%;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+  }
+  .im-clip-label {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+  }
+  .im-clip-card {
+    width: 181px;
+    height: 102px;
+    background: var(--surface-elevated);
+    border-radius: 8px;
+    padding: 4px;
+    box-shadow:
+      0 2px 3px rgba(38, 23, 29, 0.04),
+      0 0 0.5px rgba(38, 23, 29, 0.04);
+    display: flex;
+  }
+  .im-clip-card .im-thumb {
+    flex: 1;
+    border-radius: 4px;
+    background: #e4dde0;
+    overflow: hidden;
+  }
+  .im-filename {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-secondary);
+  }
+  .im-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--surface-elevated);
+    box-shadow:
+      0 2px 4px 0 var(--drop-shadow-medium),
+      0 0 0.5px rgba(38, 23, 29, 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--fg-primary);
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+  }
+  .im-nav:hover { background: #f7f4f5; }
+  .im-nav.next { right: 12px; }
+  .im-nav.prev { left: 12px; }
+  .im-nav.hidden-nav { opacity: 0; pointer-events: none; }
+  .im-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+  .im-label {
+    font-size: 12px;
+    line-height: 16px;
+    white-space: nowrap;
+  }
+  .im-input-wrap {
+    flex: 1;
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    background: rgba(139, 111, 122, 0.09);
+    border: 1px solid rgba(88, 63, 74, 0.1);
+    border-radius: 8px;
+    padding: 0 8px;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+  .im-input-wrap.focused {
+    border-color: #3434ab;
+    box-shadow:
+      0 0 0 2px var(--chrome-0-elevated),
+      0 0 0 4px #a3a3ee;
+  }
+  .im-input-wrap input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.0012px;
+    color: var(--fg-primary);
+  }
+  .im-input-wrap input::placeholder { color: var(--fg-secondary); }
+  .im-input-wrap input::selection { background: rgba(0, 147, 214, 0.15); }
   .pop-play {
     width: 22px;
     height: 22px;
@@ -2059,6 +2212,56 @@
       <button class="pop-add" id="popAdd">Add new speaker</button>
     </div>
   </div>
+
+  <!-- Identify speakers dialog (add new speaker flow) -->
+  <div class="identify-modal dismissed" id="identifyModal" role="dialog" aria-modal="true" aria-labelledby="imTitle">
+    <div class="im-header">
+      <button class="icon-btn dense" id="imBack" aria-label="Back">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 8H3M7 3.5 2.5 8 7 12.5"/>
+        </svg>
+      </button>
+      <span class="im-title" id="imTitle">Identify speakers</span>
+    </div>
+
+    <div class="im-carousel">
+      <div class="im-track" id="imTrack">
+        <div class="im-slide">
+          <p class="im-clip-label">Clip 1 of 2</p>
+          <div class="im-clip-card"><div class="im-thumb"></div></div>
+          <p class="im-filename">Screen Recording…-51.39.48&nbsp;AM.mp4</p>
+        </div>
+        <div class="im-slide">
+          <p class="im-clip-label">Clip 2 of 2</p>
+          <div class="im-clip-card"><div class="im-thumb"></div></div>
+          <p class="im-filename">Screen Recording…-51.39.48&nbsp;AM.mp4</p>
+        </div>
+      </div>
+      <button class="im-nav prev hidden-nav" id="imPrev" aria-label="Previous clip">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 8H3M7 3.5 2.5 8 7 12.5"/>
+        </svg>
+      </button>
+      <button class="im-nav next" id="imNext" aria-label="Next clip">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8h10M9 3.5 13.5 8 9 12.5"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="im-footer">
+      <span class="im-label">Who's speaking</span>
+      <div class="im-input-wrap" id="imInputWrap">
+        <input type="text" id="imInput" placeholder="Select or type to add a speaker" autocomplete="off">
+      </div>
+    </div>
+
+    <!-- Identified speakers menu for the input -->
+    <div class="mm-popover hidden" id="imMenu" role="menu">
+      <div class="pop-header">Identified speakers</div>
+      <div class="pop-list" id="imMenuList"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -2365,14 +2568,137 @@
     });
   });
 
-  document.getElementById('popAdd').addEventListener('click', e => {
-    e.stopPropagation();
-    speakers.push(`Speaker ${speakers.length + 1}`);
-    renderPopover();
-  });
-
   popover.addEventListener('click', e => e.stopPropagation());
   document.addEventListener('click', () => { if (openRow !== null) closePopover(); });
+
+  /* ===== Add new speaker flow (Identify speakers dialog) ===== */
+  const identifyModal = document.getElementById('identifyModal');
+  const imTrack = document.getElementById('imTrack');
+  const imPrev = document.getElementById('imPrev');
+  const imNext = document.getElementById('imNext');
+  const imBack = document.getElementById('imBack');
+  const imInputWrap = document.getElementById('imInputWrap');
+  const imInput = document.getElementById('imInput');
+  const imMenu = document.getElementById('imMenu');
+  const imMenuList = document.getElementById('imMenuList');
+
+  const CLIP_COUNT = 2;
+  let clipIdx = 0;
+  let clipSpeakers = [null, null];
+
+  function openIdentify() {
+    closePopover();
+    clipIdx = 0;
+    updateCarousel(true);
+    multicamModal.classList.add('away');
+    identifyModal.classList.remove('dismissed');
+  }
+
+  function backToMulticam() {
+    commitTypedSpeaker();
+    closeImMenu();
+    identifyModal.classList.add('dismissed');
+    multicamModal.classList.remove('away');
+  }
+
+  function updateCarousel(instant) {
+    if (instant) imTrack.style.transition = 'none';
+    imTrack.style.transform = `translateX(-${clipIdx * 50}%)`;
+    if (instant) requestAnimationFrame(() => { imTrack.style.transition = ''; });
+    imPrev.classList.toggle('hidden-nav', clipIdx === 0);
+    imNext.classList.toggle('hidden-nav', clipIdx === CLIP_COUNT - 1);
+    imInput.value = clipSpeakers[clipIdx] !== null ? speakers[clipSpeakers[clipIdx]] : '';
+  }
+
+  function goToClip(idx) {
+    commitTypedSpeaker();
+    closeImMenu();
+    clipIdx = Math.max(0, Math.min(CLIP_COUNT - 1, idx));
+    updateCarousel();
+  }
+
+  imNext.addEventListener('click', () => goToClip(clipIdx + 1));
+  imPrev.addEventListener('click', () => goToClip(clipIdx - 1));
+  imBack.addEventListener('click', backToMulticam);
+
+  // Add a typed name as a new speaker and assign it to the current clip
+  function commitTypedSpeaker() {
+    const v = imInput.value.trim();
+    if (!v) { clipSpeakers[clipIdx] = null; return; }
+    let idx = speakers.findIndex(s => s.toLowerCase() === v.toLowerCase());
+    if (idx === -1) { speakers.push(v); idx = speakers.length - 1; }
+    clipSpeakers[clipIdx] = idx;
+  }
+
+  function renderImMenu() {
+    const q = imInput.value.trim().toLowerCase();
+    const matches = speakers.filter(s => !q || s.toLowerCase().includes(q));
+    imMenuList.innerHTML = '';
+    matches.forEach(name => {
+      const row = document.createElement('div');
+      row.className = 'pop-row';
+      row.innerHTML = `<span class="pop-name">${escapeHtml(name)}</span>`;
+      row.addEventListener('mousedown', e => {
+        e.preventDefault();
+        imInput.value = name;
+        commitTypedSpeaker();
+        closeImMenu();
+        imInput.blur();
+      });
+      imMenuList.appendChild(row);
+    });
+    imMenu.classList.toggle('hidden', matches.length === 0);
+  }
+
+  function openImMenu() {
+    renderImMenu();
+    const modalRect = identifyModal.getBoundingClientRect();
+    const wrapRect = imInputWrap.getBoundingClientRect();
+    imMenu.style.left = `${wrapRect.left - modalRect.left}px`;
+    imMenu.style.top = `${wrapRect.bottom - modalRect.top + 6}px`;
+    imMenu.style.width = `${wrapRect.width}px`;
+  }
+
+  function closeImMenu() {
+    imMenu.classList.add('hidden');
+  }
+
+  imInput.addEventListener('focus', () => {
+    imInputWrap.classList.add('focused');
+    openImMenu();
+  });
+  imInput.addEventListener('blur', () => {
+    imInputWrap.classList.remove('focused');
+    setTimeout(closeImMenu, 120);
+    commitTypedSpeaker();
+  });
+  imInput.addEventListener('input', renderImMenu);
+  imInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitTypedSpeaker();
+      closeImMenu();
+      if (clipIdx < CLIP_COUNT - 1) goToClip(clipIdx + 1);
+      else imInput.blur();
+    }
+    if (e.key === 'Escape') { imInput.blur(); }
+  });
+
+  document.getElementById('popAdd').addEventListener('click', e => {
+    e.stopPropagation();
+    openIdentify();
+  });
+
+  const origResetModalState = resetModalState;
+  resetModalState = function () {
+    origResetModalState();
+    clipIdx = 0;
+    clipSpeakers = [null, null];
+    imInput.value = '';
+    closeImMenu();
+    identifyModal.classList.add('dismissed');
+    multicamModal.classList.remove('away');
+  };
 })();
 </script>
 
