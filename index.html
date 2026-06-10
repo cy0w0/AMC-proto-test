@@ -2679,8 +2679,11 @@
     const btn = selects[rowIdx];
     const label = btn.querySelector('.mm-select-label');
     const names = [...assignments[rowIdx]].sort().map(i => speakers[i]);
-    if (names.length) {
-      label.textContent = names.join(', ');
+    if (names.length > 1) {
+      label.textContent = 'Multi-speakers';
+      btn.classList.add('assigned');
+    } else if (names.length === 1) {
+      label.textContent = names[0];
       btn.classList.add('assigned');
     } else {
       label.textContent = 'Assign speakers';
@@ -2689,8 +2692,8 @@
   }
 
   function updateConfirm() {
-    const any = assignments.some(s => s.size > 0);
-    if (any) mmCreate.removeAttribute('disabled');
+    const all = assignments.every(s => s.size > 0);
+    if (all) mmCreate.removeAttribute('disabled');
     else mmCreate.setAttribute('disabled', '');
   }
 
