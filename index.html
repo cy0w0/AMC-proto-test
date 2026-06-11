@@ -1662,13 +1662,13 @@
   }
   .amc-pages {
     display: flex;
-    width: 200%;
+    width: 300%;
     height: 100%;
     transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
   }
   .amc-pages.instant { transition: none; }
   .amc-page {
-    width: 50%;
+    width: 33.3333%;
     flex-shrink: 0;
     height: 100%;
     overflow-y: auto;
@@ -1680,6 +1680,108 @@
     scrollbar-width: none;
   }
   .amc-page::-webkit-scrollbar { display: none; }
+
+  /* Create speaker combination page */
+  .cs-stage {
+    height: 124px;
+    width: 100%;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cs-strip {
+    display: flex;
+    gap: 2px;
+    padding: 4px;
+    height: 100%;
+    width: 100%;
+    border: 1px solid rgba(88, 63, 74, 0.1);
+    border-radius: 4px;
+  }
+  .cs-cell {
+    flex: 1;
+    min-width: 0;
+    background: rgba(88, 63, 74, 0.1);
+    border: 1px dashed var(--border-medium);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.055px;
+    color: var(--fg-secondary);
+  }
+  .cs-cell.filled {
+    border-style: solid;
+    border-color: transparent;
+    font-weight: 600;
+  }
+  .cs-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+  .cs-field {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    background: rgba(139, 111, 122, 0.09);
+    border: 1px solid rgba(88, 63, 74, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+  .cs-field.focused {
+    border-color: #3434ab;
+    box-shadow:
+      0 0 0 2px var(--surface-elevated),
+      0 0 0 4px #a3a3ee;
+  }
+  .cs-field .id {
+    width: 32px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 16px;
+    color: #715661;
+    flex-shrink: 0;
+  }
+  .cs-field input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.0012px;
+    color: var(--fg-primary);
+    padding-right: 8px;
+  }
+  .cs-field input::placeholder { color: var(--fg-secondary); }
+  .cs-field input::selection { background: rgba(0, 147, 214, 0.15); }
+  .cs-slots-field {
+    width: 80px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    background: rgba(139, 111, 122, 0.09);
+    border: 1px solid rgba(88, 63, 74, 0.1);
+    border-radius: 8px;
+    padding: 0 8px;
+  }
+  .cs-slots-field input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--fg-primary);
+  }
   .pv-carousel {
     position: relative;
     width: 100%;
@@ -2089,6 +2191,13 @@
     height: 1px;
     background: var(--grey-50-a);
     margin: 6px 4px;
+  }
+  .pop-empty {
+    padding: 6px 8px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-secondary);
+    word-break: break-word;
   }
   .pop-row strong { font-weight: 600; }
   .menu-shortcut {
@@ -2936,6 +3045,29 @@
             </div>
           </div>
 
+          <!-- Page 3 · Create speaker combination -->
+          <div class="amc-page" id="createPage">
+            <div class="amc-module" style="background: var(--surface-elevated); border-color: var(--border-medium);">
+              <div class="amc-row"><span class="amc-row-header">Create speaker combination</span></div>
+              <div class="amc-row">
+                <span class="amc-row-header grow">Speaker slots</span>
+                <div class="cs-slots-field">
+                  <input type="text" id="csSlotCount" value="1" inputmode="numeric" aria-label="Speaker slots">
+                </div>
+              </div>
+              <div class="amc-row"><span class="amc-row-header">Speaker assignment</span></div>
+              <div class="cs-stage">
+                <div class="cs-strip" id="csStrip"></div>
+              </div>
+              <div class="cs-fields" id="csFields"></div>
+            </div>
+
+            <div class="pv-actions">
+              <button class="amc-btn" id="csCancel">Cancel</button>
+              <button class="amc-btn-primary" id="csAdd" disabled>Add</button>
+            </div>
+          </div>
+
         </div>
       </div>
     </aside>
@@ -3085,6 +3217,7 @@
     <div class="pop-divider"></div>
     <button class="pop-add" id="popAdd">Add new speaker</button>
   </div>
+
 
   <!-- Identify speakers dialog (add new speaker flow) -->
   <div class="identify-modal dismissed" id="identifyModal" role="dialog" aria-modal="true" aria-labelledby="imTitle">
@@ -3337,10 +3470,12 @@
   const amcPages = document.getElementById('amcPages');
   let amcPage = 'settings';
 
+  const AMC_PAGE_X = { settings: '0', preview: '-33.3333%', create: '-66.6667%' };
+
   function setAmcPage(page, instant) {
     amcPage = page;
     if (instant) amcPages.classList.add('instant');
-    amcPages.style.transform = page === 'preview' ? 'translateX(-50%)' : 'translateX(0)';
+    amcPages.style.transform = `translateX(${AMC_PAGE_X[page]})`;
     if (instant) requestAnimationFrame(() => amcPages.classList.remove('instant'));
   }
 
@@ -3351,7 +3486,8 @@
     swapPanel(aiToolsSidebar, amcPanel);
   });
   document.getElementById('amcBack').addEventListener('click', () => {
-    if (amcPage === 'preview') setAmcPage('settings');
+    if (amcPage === 'create') setAmcPage('preview');
+    else if (amcPage === 'preview') setAmcPage('settings');
     else swapPanel(amcPanel, aiToolsSidebar);
   });
 
@@ -3457,35 +3593,22 @@
       </div>`;
   }
 
-  // Click a chip to rename the speaker inline (input field UX)
+  // Clicking a chip opens the shared Identified speakers dropdown
+  // (single-select: picks the speaker for that position in the combo)
   function attachChipEditing(scope) {
-    scope.querySelectorAll('.cc-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        if (chip.classList.contains('editing')) return;
-        const s = Number(chip.dataset.speaker);
-        const nm = chip.querySelector('.nm');
-        const color = nm.style.color;
-        chip.classList.add('editing');
-        nm.outerHTML = `<input type="text" maxlength="40" style="color:${color}" aria-label="Speaker name">`;
-        const input = chip.querySelector('input');
-        input.value = speakers[s];
-        const commit = () => {
-          const v = input.value.trim();
-          if (v) speakers[s] = v;
-          renderCombos();
-          selects.forEach((_, r) => updateSelectLabel(r));
-          updateAllCamLabels();
-        };
-        input.addEventListener('keydown', e => {
-          if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-          if (e.key === 'Escape') { input.value = speakers[s]; input.blur(); }
+    scope.querySelectorAll('.cc-chips').forEach(chipsWrap => {
+      chipsWrap.querySelectorAll('.cc-chip').forEach((chip, pos) => {
+        chip.addEventListener('click', e => {
+          e.stopPropagation();
+          if (openAnchor === chip) { closePopover(); return; }
+          closePopover();
+          const ci = comboIdx;
+          chip.classList.add('editing');
+          openSinglePopover({
+            get: () => combos[ci][pos],
+            set: idx => { combos[ci][pos] = idx; renderCombos(); },
+          }, chip);
         });
-        input.addEventListener('blur', commit);
-        input.focus({ preventScroll: true });
-        input.select();
-        // focus() inside the translated page must not scroll the stage
-        document.querySelector('.amc-stage').scrollLeft = 0;
-        amcPanel.scrollLeft = 0;
       });
     });
   }
@@ -3547,15 +3670,107 @@
   });
   pvPrev.addEventListener('click', () => { comboIdx--; renderCombos(); });
   pvNext.addEventListener('click', () => { comboIdx++; renderCombos(); });
-  document.getElementById('pvAdd').addEventListener('click', () => {
-    combos.push(assignedSpeakerIdxs().slice(0, 4));
-    comboIdx = combos.length - 1;
-    renderCombos();
-  });
   document.getElementById('pvViewToggle').addEventListener('click', () => {
     comboView = comboView === 'card' ? 'gallery' : 'card';
     renderCombos();
   });
+
+  /* Create speaker combination page */
+  const csStrip = document.getElementById('csStrip');
+  const csFields = document.getElementById('csFields');
+  const csSlotCount = document.getElementById('csSlotCount');
+  const csAdd = document.getElementById('csAdd');
+  let csSlots = [null];
+
+  document.getElementById('pvAdd').addEventListener('click', () => {
+    csSlots = [null];
+    csSlotCount.value = '1';
+    renderCreate();
+    setAmcPage('create');
+  });
+
+  function csUpdateAdd() {
+    if (csSlots.length && csSlots.every(s => s !== null)) csAdd.removeAttribute('disabled');
+    else csAdd.setAttribute('disabled', '');
+  }
+
+  function renderCreate() {
+    csStrip.innerHTML = csSlots.map((s, i) => s === null
+      ? `<div class="cs-cell">${i + 1}</div>`
+      : `<div class="cs-cell filled" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</div>`
+    ).join('');
+
+    csFields.innerHTML = csSlots.map((s, i) => `
+      <div class="cs-field" data-slot="${i}">
+        <span class="id">${i + 1}</span>
+        <input type="text" placeholder="Click to select and add a speaker" autocomplete="off"
+          value="${s === null ? '' : escapeHtml(speakers[s])}" aria-label="Speaker for slot ${i + 1}">
+      </div>`).join('');
+
+    csFields.querySelectorAll('.cs-field').forEach(field => {
+      const slot = Number(field.dataset.slot);
+      const input = field.querySelector('input');
+
+      const syncText = () => {
+        input.value = csSlots[slot] === null ? '' : speakers[csSlots[slot]];
+      };
+
+      // Commit only names that exist; unknown text stays uncommitted and the
+      // dropdown explains it (Add new speaker remains the entry point)
+      const commitTyped = () => {
+        const v = input.value.trim();
+        if (!v) { csSlots[slot] = null; renderCreate(); return; }
+        const idx = speakers.findIndex(sp => sp.toLowerCase() === v.toLowerCase());
+        if (idx !== -1) { csSlots[slot] = idx; renderCreate(); }
+        else syncText();
+      };
+
+      input.addEventListener('focus', () => {
+        field.classList.add('focused');
+        openSinglePopover({
+          get: () => csSlots[slot],
+          set: idx => { csSlots[slot] = (csSlots[slot] === idx ? null : idx); renderCreate(); },
+        }, field);
+        document.querySelector('.amc-stage').scrollLeft = 0;
+        amcPanel.scrollLeft = 0;
+      });
+      // blur never commits (re-renders fire stray blurs); it only reverts text.
+      // Committing happens on Enter or by picking from the dropdown.
+      input.addEventListener('blur', () => {
+        field.classList.remove('focused');
+        syncText();
+      });
+      input.addEventListener('input', () => {
+        popFilter = input.value;
+        renderPopover();
+      });
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); commitTyped(); closePopover(); }
+        if (e.key === 'Escape') { syncText(); input.blur(); closePopover(); }
+      });
+    });
+
+    csUpdateAdd();
+  }
+
+  csSlotCount.addEventListener('input', () => {
+    const n = Math.max(1, Math.min(4, parseInt(csSlotCount.value, 10) || 1));
+    while (csSlots.length < n) csSlots.push(null);
+    csSlots.length = n;
+    renderCreate();
+  });
+  csSlotCount.addEventListener('blur', () => {
+    csSlotCount.value = String(csSlots.length);
+  });
+
+  csAdd.addEventListener('click', () => {
+    combos.push(csSlots.filter(s => s !== null));
+    comboView = 'card';
+    comboIdx = combos.length - 1;
+    renderCombos();
+    setAmcPage('preview');
+  });
+  document.getElementById('csCancel').addEventListener('click', () => setAmcPage('preview'));
 
   const mmCreate = document.getElementById('mmCreate');
   mmCreate.addEventListener('click', e => {
@@ -3598,7 +3813,21 @@
 
   function renderPopover() {
     popList.innerHTML = '';
-    speakers.forEach((name, i) => {
+    const q = popFilter.trim().toLowerCase();
+    const entries = speakers
+      .map((name, i) => ({ name, i }))
+      .filter(e => !q || e.name.toLowerCase().includes(q));
+
+    // Unknown text: keep the dropdown, explain, leave Add new speaker available
+    if (!entries.length) {
+      const empty = document.createElement('div');
+      empty.className = 'pop-empty';
+      empty.textContent = `"${popFilter.trim()}" is not a speaker in this project.`;
+      popList.appendChild(empty);
+      return;
+    }
+
+    entries.forEach(({ name, i }) => {
       const row = document.createElement('div');
 
       // Input variant: rename field with cancel/confirm
@@ -3617,6 +3846,8 @@
           renderPopover();
           selects.forEach((_, r) => updateSelectLabel(r));
           updateAllCamLabels();
+          renderCombos();
+          renderCreate();
         };
         const cancel = () => { editingIdx = null; renderPopover(); };
 
@@ -3636,7 +3867,8 @@
 
       // Default / playing variant
       const isPlaying = playingIdx === i;
-      row.className = 'pop-row' + (assignments[openRow].has(i) ? ' checked' : '');
+      const isChecked = popSingle ? popSingle.get() === i : assignments[openRow].has(i);
+      row.className = 'pop-row' + (isChecked ? ' checked' : '');
       row.innerHTML = `
         <span class="pop-check">${checkMark}</span>
         <span class="pop-name" title="Double-click to rename">${escapeHtml(name)}</span>
@@ -3644,6 +3876,11 @@
 
       row.addEventListener('click', e => {
         if (e.target.closest('.pop-play')) return;
+        if (popSingle) {
+          popSingle.set(i);
+          closePopover();
+          return;
+        }
         assignments[openRow].has(i) ? assignments[openRow].delete(i) : assignments[openRow].add(i);
         row.classList.toggle('checked');
         updateSelectLabel(openRow);
@@ -3715,14 +3952,10 @@
   }
 
   let openAnchor = null;
+  let popSingle = null;   // single-select target: {get(): idx|null, set(idx)}
+  let popFilter = '';
 
-  function openPopover(rowIdx, anchor) {
-    openRow = rowIdx;
-    openAnchor = anchor;
-    renderPopover();
-    popover.classList.remove('hidden');
-    document.querySelectorAll('.mm-select.open').forEach(s => s.classList.remove('open'));
-    anchor.classList.add('open');
+  function positionPopoverTo(anchor) {
     const baseRect = screenEditor.getBoundingClientRect();
     const aRect = anchor.getBoundingClientRect();
     const left = Math.min(aRect.left - baseRect.left, baseRect.width - popover.offsetWidth - 8);
@@ -3730,13 +3963,40 @@
     popover.style.top = `${aRect.bottom - baseRect.top + 4}px`;
   }
 
+  function openPopover(rowIdx, anchor) {
+    openRow = rowIdx;
+    popSingle = null;
+    popFilter = '';
+    openAnchor = anchor;
+    renderPopover();
+    popover.classList.remove('hidden');
+    document.querySelectorAll('.mm-select.open').forEach(s => s.classList.remove('open'));
+    anchor.classList.add('open');
+    positionPopoverTo(anchor);
+  }
+
+  // Same dropdown, anchored to a single-select field (combo chips, create slots)
+  function openSinglePopover(target, anchor) {
+    openRow = null;
+    popSingle = target;
+    popFilter = '';
+    openAnchor = anchor;
+    renderPopover();
+    popover.classList.remove('hidden');
+    document.querySelectorAll('.mm-select.open').forEach(s => s.classList.remove('open'));
+    positionPopoverTo(anchor);
+  }
+
   function closePopover() {
     openRow = null;
+    popSingle = null;
+    popFilter = '';
     openAnchor = null;
     editingIdx = null;
     stopPlaying();
     popover.classList.add('hidden');
     document.querySelectorAll('.mm-select.open').forEach(s => s.classList.remove('open'));
+    document.querySelectorAll('.cc-chip.editing').forEach(c => c.classList.remove('editing'));
   }
 
   /* Camera name rename: double-click swaps to an inline input field */
@@ -3790,7 +4050,11 @@
   });
 
   popover.addEventListener('click', e => e.stopPropagation());
-  document.addEventListener('click', () => { if (openRow !== null) closePopover(); });
+  document.addEventListener('click', e => {
+    if (openRow === null && !popSingle) return;
+    if (openAnchor && openAnchor.contains(e.target)) return;
+    closePopover();
+  });
 
   /* ===== Add new speaker flow (Identify speakers dialog) ===== */
   const identifyModal = document.getElementById('identifyModal');
