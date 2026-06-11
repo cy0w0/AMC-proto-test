@@ -1395,7 +1395,10 @@
     gap: 8px;
     flex-shrink: 0;
   }
-  #amcPanel { padding-top: 8px; }
+  #amcPanel {
+    padding-top: 8px;
+    overflow: hidden;
+  }
   .amc-row {
     display: flex;
     align-items: center;
@@ -1650,7 +1653,33 @@
   }
 
   /* ===== Preview panel (speaker combinations) ===== */
-  #previewPanel { padding-top: 8px; }
+  /* Sliding pages: header/description stay static, module stacks swipe */
+  .amc-stage {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    overflow: hidden;
+  }
+  .amc-pages {
+    display: flex;
+    width: 200%;
+    height: 100%;
+    transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .amc-pages.instant { transition: none; }
+  .amc-page {
+    width: 50%;
+    flex-shrink: 0;
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+  }
+  .amc-page::-webkit-scrollbar { display: none; }
   .pv-carousel {
     position: relative;
     width: 100%;
@@ -1789,6 +1818,127 @@
     flex-shrink: 0;
   }
   .pv-warning svg { flex-shrink: 0; margin-left: 8px; color: #c1812e; }
+
+  /* Inline delete confirmation (non-persistent) */
+  .pv-confirm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.055px;
+    color: var(--fg-primary);
+    transition: height 0.25s ease, opacity 0.25s ease;
+  }
+  .pv-confirm.visible {
+    height: 32px;
+    opacity: 1;
+  }
+  .pv-confirm svg { flex-shrink: 0; margin-left: 8px; }
+
+  /* Chip rename (input field UX) */
+  .cc-chip { cursor: text; }
+  .cc-chip.editing {
+    border-color: #3434ab;
+    box-shadow:
+      0 0 0 2px var(--surface-elevated),
+      0 0 0 4px #a3a3ee;
+  }
+  .cc-chip input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    padding-right: 8px;
+  }
+  .cc-chip input::selection { background: rgba(0, 147, 214, 0.15); }
+
+  /* Gallery view */
+  .gal-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px;
+    width: 100%;
+  }
+  .gal-chip {
+    height: 24px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface-elevated);
+    border: 1px solid var(--grey-50-a);
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+  .gal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 8px;
+    width: 100%;
+  }
+  .gal-tile {
+    height: 56px;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    gap: 2px;
+    position: relative;
+    border: 1px solid transparent;
+  }
+  .gal-tile:hover { border-color: rgba(88, 63, 74, 0.1); }
+  .gal-cell {
+    flex: 1;
+    min-width: 0;
+    background: rgba(88, 63, 74, 0.1);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: 0.055px;
+  }
+  .tile-actions {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    display: none;
+    gap: 2px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--grey-50-a);
+    border-radius: 6px;
+    padding: 2px;
+    box-shadow: 0 2px 4px rgba(38, 23, 29, 0.12);
+    z-index: 2;
+  }
+  .gal-tile:hover .tile-actions { display: inline-flex; }
+  .ta-btn {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    color: var(--fg-primary);
+    cursor: pointer;
+  }
+  .ta-btn:hover { background: rgba(63, 42, 50, 0.08); }
 
   /* ===== Automatic multicam callout ===== */
   .callout {
@@ -2652,7 +2802,7 @@
       </div>
     </aside>
 
-    <!-- Automatic multicam panel -->
+    <!-- Automatic multicam panel (settings + preview pages) -->
     <aside class="ai-sidebar hidden" id="amcPanel">
       <div class="amc-header">
         <button class="icon-btn" id="amcBack" aria-label="Back">
@@ -2664,112 +2814,129 @@
       </div>
       <p class="amc-desc">Automatically create scenes from different cameras to show active conversations.</p>
 
-      <div class="amc-module">
-        <div class="amc-row"><span class="amc-row-header">Edit</span></div>
-        <div class="amc-row" style="height:32px;">
-          <span class="amc-row-label grow">Show only active speakers</span>
-          <button class="switch" role="switch" aria-checked="false" aria-label="Show only active speakers"></button>
-        </div>
-        <div class="amc-row">
-          <span class="amc-row-header grow">Scene count</span>
-          <div class="seg-tabs" role="tablist">
-            <button class="seg-tab" role="tab">Total</button>
-            <button class="seg-tab selected" role="tab">Per min</button>
+      <div class="amc-stage">
+        <div class="amc-pages" id="amcPages">
+
+          <!-- Page 1 · Settings -->
+          <div class="amc-page" id="settingsPage">
+            <div class="amc-module">
+              <div class="amc-row"><span class="amc-row-header">Edit</span></div>
+              <div class="amc-row">
+                <span class="amc-row-label grow">Show only active speakers</span>
+                <button class="switch" role="switch" aria-checked="false" aria-label="Show only active speakers"></button>
+              </div>
+              <div class="amc-row">
+                <span class="amc-row-header grow">Scene count</span>
+                <div class="seg-tabs" role="tablist">
+                  <button class="seg-tab" role="tab">Total</button>
+                  <button class="seg-tab selected" role="tab">Per min</button>
+                </div>
+              </div>
+              <div class="amc-row">
+                <div class="num-field"><span class="nf-label">Min</span><input type="text" value="2" aria-label="Minimum scenes"></div>
+                <div class="num-field"><span class="nf-label">Max</span><input type="text" value="10" aria-label="Maximum scenes"></div>
+              </div>
+            </div>
+
+            <div class="amc-module" id="camSetupModule">
+              <div class="amc-row">
+                <span class="amc-row-header grow">Camera setup for speakers</span>
+                <button class="amc-toggle" id="camSetupToggle" aria-label="Collapse camera setup">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+                </button>
+              </div>
+              <div class="amc-collapsible">
+                <div id="camSetupRows" style="display:flex;flex-direction:column;gap:8px;width:100%;"></div>
+                <button class="amc-btn">Edit cameras in sequence editor</button>
+              </div>
+            </div>
+
+            <div class="amc-module collapsed" id="layoutPackModule">
+              <div class="amc-row">
+                <span class="amc-row-header grow">Use layout pack</span>
+                <button class="switch" id="layoutPackSwitch" role="switch" aria-checked="false" aria-label="Use layout pack"></button>
+              </div>
+              <div class="amc-collapsible">
+                <button class="select-jumbo">
+                  <span class="sj-thumb" aria-hidden="true"><span class="sj-cell"></span><span class="sj-cell"></span></span>
+                  <span class="sj-text">
+                    <span class="sj-title">Multicam full screen</span>
+                    <span class="sj-subtitle">6 layouts</span>
+                  </span>
+                  <svg class="sj-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+                </button>
+                <button class="amc-btn">Change layout pack…</button>
+              </div>
+            </div>
+
+            <button class="amc-btn-primary" id="checkPreviewBtn">Check preview</button>
           </div>
-        </div>
-        <div class="amc-row">
-          <div class="num-field"><span class="nf-label">Min</span><input type="text" value="2" aria-label="Minimum scenes"></div>
-          <div class="num-field"><span class="nf-label">Max</span><input type="text" value="10" aria-label="Maximum scenes"></div>
-        </div>
-      </div>
 
-      <div class="amc-module" id="camSetupModule">
-        <div class="amc-row">
-          <span class="amc-row-header grow">Camera setup for speakers</span>
-          <button class="amc-toggle" id="camSetupToggle" aria-label="Collapse camera setup">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
-          </button>
-        </div>
-        <div class="amc-collapsible">
-          <div id="camSetupRows" style="display:flex;flex-direction:column;gap:8px;width:100%;"></div>
-          <button class="amc-btn">Edit cameras in sequence editor</button>
-        </div>
-      </div>
+          <!-- Page 2 · Preview -->
+          <div class="amc-page" id="previewPage">
+            <div class="amc-module">
+              <div class="amc-row">
+                <span class="amc-row-header grow">Estimated scenes</span>
+                <span class="amc-row-label" id="pvSceneCount">6</span>
+              </div>
+            </div>
 
-      <div class="amc-module collapsed" id="layoutPackModule">
-        <div class="amc-row">
-          <span class="amc-row-header grow">Use layout pack</span>
-          <button class="switch" id="layoutPackSwitch" role="switch" aria-checked="false" aria-label="Use layout pack"></button>
+            <div class="amc-module" style="border-color: var(--border-medium); padding-bottom: 16px;">
+              <div class="amc-row">
+                <span class="amc-row-header grow">Speaker combinations</span>
+                <button class="amc-toggle" id="pvAdd" aria-label="Add combination">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+                </button>
+                <button class="amc-toggle" id="pvViewToggle" aria-label="Toggle gallery view">
+                  <svg id="pvIconGrid" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
+                    <rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>
+                  </svg>
+                  <svg id="pvIconCards" class="hidden" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
+                    <rect x="2" y="4.5" width="10" height="9" rx="1.5"/>
+                    <path d="M5 4.5V3.5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-1" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="pv-carousel" id="pvCarousel">
+                <div class="pv-track" id="pvTrack"></div>
+                <button class="im-nav prev hidden-nav" id="pvPrev" aria-label="Previous combination">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 3.5 2.5 8 7 12.5"/></svg>
+                </button>
+                <button class="im-nav next" id="pvNext" aria-label="Next combination">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 3.5 13.5 8 9 12.5"/></svg>
+                </button>
+              </div>
+
+              <div class="hidden" id="pvGallery" style="width:100%;">
+                <div class="gal-chips" id="galChips"></div>
+                <div class="gal-grid" id="galGrid"></div>
+              </div>
+
+              <div class="pv-confirm" id="pvConfirm" aria-live="polite">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="6.5" fill="#2e9e44"/>
+                  <path d="M5.2 8.2 7.2 10.2 10.8 6" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span id="pvConfirmText"></span>
+              </div>
+            </div>
+
+            <div class="pv-actions">
+              <button class="amc-btn" id="pvBackBtn">Back to settings</button>
+              <button class="amc-btn-primary" id="pvApply">Apply to composition</button>
+            </div>
+
+            <div class="pv-warning">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 2.5 14.5 13.5H1.5L8 2.5Z"/>
+                <path d="M8 7v3M8 12.2v.1"/>
+              </svg>
+              Existing scenes will be overwritten.
+            </div>
+          </div>
+
         </div>
-        <div class="amc-collapsible">
-          <button class="select-jumbo">
-            <span class="sj-thumb" aria-hidden="true"><span class="sj-cell"></span><span class="sj-cell"></span></span>
-            <span class="sj-text">
-              <span class="sj-title">Multicam full screen</span>
-              <span class="sj-subtitle">6 layouts</span>
-            </span>
-            <svg class="sj-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
-          </button>
-          <button class="amc-btn">Change layout pack…</button>
-        </div>
-      </div>
-
-      <button class="amc-btn-primary" id="checkPreviewBtn">Check preview</button>
-    </aside>
-
-    <!-- Preview panel (speaker combinations) -->
-    <aside class="ai-sidebar hidden" id="previewPanel">
-      <div class="amc-header">
-        <button class="icon-btn" id="pvBack" aria-label="Back">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M13 8H3M7 3.5 2.5 8 7 12.5"/>
-          </svg>
-        </button>
-        <span class="amc-title">Automatic multicam</span>
-      </div>
-      <p class="amc-desc">Automatically create scenes from different cameras to show active conversations.</p>
-
-      <div class="amc-module">
-        <div class="amc-row">
-          <span class="amc-row-header grow">Estimated scenes</span>
-          <span class="amc-row-label" id="pvSceneCount">6</span>
-        </div>
-      </div>
-
-      <div class="amc-module" style="border-color: var(--border-medium); padding-bottom: 16px;">
-        <div class="amc-row">
-          <span class="amc-row-header grow">Speaker combinations</span>
-          <button class="amc-toggle" id="pvAdd" aria-label="Add combination">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
-          </button>
-          <button class="amc-toggle" aria-label="Grid view">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
-              <rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>
-            </svg>
-          </button>
-        </div>
-        <div class="pv-carousel">
-          <div class="pv-track" id="pvTrack"></div>
-          <button class="im-nav prev hidden-nav" id="pvPrev" aria-label="Previous combination">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 3.5 2.5 8 7 12.5"/></svg>
-          </button>
-          <button class="im-nav next" id="pvNext" aria-label="Next combination">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 3.5 13.5 8 9 12.5"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="pv-actions">
-        <button class="amc-btn" id="pvBackBtn">Back to settings</button>
-        <button class="amc-btn-primary" id="pvApply">Apply to composition</button>
-      </div>
-
-      <div class="pv-warning">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8 2.5 14.5 13.5H1.5L8 2.5Z"/>
-          <path d="M8 7v3M8 12.2v.1"/>
-        </svg>
-        Existing scenes will be overwritten.
       </div>
     </aside>
 
@@ -3072,8 +3239,11 @@
     callout.classList.remove('visible');
     callout.classList.add('hidden');
     document.getElementById('amcPanel').classList.add('hidden');
-    document.getElementById('previewPanel').classList.add('hidden');
     document.getElementById('aiToolsSidebar').classList.remove('hidden');
+    combos = [];
+    comboView = 'card';
+    setAmcPage('settings', true);
+    hideComboDeleted();
     resetModalState();
   }
 
@@ -3163,13 +3333,26 @@
     });
   }
 
+  /* Sliding pages inside the panel: modules swipe, header stays static */
+  const amcPages = document.getElementById('amcPages');
+  let amcPage = 'settings';
+
+  function setAmcPage(page, instant) {
+    amcPage = page;
+    if (instant) amcPages.classList.add('instant');
+    amcPages.style.transform = page === 'preview' ? 'translateX(-50%)' : 'translateX(0)';
+    if (instant) requestAnimationFrame(() => amcPages.classList.remove('instant'));
+  }
+
   rowAutoMulticam.addEventListener('click', () => {
     hideCallout();
     renderCamSetup();
+    setAmcPage('settings', true);
     swapPanel(aiToolsSidebar, amcPanel);
   });
   document.getElementById('amcBack').addEventListener('click', () => {
-    swapPanel(amcPanel, aiToolsSidebar);
+    if (amcPage === 'preview') setAmcPage('settings');
+    else swapPanel(amcPanel, aiToolsSidebar);
   });
 
   // Switches, segmented tabs, and the camera-setup collapse
@@ -3195,14 +3378,21 @@
     document.getElementById('camSetupModule').classList.toggle('collapsed');
   });
 
-  /* Preview panel: speaker combinations */
-  const previewPanel = document.getElementById('previewPanel');
+  /* Preview page: speaker combinations */
+  const pvCarousel = document.getElementById('pvCarousel');
+  const pvGallery = document.getElementById('pvGallery');
+  const galChips = document.getElementById('galChips');
+  const galGrid = document.getElementById('galGrid');
   const pvTrack = document.getElementById('pvTrack');
   const pvPrev = document.getElementById('pvPrev');
   const pvNext = document.getElementById('pvNext');
+  const pvConfirm = document.getElementById('pvConfirm');
+  const pvConfirmText = document.getElementById('pvConfirmText');
   const speakerColors = ['#9c5de1', '#3e8b6a', '#c16335', '#0093d6', '#c14f82'];
   let combos = [];
   let comboIdx = 0;
+  let comboView = 'card';
+  let pvConfirmTimer = null;
 
   function seedCombos() {
     const all = speakers.map((_, i) => i);
@@ -3212,6 +3402,30 @@
     comboIdx = 0;
   }
 
+  function showComboDeleted(count) {
+    pvConfirmText.textContent = `${count} speaker${count === 1 ? '' : 's'} combo is deleted.`;
+    pvConfirm.classList.add('visible');
+    clearTimeout(pvConfirmTimer);
+    pvConfirmTimer = setTimeout(() => pvConfirm.classList.remove('visible'), 2600);
+  }
+
+  function hideComboDeleted() {
+    clearTimeout(pvConfirmTimer);
+    pvConfirm.classList.remove('visible');
+  }
+
+  function deleteCombo(idx) {
+    const count = (combos[idx] || []).length;
+    combos.splice(idx, 1);
+    showComboDeleted(count);
+    renderCombos();
+  }
+
+  const trashSVG = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 4h11M5.5 4V2.8a.8.8 0 0 1 .8-.8h3.4a.8.8 0 0 1 .8.8V4M4 4l.7 9a1 1 0 0 0 1 .9h4.6a1 1 0 0 0 1-.9L12 4M6.5 7v4M9.5 7v4"/></svg>`;
+  const pencilSVG = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11.5 2.5l2 2L6 12l-3 1 1-3 7.5-7.5Z"/></svg>`;
+
   function comboCard(combo, idx) {
     const cells = combo.map(s => {
       const color = speakerColors[s % speakerColors.length];
@@ -3220,18 +3434,14 @@
     }).join('');
     const chips = combo.map(s => {
       const color = speakerColors[s % speakerColors.length];
-      return `<div class="cc-chip"><span class="id">${s + 1}</span><span class="nm" style="color:${color}">${escapeHtml(speakers[s])}</span></div>`;
+      return `<div class="cc-chip" data-speaker="${s}" title="Click to rename"><span class="id">${s + 1}</span><span class="nm" style="color:${color}">${escapeHtml(speakers[s])}</span></div>`;
     }).join('');
     return `
       <div class="pv-slide">
         <div class="combo-card">
           <div class="cc-header">
             <span>${combo.length} speaker${combo.length === 1 ? '' : 's'}</span>
-            <button class="cc-trash" data-combo="${idx}" aria-label="Delete combination">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2.5 4h11M5.5 4V2.8a.8.8 0 0 1 .8-.8h3.4a.8.8 0 0 1 .8.8V4M4 4l.7 9a1 1 0 0 0 1 .9h4.6a1 1 0 0 0 1-.9L12 4M6.5 7v4M9.5 7v4"/>
-              </svg>
-            </button>
+            <button class="cc-trash" data-combo="${idx}" aria-label="Delete combination">${trashSVG}</button>
           </div>
           <div class="cc-stage"><div class="cc-strip">${cells}</div></div>
           <div class="cc-chips">${chips}</div>
@@ -3239,34 +3449,103 @@
       </div>`;
   }
 
-  function renderCombos() {
-    comboIdx = Math.max(0, Math.min(comboIdx, combos.length - 1));
-    pvTrack.innerHTML = combos.map(comboCard).join('');
-    pvTrack.style.transform = `translateX(-${comboIdx * 100}%)`;
-    pvPrev.classList.toggle('hidden-nav', comboIdx === 0);
-    pvNext.classList.toggle('hidden-nav', comboIdx >= combos.length - 1);
-    pvTrack.querySelectorAll('.cc-trash').forEach(btn => {
-      btn.addEventListener('click', () => {
-        combos.splice(Number(btn.dataset.combo), 1);
-        if (!combos.length) seedCombos();
-        renderCombos();
+  // Click a chip to rename the speaker inline (input field UX)
+  function attachChipEditing(scope) {
+    scope.querySelectorAll('.cc-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        if (chip.classList.contains('editing')) return;
+        const s = Number(chip.dataset.speaker);
+        const nm = chip.querySelector('.nm');
+        const color = nm.style.color;
+        chip.classList.add('editing');
+        nm.outerHTML = `<input type="text" maxlength="40" style="color:${color}" aria-label="Speaker name">`;
+        const input = chip.querySelector('input');
+        input.value = speakers[s];
+        const commit = () => {
+          const v = input.value.trim();
+          if (v) speakers[s] = v;
+          renderCombos();
+          selects.forEach((_, r) => updateSelectLabel(r));
+          updateAllCamLabels();
+        };
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+          if (e.key === 'Escape') { input.value = speakers[s]; input.blur(); }
+        });
+        input.addEventListener('blur', commit);
+        input.focus({ preventScroll: true });
+        input.select();
+        // focus() inside the translated page must not scroll the stage
+        document.querySelector('.amc-stage').scrollLeft = 0;
+        amcPanel.scrollLeft = 0;
       });
     });
   }
 
+  function renderCombos() {
+    const isGallery = comboView === 'gallery';
+    pvCarousel.classList.toggle('hidden', isGallery);
+    pvGallery.classList.toggle('hidden', !isGallery);
+    document.getElementById('pvIconGrid').classList.toggle('hidden', isGallery);
+    document.getElementById('pvIconCards').classList.toggle('hidden', !isGallery);
+    document.getElementById('pvSceneCount').textContent = Math.max(combos.length * 2, 0);
+
+    if (isGallery) {
+      galChips.innerHTML = speakers.map((name, i) =>
+        `<span class="gal-chip" style="color:${speakerColors[i % speakerColors.length]}">${escapeHtml(name)}</span>`).join('');
+      galGrid.innerHTML = combos.map((combo, idx) => {
+        const cells = combo.map(s =>
+          `<div class="gal-cell" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</div>`).join('');
+        return `
+          <div class="gal-tile" data-idx="${idx}">
+            ${cells}
+            <div class="tile-actions">
+              <button class="ta-btn ta-edit" data-idx="${idx}" aria-label="Edit combination">${pencilSVG}</button>
+              <button class="ta-btn ta-del" data-idx="${idx}" aria-label="Delete combination">${trashSVG}</button>
+            </div>
+          </div>`;
+      }).join('');
+      galGrid.querySelectorAll('.ta-del').forEach(btn =>
+        btn.addEventListener('click', () => deleteCombo(Number(btn.dataset.idx))));
+      galGrid.querySelectorAll('.ta-edit').forEach(btn =>
+        btn.addEventListener('click', () => {
+          comboView = 'card';
+          comboIdx = Number(btn.dataset.idx);
+          renderCombos();
+        }));
+      return;
+    }
+
+    comboIdx = Math.max(0, Math.min(comboIdx, combos.length - 1));
+    pvTrack.innerHTML = combos.map(comboCard).join('');
+    pvTrack.style.transform = `translateX(-${comboIdx * 100}%)`;
+    pvPrev.classList.toggle('hidden-nav', comboIdx <= 0);
+    pvNext.classList.toggle('hidden-nav', comboIdx >= combos.length - 1);
+    pvTrack.querySelectorAll('.cc-trash').forEach(btn => {
+      btn.addEventListener('click', () => deleteCombo(Number(btn.dataset.combo)));
+    });
+    attachChipEditing(pvTrack);
+  }
+
   document.getElementById('checkPreviewBtn').addEventListener('click', () => {
-    seedCombos();
+    if (!combos.length) seedCombos();
     renderCombos();
-    swapPanel(amcPanel, previewPanel);
+    setAmcPage('preview');
   });
-  document.getElementById('pvBack').addEventListener('click', () => swapPanel(previewPanel, amcPanel));
-  document.getElementById('pvBackBtn').addEventListener('click', () => swapPanel(previewPanel, amcPanel));
-  document.getElementById('pvApply').addEventListener('click', () => swapPanel(previewPanel, aiToolsSidebar));
+  document.getElementById('pvBackBtn').addEventListener('click', () => setAmcPage('settings'));
+  document.getElementById('pvApply').addEventListener('click', () => {
+    swapPanel(amcPanel, aiToolsSidebar);
+    setAmcPage('settings', true);
+  });
   pvPrev.addEventListener('click', () => { comboIdx--; renderCombos(); });
   pvNext.addEventListener('click', () => { comboIdx++; renderCombos(); });
   document.getElementById('pvAdd').addEventListener('click', () => {
     combos.push(speakers.map((_, i) => i).slice(0, 4));
     comboIdx = combos.length - 1;
+    renderCombos();
+  });
+  document.getElementById('pvViewToggle').addEventListener('click', () => {
+    comboView = comboView === 'card' ? 'gallery' : 'card';
     renderCombos();
   });
 
