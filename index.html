@@ -2712,13 +2712,14 @@
       </button>
     </div>
 
-    <!-- Identified speakers popover -->
-    <div class="mm-popover hidden" id="mmPopover" role="menu">
-      <div class="pop-header">Identified speakers</div>
-      <div class="pop-list" id="popList"></div>
-      <div class="pop-divider"></div>
-      <button class="pop-add" id="popAdd">Add new speaker</button>
-    </div>
+  </div>
+
+  <!-- Identified speakers popover (shared by the intercept modal and the AMC panel) -->
+  <div class="mm-popover hidden" id="mmPopover" role="menu">
+    <div class="pop-header">Identified speakers</div>
+    <div class="pop-list" id="popList"></div>
+    <div class="pop-divider"></div>
+    <button class="pop-add" id="popAdd">Add new speaker</button>
   </div>
 
   <!-- Identify speakers dialog (add new speaker flow) -->
@@ -2952,6 +2953,14 @@
         <button class="mm-select${assigned.length ? ' assigned' : ''}"><span class="mm-select-label">${escapeHtml(label)}</span>
           <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
         </button>`;
+
+      // same dropdown interaction as the sequence intercept
+      const sel = row.querySelector('.mm-select');
+      sel.addEventListener('click', e => {
+        e.stopPropagation();
+        if (openAnchor === sel) closePopover();
+        else openPopover(i, sel);
+      });
       camSetupRows.appendChild(row);
     });
   }
@@ -3047,6 +3056,7 @@
           editingIdx = null;
           renderPopover();
           selects.forEach((_, r) => updateSelectLabel(r));
+          updateAllCamLabels();
         };
         const cancel = () => { editingIdx = null; renderPopover(); };
 
@@ -3077,6 +3087,7 @@
         assignments[openRow].has(i) ? assignments[openRow].delete(i) : assignments[openRow].add(i);
         row.classList.toggle('checked');
         updateSelectLabel(openRow);
+        updateCamRowLabel(openRow);
         updateConfirm();
       });
 
@@ -3126,24 +3137,46 @@
     else mmCreate.setAttribute('disabled', '');
   }
 
+  // Mirror assignment changes into the AMC panel's camera setup rows
+  function updateCamRowLabel(rowIdx) {
+    const row = camSetupRows.children[rowIdx];
+    if (!row) return;
+    const btn = row.querySelector('.mm-select');
+    const label = btn.querySelector('.mm-select-label');
+    const names = [...assignments[rowIdx]].sort().map(i => speakers[i]);
+    label.textContent = names.length > 1 ? `${names.length} speakers`
+      : names.length === 1 ? names[0]
+      : 'Assign speakers';
+    btn.classList.toggle('assigned', names.length > 0);
+  }
+
+  function updateAllCamLabels() {
+    assignments.forEach((_, i) => updateCamRowLabel(i));
+  }
+
+  let openAnchor = null;
+
   function openPopover(rowIdx, anchor) {
     openRow = rowIdx;
+    openAnchor = anchor;
     renderPopover();
     popover.classList.remove('hidden');
-    selects.forEach(s => s.classList.remove('open'));
+    document.querySelectorAll('.mm-select.open').forEach(s => s.classList.remove('open'));
     anchor.classList.add('open');
-    const modalW = multicamModal.clientWidth;
-    const left = Math.min(anchor.offsetLeft, modalW - popover.offsetWidth - 12);
+    const baseRect = screenEditor.getBoundingClientRect();
+    const aRect = anchor.getBoundingClientRect();
+    const left = Math.min(aRect.left - baseRect.left, baseRect.width - popover.offsetWidth - 8);
     popover.style.left = `${Math.max(8, left)}px`;
-    popover.style.top = `${anchor.offsetTop + anchor.offsetHeight + 4}px`;
+    popover.style.top = `${aRect.bottom - baseRect.top + 4}px`;
   }
 
   function closePopover() {
     openRow = null;
+    openAnchor = null;
     editingIdx = null;
     stopPlaying();
     popover.classList.add('hidden');
-    selects.forEach(s => s.classList.remove('open'));
+    document.querySelectorAll('.mm-select.open').forEach(s => s.classList.remove('open'));
   }
 
   /* Camera name rename: double-click swaps to an inline input field */
@@ -3191,9 +3224,8 @@
   selects.forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      const rowIdx = Number(btn.dataset.row);
-      if (openRow === rowIdx) closePopover();
-      else openPopover(rowIdx, btn);
+      if (openAnchor === btn) closePopover();
+      else openPopover(Number(btn.dataset.row), btn);
     });
   });
 
