@@ -3394,9 +3394,17 @@
   let comboView = 'card';
   let pvConfirmTimer = null;
 
+  // Combos are built from the speakers assigned in the sequence intercept
+  function assignedSpeakerIdxs() {
+    const set = new Set();
+    assignments.forEach(s => s.forEach(i => set.add(i)));
+    const idxs = [...set].sort((a, b) => a - b);
+    return idxs.length ? idxs : speakers.map((_, i) => i);
+  }
+
   function seedCombos() {
-    const all = speakers.map((_, i) => i);
-    combos = [all.slice(0, 4)];
+    const all = assignedSpeakerIdxs().slice(0, 4);
+    combos = [all];
     if (all.length >= 2) combos.push(all.slice(0, 2));
     combos.push([all[all.length - 1]]);
     comboIdx = 0;
@@ -3491,8 +3499,8 @@
     document.getElementById('pvSceneCount').textContent = Math.max(combos.length * 2, 0);
 
     if (isGallery) {
-      galChips.innerHTML = speakers.map((name, i) =>
-        `<span class="gal-chip" style="color:${speakerColors[i % speakerColors.length]}">${escapeHtml(name)}</span>`).join('');
+      galChips.innerHTML = assignedSpeakerIdxs().map(i =>
+        `<span class="gal-chip" style="color:${speakerColors[i % speakerColors.length]}">${escapeHtml(speakers[i])}</span>`).join('');
       galGrid.innerHTML = combos.map((combo, idx) => {
         const cells = combo.map(s =>
           `<div class="gal-cell" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</div>`).join('');
@@ -3540,7 +3548,7 @@
   pvPrev.addEventListener('click', () => { comboIdx--; renderCombos(); });
   pvNext.addEventListener('click', () => { comboIdx++; renderCombos(); });
   document.getElementById('pvAdd').addEventListener('click', () => {
-    combos.push(speakers.map((_, i) => i).slice(0, 4));
+    combos.push(assignedSpeakerIdxs().slice(0, 4));
     comboIdx = combos.length - 1;
     renderCombos();
   });
