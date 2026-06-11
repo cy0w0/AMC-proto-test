@@ -3874,11 +3874,17 @@
         <span class="pop-name" title="Double-click to rename">${escapeHtml(name)}</span>
         <button class="pop-play${isPlaying ? ' playing' : ''}" aria-label="${isPlaying ? 'Pause sample' : 'Play sample'}">${isPlaying ? pauseSVG : playSVG}</button>`;
 
+      let singleSelectTimer = null;
       row.addEventListener('click', e => {
         if (e.target.closest('.pop-play')) return;
         if (popSingle) {
-          popSingle.set(i);
-          closePopover();
+          // small delay so a double-click (rename) can cancel the selection
+          clearTimeout(singleSelectTimer);
+          const target = popSingle;
+          singleSelectTimer = setTimeout(() => {
+            target.set(i);
+            closePopover();
+          }, 250);
           return;
         }
         assignments[openRow].has(i) ? assignments[openRow].delete(i) : assignments[openRow].add(i);
@@ -3900,9 +3906,10 @@
         renderPopover();
       });
 
-      // double-click to rename (per design annotation)
+      // double-click to rename (per design annotation) — works in every context
       row.querySelector('.pop-name').addEventListener('dblclick', e => {
         e.stopPropagation();
+        clearTimeout(singleSelectTimer);
         stopPlaying();
         editingIdx = i;
         renderPopover();
@@ -4071,12 +4078,17 @@
   let clipIdx = 0;
   let clipSpeakers = [null, null];
 
+  let scrimWasDismissed = false;
+
   function openIdentify() {
     closePopover();
     clipIdx = 0;
     updateCarousel(true);
     hideSpeakerConfirm();
     multicamModal.classList.add('away');
+    // the identify dialog always sits on a scrim
+    scrimWasDismissed = modalScrim.classList.contains('dismissed');
+    modalScrim.classList.remove('dismissed');
     identifyModal.classList.remove('dismissed');
   }
 
@@ -4085,6 +4097,7 @@
     closeImMenu();
     hideSpeakerConfirm();
     identifyModal.classList.add('dismissed');
+    if (scrimWasDismissed) modalScrim.classList.add('dismissed');
     multicamModal.classList.remove('away');
   }
 
@@ -4146,23 +4159,71 @@
     imInput.blur();
   }
 
+  let imEditing = null; // speaker index being renamed inside this menu
+
+  function imApplyRename(i, value) {
+    const v = value.trim();
+    if (v) speakers[i] = v;
+    imEditing = null;
+    renderImMenu();
+    selects.forEach((_, r) => updateSelectLabel(r));
+    updateAllCamLabels();
+    renderCombos();
+    renderCreate();
+    if (clipSpeakers[clipIdx] !== null) imInput.value = speakers[clipSpeakers[clipIdx]];
+  }
+
   function renderImMenu() {
     const raw = imInput.value.trim();
     const q = raw.toLowerCase();
-    const matches = speakers.filter(s => !q || s.toLowerCase().includes(q));
+    const entries = speakers
+      .map((name, i) => ({ name, i }))
+      .filter(e => !q || e.name.toLowerCase().includes(q));
     const exact = speakers.some(s => s.toLowerCase() === q);
     imMenuList.innerHTML = '';
 
-    matches.forEach(name => {
+    entries.forEach(({ name, i }) => {
       const row = document.createElement('div');
+
+      // rename state: same edit-field treatment as the intercept dropdown
+      if (imEditing === i) {
+        row.className = 'pop-row editing';
+        row.innerHTML = `
+          <span class="edit-field"><input type="text" value="${escapeHtml(name)}" maxlength="40" aria-label="Speaker name"></span>
+          <button class="edit-btn cancel" aria-label="Cancel rename">${xSVG}</button>
+          <button class="edit-btn confirm" aria-label="Confirm rename">${tickSVG}</button>`;
+        const editInput = row.querySelector('input');
+        row.querySelector('.confirm').addEventListener('mousedown', e => { e.preventDefault(); imApplyRename(i, editInput.value); });
+        row.querySelector('.cancel').addEventListener('mousedown', e => { e.preventDefault(); imEditing = null; renderImMenu(); });
+        editInput.addEventListener('keydown', e => {
+          if (e.key === 'Enter') { e.preventDefault(); imApplyRename(i, editInput.value); }
+          if (e.key === 'Escape') { e.preventDefault(); imEditing = null; renderImMenu(); }
+        });
+        editInput.addEventListener('blur', () => { if (imEditing === i) imApplyRename(i, editInput.value); });
+        setTimeout(() => { editInput.focus(); editInput.select(); }, 0);
+        imMenuList.appendChild(row);
+        return;
+      }
+
       row.className = 'pop-row';
-      row.innerHTML = `<span class="pop-name">${escapeHtml(name)}</span>`;
+      row.innerHTML = `<span class="pop-name" title="Double-click to rename">${escapeHtml(name)}</span>`;
+      let selectTimer = null;
       row.addEventListener('mousedown', e => {
         e.preventDefault();
-        imInput.value = name;
-        commitTypedSpeaker();
-        closeImMenu();
-        imInput.blur();
+        // small delay so a double-click (rename) can cancel the selection
+        clearTimeout(selectTimer);
+        selectTimer = setTimeout(() => {
+          imInput.value = name;
+          commitTypedSpeaker();
+          closeImMenu();
+          imInput.blur();
+        }, 250);
+      });
+      row.querySelector('.pop-name').addEventListener('dblclick', e => {
+        e.preventDefault();
+        clearTimeout(selectTimer);
+        imEditing = i;
+        renderImMenu();
       });
       imMenuList.appendChild(row);
     });
@@ -4170,7 +4231,7 @@
     // Typing an unknown name offers "Add <name> as a speaker · Enter"
     const showAdd = raw && !exact;
     if (showAdd) {
-      if (matches.length) {
+      if (entries.length) {
         const div = document.createElement('div');
         div.className = 'pop-divider';
         imMenuList.appendChild(div);
@@ -4182,8 +4243,8 @@
       imMenuList.appendChild(row);
     }
 
-    imMenuHeader.style.display = matches.length ? '' : 'none';
-    imMenu.classList.toggle('hidden', !matches.length && !showAdd);
+    imMenuHeader.style.display = entries.length ? '' : 'none';
+    imMenu.classList.toggle('hidden', !entries.length && !showAdd);
   }
 
   function openImMenu() {
@@ -4196,6 +4257,7 @@
   }
 
   function closeImMenu() {
+    imEditing = null;
     imMenu.classList.add('hidden');
   }
 
@@ -4205,8 +4267,14 @@
   });
   imInput.addEventListener('blur', () => {
     imInputWrap.classList.remove('focused');
-    setTimeout(closeImMenu, 120);
+    if (imEditing !== null) return; // focus moved into the rename field
+    setTimeout(() => { if (imEditing === null) closeImMenu(); }, 120);
     commitTypedSpeaker();
+  });
+  document.addEventListener('click', e => {
+    if (imMenu.classList.contains('hidden')) return;
+    if (e.target.closest('#imMenu') || e.target.closest('#imInputWrap')) return;
+    closeImMenu();
   });
   imInput.addEventListener('input', renderImMenu);
   imInput.addEventListener('keydown', e => {
