@@ -1649,6 +1649,147 @@
     padding-right: 4px;
   }
 
+  /* ===== Preview panel (speaker combinations) ===== */
+  #previewPanel { padding-top: 8px; }
+  .pv-carousel {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+  .pv-track {
+    display: flex;
+    transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .pv-slide {
+    flex: 0 0 100%;
+    display: flex;
+    justify-content: center;
+    padding: 8px 0;
+  }
+  .pv-carousel .im-nav { width: 28px; height: 28px; }
+  .pv-carousel .im-nav.prev { left: 0; }
+  .pv-carousel .im-nav.next { right: 0; }
+
+  .combo-card {
+    width: 248px;
+    background: var(--surface-elevated);
+    border: 1px solid rgba(88, 63, 74, 0.1);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow:
+      0 8px 8px rgba(38, 23, 29, 0.12),
+      0 8px 4px rgba(38, 23, 29, 0.08);
+  }
+  .cc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+  }
+  .cc-trash {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    color: var(--fg-secondary);
+    cursor: pointer;
+  }
+  .cc-trash:hover { background: rgba(63, 42, 50, 0.08); color: var(--fg-primary); }
+  .cc-stage {
+    height: 124px;
+    width: 100%;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cc-strip {
+    display: flex;
+    gap: 2px;
+    padding: 4px;
+    height: 100%;
+    width: 100%;
+    border-radius: 4px;
+  }
+  .cc-cell {
+    flex: 1;
+    min-width: 0;
+    background: rgba(88, 63, 74, 0.1);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cc-cell span {
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: 0.055px;
+  }
+  .cc-chips {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    width: 100%;
+  }
+  .cc-chip {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    background: rgba(139, 111, 122, 0.09);
+    border: 1px solid rgba(88, 63, 74, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .cc-chip .id {
+    width: 32px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 16px;
+    color: #715661;
+    flex-shrink: 0;
+  }
+  .cc-chip .nm {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    padding-right: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pv-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    flex-shrink: 0;
+  }
+  .pv-actions .amc-btn,
+  .pv-actions .amc-btn-primary { flex: 1; width: auto; }
+  .pv-warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 32px;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.055px;
+    color: var(--fg-primary);
+    flex-shrink: 0;
+  }
+  .pv-warning svg { flex-shrink: 0; margin-left: 8px; color: #c1812e; }
+
   /* ===== Automatic multicam callout ===== */
   .callout {
     position: absolute;
@@ -2573,7 +2714,63 @@
         </div>
       </div>
 
-      <button class="amc-btn-primary">Check preview</button>
+      <button class="amc-btn-primary" id="checkPreviewBtn">Check preview</button>
+    </aside>
+
+    <!-- Preview panel (speaker combinations) -->
+    <aside class="ai-sidebar hidden" id="previewPanel">
+      <div class="amc-header">
+        <button class="icon-btn" id="pvBack" aria-label="Back">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 8H3M7 3.5 2.5 8 7 12.5"/>
+          </svg>
+        </button>
+        <span class="amc-title">Automatic multicam</span>
+      </div>
+      <p class="amc-desc">Automatically create scenes from different cameras to show active conversations.</p>
+
+      <div class="amc-module">
+        <div class="amc-row">
+          <span class="amc-row-header grow">Estimated scenes</span>
+          <span class="amc-row-label" id="pvSceneCount">6</span>
+        </div>
+      </div>
+
+      <div class="amc-module" style="border-color: var(--border-medium); padding-bottom: 16px;">
+        <div class="amc-row">
+          <span class="amc-row-header grow">Speaker combinations</span>
+          <button class="amc-toggle" id="pvAdd" aria-label="Add combination">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+          </button>
+          <button class="amc-toggle" aria-label="Grid view">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
+              <rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>
+            </svg>
+          </button>
+        </div>
+        <div class="pv-carousel">
+          <div class="pv-track" id="pvTrack"></div>
+          <button class="im-nav prev hidden-nav" id="pvPrev" aria-label="Previous combination">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 3.5 2.5 8 7 12.5"/></svg>
+          </button>
+          <button class="im-nav next" id="pvNext" aria-label="Next combination">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 3.5 13.5 8 9 12.5"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="pv-actions">
+        <button class="amc-btn" id="pvBackBtn">Back to settings</button>
+        <button class="amc-btn-primary" id="pvApply">Apply to composition</button>
+      </div>
+
+      <div class="pv-warning">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 2.5 14.5 13.5H1.5L8 2.5Z"/>
+          <path d="M8 7v3M8 12.2v.1"/>
+        </svg>
+        Existing scenes will be overwritten.
+      </div>
     </aside>
 
     <!-- Dock -->
@@ -2875,6 +3072,7 @@
     callout.classList.remove('visible');
     callout.classList.add('hidden');
     document.getElementById('amcPanel').classList.add('hidden');
+    document.getElementById('previewPanel').classList.add('hidden');
     document.getElementById('aiToolsSidebar').classList.remove('hidden');
     resetModalState();
   }
@@ -2995,6 +3193,81 @@
   });
   document.getElementById('camSetupToggle').addEventListener('click', () => {
     document.getElementById('camSetupModule').classList.toggle('collapsed');
+  });
+
+  /* Preview panel: speaker combinations */
+  const previewPanel = document.getElementById('previewPanel');
+  const pvTrack = document.getElementById('pvTrack');
+  const pvPrev = document.getElementById('pvPrev');
+  const pvNext = document.getElementById('pvNext');
+  const speakerColors = ['#9c5de1', '#3e8b6a', '#c16335', '#0093d6', '#c14f82'];
+  let combos = [];
+  let comboIdx = 0;
+
+  function seedCombos() {
+    const all = speakers.map((_, i) => i);
+    combos = [all.slice(0, 4)];
+    if (all.length >= 2) combos.push(all.slice(0, 2));
+    combos.push([all[all.length - 1]]);
+    comboIdx = 0;
+  }
+
+  function comboCard(combo, idx) {
+    const cells = combo.map(s => {
+      const color = speakerColors[s % speakerColors.length];
+      const initial = (speakers[s] || '?').charAt(0).toUpperCase();
+      return `<div class="cc-cell"><span style="color:${color}">${escapeHtml(initial)}</span></div>`;
+    }).join('');
+    const chips = combo.map(s => {
+      const color = speakerColors[s % speakerColors.length];
+      return `<div class="cc-chip"><span class="id">${s + 1}</span><span class="nm" style="color:${color}">${escapeHtml(speakers[s])}</span></div>`;
+    }).join('');
+    return `
+      <div class="pv-slide">
+        <div class="combo-card">
+          <div class="cc-header">
+            <span>${combo.length} speaker${combo.length === 1 ? '' : 's'}</span>
+            <button class="cc-trash" data-combo="${idx}" aria-label="Delete combination">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2.5 4h11M5.5 4V2.8a.8.8 0 0 1 .8-.8h3.4a.8.8 0 0 1 .8.8V4M4 4l.7 9a1 1 0 0 0 1 .9h4.6a1 1 0 0 0 1-.9L12 4M6.5 7v4M9.5 7v4"/>
+              </svg>
+            </button>
+          </div>
+          <div class="cc-stage"><div class="cc-strip">${cells}</div></div>
+          <div class="cc-chips">${chips}</div>
+        </div>
+      </div>`;
+  }
+
+  function renderCombos() {
+    comboIdx = Math.max(0, Math.min(comboIdx, combos.length - 1));
+    pvTrack.innerHTML = combos.map(comboCard).join('');
+    pvTrack.style.transform = `translateX(-${comboIdx * 100}%)`;
+    pvPrev.classList.toggle('hidden-nav', comboIdx === 0);
+    pvNext.classList.toggle('hidden-nav', comboIdx >= combos.length - 1);
+    pvTrack.querySelectorAll('.cc-trash').forEach(btn => {
+      btn.addEventListener('click', () => {
+        combos.splice(Number(btn.dataset.combo), 1);
+        if (!combos.length) seedCombos();
+        renderCombos();
+      });
+    });
+  }
+
+  document.getElementById('checkPreviewBtn').addEventListener('click', () => {
+    seedCombos();
+    renderCombos();
+    swapPanel(amcPanel, previewPanel);
+  });
+  document.getElementById('pvBack').addEventListener('click', () => swapPanel(previewPanel, amcPanel));
+  document.getElementById('pvBackBtn').addEventListener('click', () => swapPanel(previewPanel, amcPanel));
+  document.getElementById('pvApply').addEventListener('click', () => swapPanel(previewPanel, aiToolsSidebar));
+  pvPrev.addEventListener('click', () => { comboIdx--; renderCombos(); });
+  pvNext.addEventListener('click', () => { comboIdx++; renderCombos(); });
+  document.getElementById('pvAdd').addEventListener('click', () => {
+    combos.push(speakers.map((_, i) => i).slice(0, 4));
+    comboIdx = combos.length - 1;
+    renderCombos();
   });
 
   const mmCreate = document.getElementById('mmCreate');
