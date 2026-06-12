@@ -734,22 +734,24 @@
   .artboard .frames {
     display: flex;
     gap: 6px;
+    width: 100%;
+    aspect-ratio: 16 / 9;
   }
   .artboard .frames-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 1fr;
     gap: 6px;
   }
   .artboard .cam-frame {
     flex: 1;
-    aspect-ratio: 198 / 214;
+    min-width: 0;
+    height: 100%;
     border-radius: 2px;
     overflow: hidden;
     position: relative;
   }
-  .artboard .frames-grid .cam-frame {
-    aspect-ratio: 198 / 110;
-  }
+  .artboard .frames-grid .cam-frame { height: auto; }
   .artboard .cam-frame svg {
     width: 100%;
     height: 100%;
@@ -2548,17 +2550,19 @@
     cursor: pointer;
     flex-shrink: 0;
     transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1),
-      opacity 0.35s ease, box-shadow 0.35s ease;
+      opacity 0.35s ease;
     opacity: 0.45;
     transform: scale(0.9);
+    border: 1px solid rgba(88, 63, 74, 0.1);
+    background: var(--surface-elevated);
   }
   .lp-card.selected {
     transform: scale(1.26);
     opacity: 1;
     cursor: default;
-    background: var(--surface-elevated);
+    border-color: transparent;
     outline: 2px solid #3f2a32;
-    box-shadow: 0 3px 10px rgba(38, 23, 29, 0.2);
+    outline-offset: 1px;
   }
   .lp-cell {
     flex: 1;
@@ -3836,9 +3840,9 @@
     </div>
     <div class="lp-row">
       <span class="grow">Speaker slots</span>
-      <button class="lp-add" id="lpAdd" aria-label="Add speaker slot">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
-      </button>
+      <div class="cs-slots-field">
+        <input type="text" id="lpSlotCount" value="3" inputmode="numeric" aria-label="Speaker slots">
+      </div>
     </div>
     <div class="lp-carousel">
       <div class="lp-track" id="lpTrack"></div>
@@ -4716,6 +4720,7 @@
     lpLayoutIdx = lpSavedLayout;
     renderLayoutCarousel(true);
     renderLpChips();
+    lpSlotCount.value = String(lpCombo().length);
     lpApply.setAttribute('disabled', '');
     layoutPopover.classList.remove('hidden');
     positionLeftOf(layoutPopover, anchor);
@@ -4728,7 +4733,8 @@
     const aRect = anchor.getBoundingClientRect();
     const left = Math.max(8, aRect.left - baseRect.left - pop.offsetWidth - 8);
     pop.style.left = `${left}px`;
-    pop.style.top = `${Math.max(8, aRect.top - baseRect.top - pop.offsetHeight - 8)}px`;
+    // hug the toolbar: bottom edge aligned with the anchor's bottom
+    pop.style.top = `${Math.max(8, aRect.bottom - baseRect.top - pop.offsetHeight)}px`;
   }
 
   function closeLayoutPopover() {
@@ -4825,15 +4831,22 @@
     if (e.target.closest('#layoutPopover')) return;
     closeLayoutPopover();
   });
-  document.getElementById('lpAdd').addEventListener('click', () => {
+  const lpSlotCount = document.getElementById('lpSlotCount');
+  lpSlotCount.addEventListener('input', () => {
     const combo = lpCombo();
-    if (combo.length >= 4) return;
-    const cand = assignedSpeakerIdxs().find(s => !combo.includes(s));
-    combo.push(cand !== undefined ? cand : combo.length % speakers.length);
+    const n = Math.max(1, Math.min(4, parseInt(lpSlotCount.value, 10) || combo.length));
+    while (combo.length < n) {
+      const cand = assignedSpeakerIdxs().find(s => !combo.includes(s));
+      combo.push(cand !== undefined ? cand : combo.length % speakers.length);
+    }
+    combo.length = n;
     renderLpChips();
     renderLayoutCarousel(true);
     renderCombos();
     lpUpdateApply(true);
+  });
+  lpSlotCount.addEventListener('blur', () => {
+    lpSlotCount.value = String(lpCombo().length);
   });
   lpApply.addEventListener('click', () => {
     lpSavedLayout = lpLayoutIdx;
