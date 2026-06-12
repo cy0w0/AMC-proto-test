@@ -1189,7 +1189,7 @@
     gap: 8px;
     flex-shrink: 0;
   }
-  .sb-card {
+  .sbc-card {
     width: 200px;
     height: 112px;
     border-radius: 4px;
@@ -1198,13 +1198,13 @@
     overflow: hidden;
     border: 1px solid var(--border-medium);
   }
-  .sb-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .sb-item.selected .sb-card {
+  .sbc-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .sb-item.selected .sbc-card {
     border: 2px solid #fff;
     outline: 2px solid #3f2a32;
     outline-offset: 0;
   }
-  .sb-card .sb-pip {
+  .sbc-card .sb-pip {
     position: absolute;
     left: 8px;
     top: 8px;
@@ -1213,7 +1213,7 @@
     object-fit: cover;
     border-radius: 2px;
   }
-  .sb-card .sb-progress {
+  .sbc-card .sb-progress {
     position: absolute;
     left: 12px;
     right: 52px;
@@ -1222,7 +1222,7 @@
     border-radius: 3px;
     background: rgba(140, 140, 140, 0.6);
   }
-  .sb-card .sb-progress::before {
+  .sbc-card .sb-progress::before {
     content: "";
     position: absolute;
     left: -2px;
@@ -4236,11 +4236,11 @@
       let card;
       if (idx === 0) {
         // selected scene: picture-in-picture over black with a progress scrubber
-        card = `<div class="sb-card"><img class="sb-pip" alt="" src="${TL_THUMB(pattern[0])}"><span class="sb-progress"></span></div>`;
+        card = `<div class="sbc-card"><img class="sb-pip" alt="" src="${TL_THUMB(pattern[0])}"><span class="sb-progress"></span></div>`;
       } else if (idx === list.length - 1) {
-        card = `<div class="sb-card"></div>`;
+        card = `<div class="sbc-card"></div>`;
       } else {
-        card = `<div class="sb-card"><img alt="" src="${TL_THUMB(pattern[0])}"></div>`;
+        card = `<div class="sbc-card"><img alt="" src="${TL_THUMB(pattern[0])}"></div>`;
       }
       item.innerHTML = `${card}<span class="sb-num">${idx + 1}</span>`;
       sbCards.appendChild(item);
