@@ -1007,6 +1007,149 @@
     overflow: hidden;
   }
 
+  /* Applied timeline (post-AMC) */
+  .amc-timeline .tl-post { display: none; }
+  .amc-timeline.applied .tl-pre { display: none; }
+  .amc-timeline.applied .tl-post { display: block; }
+  .amc-timeline.applied .inactive {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .amc-timeline.applied .toggle-group button:first-child {
+    background: #583f4a;
+    border-radius: 4px;
+    color: #fff8f4;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .tl-ruler {
+    display: flex;
+    align-items: flex-end;
+    height: 24px;
+    padding-left: 68px;
+    background: #fff;
+    overflow: hidden;
+  }
+  .tl-seg {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .tl-label {
+    font-size: 9px;
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: 0.144px;
+    color: var(--fg-secondary);
+  }
+  .tl-dot {
+    width: 2px;
+    height: 2px;
+    border-radius: 1px;
+    background: #d1c7cb;
+    margin-bottom: 7px;
+  }
+  .tl-scenes {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+  }
+  .tl-scene {
+    height: 56px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .tl-film {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 4px;
+    border: 1px solid var(--border-medium);
+  }
+  .tl-scene.selected .tl-film {
+    border-color: transparent;
+    outline: 2px solid #3f2a32;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  .tl-cell {
+    width: 56px;
+    height: 100%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-right: 1px solid rgba(255, 255, 255, 0.6);
+  }
+  .tl-id {
+    position: absolute;
+    left: 4px;
+    bottom: 4px;
+    height: 16px;
+    min-width: 14px;
+    padding: 0 4px;
+    background: var(--grey-50);
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    line-height: 16px;
+    font-weight: 600;
+    color: var(--fg-primary);
+    z-index: 2;
+  }
+  .tl-transition {
+    position: absolute;
+    left: -7px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 24px;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+  .tl-transition span {
+    width: 1px;
+    height: 6px;
+    background: #818183;
+  }
+  .tl-wordbar {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 8px 4px 68px;
+    overflow: hidden;
+  }
+  .tl-chip {
+    height: 24px;
+    padding: 0 4px;
+    background: rgba(88, 63, 74, 0.1);
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.055px;
+    color: var(--fg-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
   /* ===== Modal ===== */
   .scrim {
     position: absolute;
@@ -2789,8 +2932,8 @@
         </section>
       </div>
 
-      <!-- AMC timeline (processing skeleton) -->
-      <div class="amc-timeline">
+      <!-- AMC timeline -->
+      <div class="amc-timeline" id="amcTimeline">
         <div class="playback-bar">
           <div class="pb-left">
             <div class="tools">
@@ -2810,25 +2953,31 @@
                   <path d="M10.5 5.5H13M10.5 9H13M3 12.5h10"/>
                 </svg>
               </button>
-              <span class="skel" style="width:56px;height:10px;margin-left:8px;"></span>
-              <span class="skel soft" style="width:5px;height:10px;margin-left:4px;"></span>
-              <span class="skel soft" style="width:56px;height:10px;margin-left:4px;"></span>
+              <div class="time inactive">
+                <span class="current">0:00:00.0</span>
+                <span class="sep">/</span>
+                <span class="total">0:00:00.0</span>
+              </div>
             </div>
           </div>
           <div class="pb-center">
-            <button class="icon-btn dense inactive" aria-label="Play">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M4.5 3.2v9.6L12.8 8 4.5 3.2Z"/>
-              </svg>
+            <button class="btn-light inactive">
+              <span class="record-dot" aria-hidden="true" style="border-color: currentColor;"></span>
+              Record
             </button>
-            <button class="icon-btn dense inactive" aria-label="Record">
-              <span class="record-dot" style="border-color: currentColor;"></span>
-            </button>
+            <div class="playback-controls">
+              <button class="icon-btn dense inactive" aria-label="Play">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M4.5 3.2v9.6L12.8 8 4.5 3.2Z"/>
+                </svg>
+              </button>
+              <button class="btn-light inactive">1x</button>
+            </div>
             <button class="btn-light inactive">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M5.5 5 2.5 8l3 3M10.5 5l3 3-3 3"/>
               </svg>
-              <span class="skel" style="width:25px;height:10px;"></span>
+              Split
             </button>
           </div>
           <div class="pb-right">
@@ -2836,7 +2985,7 @@
               <button class="icon-btn dense" aria-label="Zoom out">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M3 8h10"/></svg>
               </button>
-              <span class="skel" style="width:32px;height:10px;"></span>
+              <span style="font-size:12px;line-height:16px;">100%</span>
               <button class="icon-btn dense" aria-label="Zoom in">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
               </button>
@@ -2867,32 +3016,67 @@
           </div>
         </div>
 
-        <div class="timestamps">
-          <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
-          <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
-          <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
-          <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
-          <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+        <!-- Pre-AMC: processing skeleton -->
+        <div class="tl-pre">
+          <div class="timestamps">
+            <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+            <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+            <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+            <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+            <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+          </div>
+          <div class="scenes">
+            <button class="add-scene" aria-label="Add scene">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+                <path d="M8 3v10M3 8h10"/>
+              </svg>
+            </button>
+            <span class="scene-thumb"></span>
+            <span class="scene-thumb"></span>
+          </div>
+          <div class="wordbar">
+            <span class="skel" style="width:190px;height:10px;"></span>
+            <span class="skel" style="width:82px;height:10px;"></span>
+            <span class="skel" style="width:134px;height:10px;"></span>
+            <span class="skel" style="width:134px;height:10px;"></span>
+            <span class="skel" style="width:134px;height:10px;"></span>
+            <span class="skel" style="width:134px;height:10px;"></span>
+            <span class="skel" style="width:134px;height:10px;"></span>
+          </div>
         </div>
 
-        <div class="scenes">
-          <button class="add-scene" aria-label="Add scene">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
-              <path d="M8 3v10M3 8h10"/>
-            </svg>
-          </button>
-          <span class="scene-thumb"></span>
-          <span class="scene-thumb"></span>
-        </div>
-
-        <div class="wordbar">
-          <span class="skel" style="width:190px;height:10px;"></span>
-          <span class="skel" style="width:82px;height:10px;"></span>
-          <span class="skel" style="width:134px;height:10px;"></span>
-          <span class="skel" style="width:134px;height:10px;"></span>
-          <span class="skel" style="width:134px;height:10px;"></span>
-          <span class="skel" style="width:134px;height:10px;"></span>
-          <span class="skel" style="width:134px;height:10px;"></span>
+        <!-- Post-AMC: applied scenes -->
+        <div class="tl-post">
+          <div class="tl-ruler">
+            <div class="tl-seg"><span class="tl-label">:00</span><span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span></div>
+            <div class="tl-seg"><span class="tl-label">0:05</span><span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span></div>
+            <div class="tl-seg"><span class="tl-label">0:10</span><span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span></div>
+            <div class="tl-seg"><span class="tl-label">0:15</span><span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span></div>
+            <div class="tl-seg"><span class="tl-label">0:25</span><span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span></div>
+            <div class="tl-seg"><span class="tl-label">0:30</span><span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span><span class="tl-dot"></span></div>
+          </div>
+          <div class="tl-scenes">
+            <button class="add-scene" aria-label="Add scene">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+                <path d="M8 3v10M3 8h10"/>
+              </svg>
+            </button>
+            <div id="tlScenes" style="display:flex;align-items:center;gap:4px;"></div>
+            <button class="add-scene" aria-label="Add scene">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+                <path d="M8 3v10M3 8h10"/>
+              </svg>
+            </button>
+          </div>
+          <div class="tl-wordbar">
+            <span class="tl-chip" style="max-width:214px;">Citations are crucial but time-consuming</span>
+            <span class="tl-chip" style="max-width:254px;">From proper formatting to crediting the usage of AI</span>
+            <span class="tl-chip" style="max-width:102px;">I’m Zach, and I’m here</span>
+            <span class="tl-chip">Let’s say I’m a biology student working on a research</span>
+            <span class="tl-chip" style="max-width:134px;">That with this study we can see how the brain</span>
+            <span class="tl-chip" style="max-width:134px;">gives abstract meaning to many shapes</span>
+            <span class="tl-chip" style="max-width:134px;">And filmmakers use this phenomenon</span>
+          </div>
         </div>
       </div>
 
@@ -3805,6 +3989,32 @@
     <path d="M8 2a6 6 0 0 1 6 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`;
   let applyTimers = [];
 
+  // Timeline reflects the applied multicam: one scene per combination,
+  // filmstrip cells tinted per speaker camera
+  function renderTimelineScenes() {
+    const tlScenes = document.getElementById('tlScenes');
+    tlScenes.innerHTML = '';
+    const widths = [212, 164, 100, 316];
+    const list = combos.length ? combos : [[0], [1]];
+    list.slice(0, 5).forEach((combo, idx) => {
+      const w = widths[idx % widths.length];
+      const scene = document.createElement('div');
+      scene.className = 'tl-scene' + (idx === 0 ? ' selected' : '');
+      scene.style.width = `${w}px`;
+      const cells = [];
+      const count = Math.ceil(w / 56);
+      for (let k = 0; k < count; k++) {
+        const s = combo[k % combo.length];
+        const color = speakerColors[s % speakerColors.length];
+        const initial = (speakers[s] || '?').charAt(0).toUpperCase();
+        cells.push(`<div class="tl-cell" style="background:${color}26;color:${color}">${escapeHtml(initial)}</div>`);
+      }
+      scene.innerHTML = `<div class="tl-film">${cells.join('')}</div><span class="tl-id">${idx + 1}</span>`
+        + (idx > 0 ? '<span class="tl-transition"><span></span></span>' : '');
+      tlScenes.appendChild(scene);
+    });
+  }
+
   function resetApplyState() {
     applyTimers.forEach(clearTimeout);
     applyTimers = [];
@@ -3814,6 +4024,7 @@
     pvApply.textContent = APPLY_LABEL;
     applyToast.classList.remove('visible');
     amcToast.classList.remove('visible');
+    document.getElementById('amcTimeline').classList.remove('applied');
   }
 
   // Editing anything after an apply turns the button into Run
@@ -3851,6 +4062,9 @@
       pvApply.textContent = 'Applied';
       pvApply.dataset.state = 'applied';
       amcPanel.classList.remove('generating');
+      // timeline reflects the applied multicam
+      renderTimelineScenes();
+      document.getElementById('amcTimeline').classList.add('applied');
     }, 420 * STEPS + 300));
     // strictly in order: the supertoast finishes and fades out first,
     // then the applied toast appears
