@@ -3852,12 +3852,14 @@
       pvApply.dataset.state = 'applied';
       amcPanel.classList.remove('generating');
     }, 420 * STEPS + 300));
-    applyTimers.push(setTimeout(() => {
-      amcToast.classList.add('visible');
-    }, 420 * STEPS + 700));
+    // strictly in order: the supertoast finishes and fades out first,
+    // then the applied toast appears
     applyTimers.push(setTimeout(() => {
       applyToast.classList.remove('visible');
-    }, 420 * STEPS + 1900));
+    }, 420 * STEPS + 1100));
+    applyTimers.push(setTimeout(() => {
+      amcToast.classList.add('visible');
+    }, 420 * STEPS + 1500));
   });
 
   document.getElementById('amcToastUndo').addEventListener('click', resetApplyState);
