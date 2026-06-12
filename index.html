@@ -735,12 +735,20 @@
     display: flex;
     gap: 6px;
   }
+  .artboard .frames-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
   .artboard .cam-frame {
     flex: 1;
     aspect-ratio: 198 / 214;
     border-radius: 2px;
     overflow: hidden;
     position: relative;
+  }
+  .artboard .frames-grid .cam-frame {
+    aspect-ratio: 198 / 110;
   }
   .artboard .cam-frame svg {
     width: 100%;
@@ -1093,7 +1101,12 @@
     aspect-ratio: 100 / 56;
     height: 100%;
     flex-shrink: 0;
-    object-fit: cover;
+    overflow: hidden;
+    display: block;
+  }
+  .tl-thumb svg, .sb-pip svg, .sbc-card > svg {
+    width: 100%;
+    height: 100%;
     display: block;
   }
   .tl-scene.selected .tl-film {
@@ -1103,10 +1116,24 @@
   }
 
   /* ===== Storyboard view ===== */
-  .sb-view { display: none; }
-  .amc-timeline.applied.storyboard .playback-bar { display: none; }
+  .sb-view {
+    display: none;
+    height: 128px;
+    overflow: hidden;
+  }
   .amc-timeline.applied.storyboard .tl-post { display: none; }
   .amc-timeline.applied.storyboard .sb-view { display: block; }
+  .amc-timeline.applied.storyboard .playback-bar .toggle-group button:first-child {
+    background: transparent;
+    color: var(--fg-primary);
+  }
+  .amc-timeline.applied.storyboard .playback-bar .toggle-group button:last-child {
+    background: #583f4a;
+    border-radius: 4px;
+    color: #fff8f4;
+    opacity: 1;
+    pointer-events: auto;
+  }
   .sb-scrub {
     position: relative;
     height: 12px;
@@ -1177,7 +1204,7 @@
   .sb-cards {
     display: flex;
     align-items: flex-start;
-    padding: 12px 8px 20px 8px;
+    padding: 4px 8px 6px 8px;
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -1190,8 +1217,8 @@
     flex-shrink: 0;
   }
   .sbc-card {
-    width: 200px;
-    height: 112px;
+    width: 150px;
+    height: 84px;
     border-radius: 4px;
     background: #000;
     position: relative;
@@ -1206,19 +1233,20 @@
   }
   .sbc-card .sb-pip {
     position: absolute;
-    left: 8px;
-    top: 8px;
+    left: 6px;
+    top: 6px;
     width: 45%;
     height: 52%;
-    object-fit: cover;
     border-radius: 2px;
+    overflow: hidden;
+    display: block;
   }
   .sbc-card .sb-progress {
     position: absolute;
-    left: 12px;
-    right: 52px;
-    bottom: 12px;
-    height: 6px;
+    left: 10px;
+    right: 40px;
+    bottom: 9px;
+    height: 5px;
     border-radius: 3px;
     background: rgba(140, 140, 140, 0.6);
   }
@@ -1242,7 +1270,7 @@
     width: 1px;
     height: 14px;
     background: #b9aeb3;
-    margin: 49px 12px 0;
+    margin: 35px 10px 0;
     flex-shrink: 0;
   }
   .tl-id {
@@ -2921,6 +2949,20 @@
 <!-- ════════════════ SCREEN 2 · AMC editor (post-upload) ════════════════ -->
 <div class="app-screen hidden" id="screenEditor">
 
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <radialGradient id="g-park" cx="30%" cy="25%" r="90%">
+        <stop offset="0%" stop-color="#a8c88a"/><stop offset="55%" stop-color="#6f9e54"/><stop offset="100%" stop-color="#3f6b33"/>
+      </radialGradient>
+      <linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4d9fe0"/><stop offset="100%" stop-color="#a8d4f2"/>
+      </linearGradient>
+      <radialGradient id="g-warm" cx="30%" cy="25%" r="95%">
+        <stop offset="0%" stop-color="#f4cf9a"/><stop offset="55%" stop-color="#e0a468"/><stop offset="100%" stop-color="#b06f3a"/>
+      </radialGradient>
+    </defs>
+  </svg>
+
   <header class="app-bar">
     <div class="left-items">
       <button class="icon-btn js-home" title="Home" aria-label="Home">
@@ -3010,60 +3052,11 @@
           </div>
           <div class="canvas-stage">
             <div class="artboard">
-              <div class="frames">
-                <div class="cam-frame">
-                  <!-- Cam 1: white dog, green park -->
-                  <svg viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice" aria-label="Camera 1">
-                    <defs>
-                      <radialGradient id="park" cx="30%" cy="25%" r="90%">
-                        <stop offset="0%" stop-color="#a8c88a"/>
-                        <stop offset="55%" stop-color="#6f9e54"/>
-                        <stop offset="100%" stop-color="#3f6b33"/>
-                      </radialGradient>
-                    </defs>
-                    <rect width="198" height="214" fill="url(#park)"/>
-                    <circle cx="40" cy="40" r="22" fill="#c3dba6" opacity="0.5"/>
-                    <circle cx="160" cy="28" r="16" fill="#c3dba6" opacity="0.4"/>
-                    <circle cx="120" cy="60" r="10" fill="#d7e8c0" opacity="0.4"/>
-                    <g>
-                      <ellipse cx="99" cy="200" rx="64" ry="48" fill="#f7f4ef"/>
-                      <circle cx="99" cy="150" r="44" fill="#fbf9f5"/>
-                      <path d="M62 122c-10-16-8-34 2-42 8 8 12 20 12 34" fill="#efe9e0"/>
-                      <path d="M136 122c10-16 8-34-2-42-8 8-12 20-12 34" fill="#efe9e0"/>
-                      <ellipse cx="84" cy="146" rx="5" ry="6" fill="#3a3236"/>
-                      <ellipse cx="114" cy="146" rx="5" ry="6" fill="#3a3236"/>
-                      <ellipse cx="99" cy="166" rx="8" ry="6" fill="#3a3236"/>
-                      <path d="M99 172v8M91 182c4 4 12 4 16 0" stroke="#3a3236" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-                    </g>
-                  </svg>
-                </div>
-                <div class="cam-frame">
-                  <!-- Cam 2: corgi, blue sky -->
-                  <svg viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice" aria-label="Camera 2">
-                    <defs>
-                      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#4d9fe0"/>
-                        <stop offset="100%" stop-color="#a8d4f2"/>
-                      </linearGradient>
-                    </defs>
-                    <rect width="198" height="214" fill="url(#sky)"/>
-                    <ellipse cx="42" cy="46" rx="26" ry="11" fill="#fff" opacity="0.85"/>
-                    <ellipse cx="62" cy="52" rx="18" ry="8" fill="#fff" opacity="0.7"/>
-                    <ellipse cx="156" cy="30" rx="22" ry="9" fill="#fff" opacity="0.8"/>
-                    <g>
-                      <path d="M56 118 42 62l34 30Z" fill="#d98c40"/>
-                      <path d="M142 118l14-56-34 30Z" fill="#d98c40"/>
-                      <path d="M60 116 49 72l26 24Z" fill="#b56a28"/>
-                      <path d="M138 116l11-44-26 24Z" fill="#b56a28"/>
-                      <circle cx="99" cy="160" r="52" fill="#e8a45c"/>
-                      <path d="M99 112c-14 0-26 10-30 24 8 18 14 42 30 42s22-24 30-42c-4-14-16-24-30-24Z" fill="#fbf6ee"/>
-                      <ellipse cx="80" cy="150" rx="5.5" ry="6.5" fill="#3a3236"/>
-                      <ellipse cx="118" cy="150" rx="5.5" ry="6.5" fill="#3a3236"/>
-                      <ellipse cx="99" cy="172" rx="9" ry="7" fill="#3a3236"/>
-                      <path d="M99 179v9M89 190c5 5 15 5 20 0" stroke="#3a3236" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-                    </g>
-                  </svg>
-                </div>
+              <div class="frames frames-grid">
+                <div class="cam-frame" data-cam="0" aria-label="Camera 1"></div>
+                <div class="cam-frame" data-cam="1" aria-label="Camera 2"></div>
+                <div class="cam-frame" data-cam="2" aria-label="Camera 3"></div>
+                <div class="cam-frame" data-cam="3" aria-label="Webinar"></div>
               </div>
             </div>
 
@@ -3238,47 +3231,6 @@
         <!-- Storyboard view -->
         <div class="sb-view">
           <div class="sb-scrub"><span class="dot"></span></div>
-          <div class="sb-bar">
-            <div class="sb-time">
-              <span class="cur">00:00.0</span>
-              <span class="sep">/</span>
-              <span class="tot">02:49:17.8</span>
-            </div>
-            <div class="sb-controls">
-              <button class="icon-btn" aria-label="Record">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <circle cx="10" cy="10" r="8.2" stroke="#e5484d" stroke-width="1.6"/>
-                  <circle cx="10" cy="10" r="4.4" fill="#e5484d"/>
-                </svg>
-              </button>
-              <button class="icon-btn" aria-label="Play">
-                <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M4.5 3.2v9.6L12.8 8 4.5 3.2Z"/>
-                </svg>
-              </button>
-              <button class="sb-split">
-                <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M5.5 5 2.5 8l3 3M10.5 5l3 3-3 3"/>
-                </svg>
-                Split
-              </button>
-            </div>
-            <div class="toggle-group sb-toggle">
-              <button id="sbToTimeline" aria-label="Timeline view">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
-                  <path d="M1.5 4.5h13M1.5 8h9M1.5 11.5h13"/>
-                </svg>
-              </button>
-              <button class="tg-active" aria-label="Storyboard view">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
-                  <rect x="2" y="2" width="5" height="5" rx="1"/>
-                  <rect x="9" y="2" width="5" height="5" rx="1"/>
-                  <rect x="2" y="9" width="5" height="5" rx="1"/>
-                  <rect x="9" y="9" width="5" height="5" rx="1"/>
-                </svg>
-              </button>
-            </div>
-          </div>
           <div class="sb-cards" id="sbCards"></div>
         </div>
       </div>
@@ -3663,7 +3615,7 @@
     <div class="mm-rows" id="mmRows">
       <div class="mm-row">
         <div class="mm-filename">
-          <span class="mm-thumb">🐹</span>
+          <span class="mm-thumb" data-cam="0"></span>
           <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
         </div>
         <button class="mm-select" data-row="0" aria-haspopup="menu">
@@ -3673,7 +3625,7 @@
       </div>
       <div class="mm-row">
         <div class="mm-filename">
-          <span class="mm-thumb">🐶</span>
+          <span class="mm-thumb" data-cam="1"></span>
           <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
         </div>
         <button class="mm-select" data-row="1" aria-haspopup="menu">
@@ -3683,7 +3635,7 @@
       </div>
       <div class="mm-row">
         <div class="mm-filename">
-          <span class="mm-thumb">🐑</span>
+          <span class="mm-thumb" data-cam="2"></span>
           <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
         </div>
         <button class="mm-select" data-row="2" aria-haspopup="menu">
@@ -3693,7 +3645,7 @@
       </div>
       <div class="mm-row">
         <div class="mm-filename">
-          <span class="mm-thumb">🐕</span>
+          <span class="mm-thumb" data-cam="3"></span>
           <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
         </div>
         <button class="mm-select" data-row="3" aria-haspopup="menu">
@@ -3791,6 +3743,78 @@
 
 <script>
 (function () {
+  /* ===== Fake camera visuals: 3 solo animal cams + a webinar (all three) ===== */
+  const ANIMAL_ART = [
+    // cam 0: hamster on warm backdrop
+    `<rect width="198" height="214" fill="url(#g-warm)"/>
+     <circle cx="44" cy="42" r="20" fill="#f6dcae" opacity="0.45"/>
+     <circle cx="158" cy="30" r="14" fill="#f6dcae" opacity="0.4"/>
+     <g>
+       <ellipse cx="99" cy="196" rx="62" ry="46" fill="#e8b87a"/>
+       <circle cx="99" cy="148" r="46" fill="#eec189"/>
+       <circle cx="64" cy="110" r="15" fill="#d99c58"/>
+       <circle cx="134" cy="110" r="15" fill="#d99c58"/>
+       <circle cx="64" cy="110" r="8" fill="#f6d7ab"/>
+       <circle cx="134" cy="110" r="8" fill="#f6d7ab"/>
+       <circle cx="72" cy="150" r="13" fill="#f8e3c0"/>
+       <circle cx="126" cy="150" r="13" fill="#f8e3c0"/>
+       <ellipse cx="84" cy="142" rx="5" ry="6" fill="#3a3236"/>
+       <ellipse cx="114" cy="142" rx="5" ry="6" fill="#3a3236"/>
+       <ellipse cx="99" cy="158" rx="6" ry="4.5" fill="#b06a52"/>
+       <path d="M99 162v6M92 170c3.5 3.5 10.5 3.5 14 0" stroke="#3a3236" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+     </g>`,
+    // cam 1: white dog in the park
+    `<rect width="198" height="214" fill="url(#g-park)"/>
+     <circle cx="40" cy="40" r="22" fill="#c3dba6" opacity="0.5"/>
+     <circle cx="160" cy="28" r="16" fill="#c3dba6" opacity="0.4"/>
+     <circle cx="120" cy="60" r="10" fill="#d7e8c0" opacity="0.4"/>
+     <g>
+       <ellipse cx="99" cy="200" rx="64" ry="48" fill="#f7f4ef"/>
+       <circle cx="99" cy="150" r="44" fill="#fbf9f5"/>
+       <path d="M62 122c-10-16-8-34 2-42 8 8 12 20 12 34" fill="#efe9e0"/>
+       <path d="M136 122c10-16 8-34-2-42-8 8-12 20-12 34" fill="#efe9e0"/>
+       <ellipse cx="84" cy="146" rx="5" ry="6" fill="#3a3236"/>
+       <ellipse cx="114" cy="146" rx="5" ry="6" fill="#3a3236"/>
+       <ellipse cx="99" cy="166" rx="8" ry="6" fill="#3a3236"/>
+       <path d="M99 172v8M91 182c4 4 12 4 16 0" stroke="#3a3236" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+     </g>`,
+    // cam 2: corgi under blue sky
+    `<rect width="198" height="214" fill="url(#g-sky)"/>
+     <ellipse cx="42" cy="46" rx="26" ry="11" fill="#fff" opacity="0.85"/>
+     <ellipse cx="62" cy="52" rx="18" ry="8" fill="#fff" opacity="0.7"/>
+     <ellipse cx="156" cy="30" rx="22" ry="9" fill="#fff" opacity="0.8"/>
+     <g>
+       <path d="M56 118 42 62l34 30Z" fill="#d98c40"/>
+       <path d="M142 118l14-56-34 30Z" fill="#d98c40"/>
+       <path d="M60 116 49 72l26 24Z" fill="#b56a28"/>
+       <path d="M138 116l11-44-26 24Z" fill="#b56a28"/>
+       <circle cx="99" cy="160" r="52" fill="#e8a45c"/>
+       <path d="M99 112c-14 0-26 10-30 24 8 18 14 42 30 42s22-24 30-42c-4-14-16-24-30-24Z" fill="#fbf6ee"/>
+       <ellipse cx="80" cy="150" rx="5.5" ry="6.5" fill="#3a3236"/>
+       <ellipse cx="118" cy="150" rx="5.5" ry="6.5" fill="#3a3236"/>
+       <ellipse cx="99" cy="172" rx="9" ry="7" fill="#3a3236"/>
+       <path d="M99 179v9M89 190c5 5 15 5 20 0" stroke="#3a3236" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+     </g>`,
+  ];
+
+  function camInner(cam) {
+    if (cam < 3) return ANIMAL_ART[cam];
+    // cam 3: webinar — the three animals together in a call grid
+    return `<rect width="198" height="214" fill="#241d20"/>
+      <svg x="6" y="74" width="60" height="66" viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice">${ANIMAL_ART[0]}</svg>
+      <svg x="69" y="74" width="60" height="66" viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice">${ANIMAL_ART[1]}</svg>
+      <svg x="132" y="74" width="60" height="66" viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice">${ANIMAL_ART[2]}</svg>`;
+  }
+
+  function camSVGHTML(cam) {
+    return `<svg viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block" aria-hidden="true">${camInner(cam)}</svg>`;
+  }
+
+  // paint every placeholder tile/frame marked with data-cam
+  document.querySelectorAll('[data-cam]').forEach(el => {
+    el.innerHTML = camSVGHTML(Number(el.dataset.cam));
+  });
+
   const uploadZone = document.getElementById('uploadZone');
   const supertoast = document.getElementById('supertoast');
   const screenEmpty = document.getElementById('screenEmpty');
@@ -3944,7 +3968,7 @@
   }
 
   // Camera setup rows carry the tokens assigned in the sequence intercept
-  const camThumbs = ['🐹', '🐶', '🐑', '🐕'];
+  const camThumbs = [0, 1, 2, 3].map(camSVGHTML);
   const camSetupRows = document.getElementById('camSetupRows');
 
   function renderCamSetup() {
@@ -4192,14 +4216,19 @@
     <path d="M8 2a6 6 0 0 1 6 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`;
   let applyTimers = [];
 
-  // Timeline reflects the applied multicam: one scene per combination,
-  // filmstrips use the design's video-frame thumbnails (assets/timeline)
-  const TL_THUMB = n => `assets/timeline/thumb${n}.jpg`;
-  const SCENE_PATTERNS = [[0, 1, 2, 3], [4, 5, 6, 7], [8, 1, 2], [9, 10, 11, 11]];
+  // Timeline reflects the applied multicam: one scene per combination.
+  // Filmstrip cells cycle through the combo's solo cams, plus the webinar
+  // frame when the combo has multiple speakers.
   const SCENE_WIDTHS = [212, 164, 100, 316];
 
   function timelineSceneList() {
     return (combos.length ? combos : [[0], [1]]).slice(0, 5);
+  }
+
+  function comboCamSeq(combo) {
+    const seq = combo.map(s => s % 3);
+    if (combo.length > 1) seq.push(3);
+    return seq;
   }
 
   function renderTimelineScenes() {
@@ -4207,14 +4236,14 @@
     tlScenes.innerHTML = '';
     timelineSceneList().forEach((combo, idx) => {
       const w = SCENE_WIDTHS[idx % SCENE_WIDTHS.length];
-      const pattern = SCENE_PATTERNS[idx % SCENE_PATTERNS.length];
+      const seq = comboCamSeq(combo);
       const scene = document.createElement('div');
       scene.className = 'tl-scene' + (idx === 0 ? ' selected' : '');
       scene.style.width = `${w}px`;
       const count = Math.ceil(w / 100) + 1;
       const cells = [];
       for (let k = 0; k < count; k++) {
-        cells.push(`<img class="tl-thumb" alt="" src="${TL_THUMB(pattern[k % pattern.length])}">`);
+        cells.push(`<div class="tl-thumb">${camSVGHTML(seq[k % seq.length])}</div>`);
       }
       scene.innerHTML = `<div class="tl-film">${cells.join('')}</div><span class="tl-id">${idx + 1}</span>`
         + (idx > 0 ? '<span class="tl-transition"><span></span></span>' : '');
@@ -4222,7 +4251,7 @@
     });
   }
 
-  // Storyboard view: large scene cards with numbers and tick marks
+  // Storyboard view: numbered scene cards with tick marks
   function renderStoryboard() {
     const sbCards = document.getElementById('sbCards');
     sbCards.innerHTML = '';
@@ -4230,18 +4259,13 @@
     const tick = () => { const t = document.createElement('span'); t.className = 'sb-tick'; return t; };
     sbCards.appendChild(tick());
     list.forEach((combo, idx) => {
-      const pattern = SCENE_PATTERNS[idx % SCENE_PATTERNS.length];
+      const rep = combo.length > 1 ? 3 : combo[0] % 3;
       const item = document.createElement('div');
       item.className = 'sb-item' + (idx === 0 ? ' selected' : '');
-      let card;
-      if (idx === 0) {
+      const card = idx === 0
         // selected scene: picture-in-picture over black with a progress scrubber
-        card = `<div class="sbc-card"><img class="sb-pip" alt="" src="${TL_THUMB(pattern[0])}"><span class="sb-progress"></span></div>`;
-      } else if (idx === list.length - 1) {
-        card = `<div class="sbc-card"></div>`;
-      } else {
-        card = `<div class="sbc-card"><img alt="" src="${TL_THUMB(pattern[0])}"></div>`;
-      }
+        ? `<div class="sbc-card"><span class="sb-pip">${camSVGHTML(rep)}</span><span class="sb-progress"></span></div>`
+        : `<div class="sbc-card">${camSVGHTML(rep)}</div>`;
       item.innerHTML = `${card}<span class="sb-num">${idx + 1}</span>`;
       sbCards.appendChild(item);
       sbCards.appendChild(tick());
@@ -4269,9 +4293,6 @@
     amcTimelineEl.classList.add('storyboard');
   });
   tlToggle[0].addEventListener('click', () => amcTimelineEl.classList.remove('storyboard'));
-  document.getElementById('sbToTimeline').addEventListener('click', () => {
-    amcTimelineEl.classList.remove('storyboard');
-  });
 
   // Editing anything after an apply turns the button into Run
   function markDirty() {
