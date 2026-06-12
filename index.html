@@ -2586,6 +2586,82 @@
     pointer-events: none;
   }
 
+  /* mini callout with a bottom caret (points down at the scene toolbar) */
+  .callout.callout-bottom { width: 224px; padding: 12px; }
+  .callout.callout-bottom::after {
+    right: auto;
+    top: auto;
+    left: 50%;
+    bottom: -6px;
+    transform: translateX(-50%) rotate(45deg);
+    border-top: none;
+    border-left: none;
+    border-right: 1px solid rgba(255, 248, 244, 0.1);
+    border-bottom: 1px solid rgba(255, 248, 244, 0.1);
+  }
+
+  /* ===== Layout pack gallery ===== */
+  .pack-popover { width: 300px; max-height: 480px; }
+  .pk-header-icons { display: flex; align-items: center; gap: 2px; }
+  .pk-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
+    min-height: 0;
+  }
+  .pk-grid::-webkit-scrollbar { display: none; }
+  .pk-card {
+    border: 1px solid var(--grey-50-a);
+    border-radius: 8px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+    background: var(--surface-elevated);
+  }
+  .pk-card:hover { border-color: var(--border-medium); }
+  .pk-card.selected {
+    border: 2px solid #a85c74;
+    padding: 3px;
+  }
+  .pk-card .pk-img {
+    height: 76px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #241d20;
+  }
+  .pk-card .pk-img svg { width: 100%; height: 100%; display: block; }
+  .pk-card .pk-name {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+    padding: 0 4px 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pk-back {
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 16px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: 16px;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .pk-back:hover { background: #faf8f8; }
+
   /* ===== Automatic multicam callout ===== */
   .callout {
     position: absolute;
@@ -3748,6 +3824,41 @@
     <button class="amc-btn lp-apply" id="lpApply" disabled>Apply changes</button>
   </div>
 
+  <!-- Layout adjustment callout (after the applied toast) -->
+  <div class="callout callout-bottom hidden" id="layoutCallout" role="note">
+    <div class="co-title">Adjust your multi-cam layout</div>
+    <div class="co-subtitle">Not happy with a scene? Open Layout to tweak styles and speakers.</div>
+  </div>
+
+  <!-- Layout pack gallery (back from layout editing) -->
+  <div class="layout-popover pack-popover hidden" id="packPopover" role="dialog" aria-label="Layout pack">
+    <div class="lp-header">
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="2" width="8" height="12" rx="1.5"/>
+        <path d="M10 4.5h2.5a1 1 0 0 1 1 1V12a2 2 0 0 1-2 2H6"/>
+        <path d="M6 11.5h.01"/>
+      </svg>
+      <span class="lp-title" style="flex:1;">Multicam full screen</span>
+      <span class="pk-header-icons">
+        <button class="icon-btn dense" aria-label="Search">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
+        </button>
+        <button class="icon-btn dense" aria-label="Filter">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M3 5h10M5 8h6M7 11h2"/></svg>
+        </button>
+        <button class="icon-btn dense" aria-label="More">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="3.5" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="12.5" cy="8" r="1.2"/></svg>
+        </button>
+      </span>
+    </div>
+    <div class="pk-grid" id="pkGrid"></div>
+    <button class="pk-back" id="pkBack">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4 3 7.5 6.5 11"/><path d="M3 7.5h7a3 3 0 0 1 0 6H8"/></svg>
+      Back to Descript
+    </button>
+    <button class="amc-btn lp-apply" id="pkChange" disabled>Change layout pack</button>
+  </div>
+
   <!-- Automatic multicam callout -->
   <div class="callout hidden" id="amcCallout" role="note">
     <div class="co-image" aria-hidden="true">
@@ -4534,13 +4645,17 @@
     renderLpChips();
     lpApply.setAttribute('disabled', '');
     layoutPopover.classList.remove('hidden');
+    positionLeftOf(layoutPopover, anchor);
+    requestAnimationFrame(() => layoutPopover.classList.add('open'));
+  }
+
+  // popovers from the scene toolbar open to the LEFT of the anchor, above it
+  function positionLeftOf(pop, anchor) {
     const baseRect = screenEditor.getBoundingClientRect();
     const aRect = anchor.getBoundingClientRect();
-    const h = layoutPopover.offsetHeight;
-    const left = Math.min(Math.max(8, aRect.left - baseRect.left - 60), baseRect.width - 240);
-    layoutPopover.style.left = `${left}px`;
-    layoutPopover.style.top = `${aRect.top - baseRect.top - h - 8}px`;
-    requestAnimationFrame(() => layoutPopover.classList.add('open'));
+    const left = Math.max(8, aRect.left - baseRect.left - pop.offsetWidth - 8);
+    pop.style.left = `${left}px`;
+    pop.style.top = `${Math.max(8, aRect.top - baseRect.top - pop.offsetHeight - 8)}px`;
   }
 
   function closeLayoutPopover() {
@@ -4552,11 +4667,85 @@
     document.getElementById(id).addEventListener('click', e => {
       e.stopPropagation();
       if (!amcTimelineEl.classList.contains('applied')) return;
+      hideLayoutCallout();
       if (!layoutPopover.classList.contains('hidden')) { closeLayoutPopover(); return; }
+      lpAnchor = e.currentTarget;
       openLayoutPopover(e.currentTarget);
     });
   });
-  document.getElementById('lpBack').addEventListener('click', closeLayoutPopover);
+  /* Layout pack gallery (best-effort; opens from the layout popover's back button) */
+  const packPopover = document.getElementById('packPopover');
+  const pkGrid = document.getElementById('pkGrid');
+  const pkChange = document.getElementById('pkChange');
+  let pkSelected = 5;
+  let lpAnchor = null;
+
+  // mini layout compositions rendered with the animal cams
+  function packPreviewSVG(kind) {
+    const f = (cam, x, y, w, h) =>
+      `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice">${camInner(cam)}</svg>`;
+    let inner = '';
+    switch (kind) {
+      case 0: inner = f(0, 0, 0, 99, 112) + f(1, 101, 0, 99, 112); break;                      // 2 cam
+      case 1: inner = f(0, 0, 0, 66, 112) + f(1, 67, 0, 66, 112) + f(2, 134, 0, 66, 112); break; // 3 full
+      case 2: inner = f(0, 0, 0, 99, 55) + f(1, 101, 0, 99, 55) + f(2, 0, 57, 99, 55) + f(3, 101, 57, 99, 55); break; // 4 grid
+      case 3: inner = f(1, 0, 0, 144, 112) + f(2, 146, 0, 54, 54); break;                      // focus 2
+      case 4: inner = f(2, 0, 0, 144, 112) + f(0, 146, 0, 54, 54) + f(1, 146, 58, 54, 54); break; // focus 3
+      default: inner = f(0, 0, 0, 144, 112) + f(1, 146, 0, 54, 35) + f(2, 146, 38, 54, 35) + f(3, 146, 76, 54, 36); // focus 4
+    }
+    return `<svg viewBox="0 0 200 112" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block" aria-hidden="true"><rect width="200" height="112" fill="#241d20"/>${inner}</svg>`;
+  }
+
+  const PACKS = ['2 Cam Test', 'Full Screen Three Cam', 'Full Screen Four Cam', 'Focus Two Camera', 'Focus Three Camera', 'Focus Four Camera'];
+
+  function renderPackGrid() {
+    pkGrid.innerHTML = PACKS.map((name, i) => `
+      <div class="pk-card${i === pkSelected ? ' selected' : ''}" data-i="${i}">
+        <div class="pk-img">${packPreviewSVG(i)}</div>
+        <span class="pk-name" title="${name}">${name}</span>
+      </div>`).join('');
+    pkGrid.querySelectorAll('.pk-card').forEach(card => {
+      card.addEventListener('click', () => {
+        pkSelected = Number(card.dataset.i);
+        pkGrid.querySelectorAll('.pk-card').forEach(cd =>
+          cd.classList.toggle('selected', Number(cd.dataset.i) === pkSelected));
+        pkChange.removeAttribute('disabled');
+      });
+    });
+  }
+
+  function openPackPopover() {
+    renderPackGrid();
+    pkChange.setAttribute('disabled', '');
+    packPopover.classList.remove('hidden');
+    if (lpAnchor) positionLeftOf(packPopover, lpAnchor);
+    requestAnimationFrame(() => packPopover.classList.add('open'));
+  }
+
+  function closePackPopover() {
+    packPopover.classList.remove('open');
+    setTimeout(() => packPopover.classList.add('hidden'), 200);
+  }
+
+  document.getElementById('lpBack').addEventListener('click', () => {
+    closeLayoutPopover();
+    setTimeout(openPackPopover, 180);
+  });
+  document.getElementById('pkBack').addEventListener('click', () => {
+    closePackPopover();
+    setTimeout(() => { if (lpAnchor) openLayoutPopover(lpAnchor); }, 180);
+  });
+  pkChange.addEventListener('click', () => {
+    closePackPopover();
+    markDirty();
+    setTimeout(() => { if (lpAnchor) openLayoutPopover(lpAnchor); }, 180);
+  });
+  packPopover.addEventListener('click', e => e.stopPropagation());
+  document.addEventListener('click', e => {
+    if (packPopover.classList.contains('hidden')) return;
+    if (e.target.closest('#packPopover')) return;
+    closePackPopover();
+  });
   layoutPopover.addEventListener('click', e => e.stopPropagation());
   document.addEventListener('click', e => {
     if (layoutPopover.classList.contains('hidden')) return;
@@ -4580,6 +4769,31 @@
     closeLayoutPopover();
   });
 
+  /* Layout callout: nudges users to the scene toolbar after the toast */
+  const layoutCallout = document.getElementById('layoutCallout');
+
+  function showLayoutCallout() {
+    if (!amcTimelineEl.classList.contains('applied')) return;
+    if (!layoutPopover.classList.contains('hidden')) return;
+    const anchor = document.getElementById('layoutTbItem');
+    layoutCallout.classList.remove('hidden');
+    const baseRect = screenEditor.getBoundingClientRect();
+    const aRect = anchor.getBoundingClientRect();
+    layoutCallout.style.left = `${aRect.left + aRect.width / 2 - baseRect.left - layoutCallout.offsetWidth / 2}px`;
+    layoutCallout.style.top = `${aRect.top - baseRect.top - layoutCallout.offsetHeight - 10}px`;
+    requestAnimationFrame(() => layoutCallout.classList.add('visible'));
+  }
+
+  function hideLayoutCallout() {
+    if (!layoutCallout.classList.contains('visible')) return;
+    layoutCallout.classList.remove('visible');
+    setTimeout(() => layoutCallout.classList.add('hidden'), 250);
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#layoutCallout')) hideLayoutCallout();
+  });
+
   function resetApplyState() {
     applyTimers.forEach(clearTimeout);
     applyTimers = [];
@@ -4593,6 +4807,10 @@
     lpSavedLayout = 0;
     layoutPopover.classList.remove('open');
     layoutPopover.classList.add('hidden');
+    packPopover.classList.remove('open');
+    packPopover.classList.add('hidden');
+    layoutCallout.classList.remove('visible');
+    layoutCallout.classList.add('hidden');
   }
 
   /* Timeline <-> storyboard view toggles */
@@ -4652,11 +4870,20 @@
     applyTimers.push(setTimeout(() => {
       amcToast.classList.add('visible');
     }, 420 * STEPS + 1500));
+    // the toast stays briefly, then hands off to the layout callout
+    applyTimers.push(setTimeout(() => {
+      amcToast.classList.remove('visible');
+    }, 420 * STEPS + 6500));
+    applyTimers.push(setTimeout(() => {
+      showLayoutCallout();
+    }, 420 * STEPS + 6900));
   });
 
   document.getElementById('amcToastUndo').addEventListener('click', resetApplyState);
-  document.getElementById('amcToastClose').addEventListener('click', () => {
+  document.getElementById('amcToastClose').addEventListener('click', e => {
+    e.stopPropagation();
     amcToast.classList.remove('visible');
+    setTimeout(showLayoutCallout, 350);
   });
   pvPrev.addEventListener('click', () => { comboIdx--; renderCombos(); });
   pvNext.addEventListener('click', () => { comboIdx++; renderCombos(); });
