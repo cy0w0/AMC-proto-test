@@ -4733,8 +4733,11 @@
     const aRect = anchor.getBoundingClientRect();
     const left = Math.max(8, aRect.left - baseRect.left - pop.offsetWidth - 8);
     pop.style.left = `${left}px`;
-    // hug the toolbar: bottom edge aligned with the anchor's bottom
-    pop.style.top = `${Math.max(8, aRect.bottom - baseRect.top - pop.offsetHeight)}px`;
+    // straddle the toolbar: ~40% of the menu above the anchor's center
+    const anchorCenter = aRect.top + aRect.height / 2 - baseRect.top;
+    const top = Math.max(8, Math.min(anchorCenter - pop.offsetHeight * 0.4,
+      baseRect.height - pop.offsetHeight - 8));
+    pop.style.top = `${top}px`;
   }
 
   function closeLayoutPopover() {
