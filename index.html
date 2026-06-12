@@ -1517,6 +1517,7 @@
   }
 
   /* Identified speakers popover */
+  #mmPopover { z-index: 90; }
   .mm-popover {
     position: absolute;
     width: 208px;
@@ -2459,6 +2460,132 @@
   }
   .ta-btn:hover { background: rgba(63, 42, 50, 0.08); }
 
+  /* ===== Edit multi-cam layout popover ===== */
+  .layout-popover {
+    position: absolute;
+    width: 232px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    box-shadow:
+      0 8px 16px 0 var(--drop-shadow-medium),
+      0 8px 8px 0 var(--drop-shadow-soft);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 65;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+  .layout-popover.open {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .lp-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+  }
+  .lp-title {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+  .lp-tabs { width: 100%; }
+  .lp-tabs .seg-tab { flex: 1; }
+  .lp-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 32px;
+  }
+  .lp-row .grow { flex: 1; font-size: 12px; line-height: 16px; }
+  .lp-add {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: 6px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .lp-add:hover { background: #faf8f8; }
+
+  /* layout style carousel: transform-only animation, no reflow */
+  .lp-carousel {
+    width: 100%;
+    height: 104px;
+    overflow: hidden;
+    position: relative;
+  }
+  .lp-track {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .lp-card {
+    width: 110px;
+    height: 72px;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    gap: 2px;
+    align-items: stretch;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.35s ease;
+    opacity: 0.75;
+  }
+  .lp-card.selected {
+    transform: scale(1.2);
+    opacity: 1;
+    cursor: default;
+  }
+  .lp-cell {
+    flex: 1;
+    min-width: 0;
+    background: rgba(88, 63, 74, 0.1);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: 0.055px;
+  }
+  .lp-cell.wide { flex: 2; }
+  .lp-cell.screen {
+    background: rgba(63, 42, 50, 0.16);
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 6px 3px 3px;
+  }
+  .lp-cell.screen .scr {
+    width: 100%;
+    height: 64%;
+    background: #fff;
+    border-radius: 0 0 3px 3px;
+  }
+  .lp-apply[disabled] {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
   /* ===== Automatic multicam callout ===== */
   .callout {
     position: absolute;
@@ -3062,8 +3189,8 @@
 
             <!-- Scene toolbar -->
             <div class="canvas-toolbar scene-toolbar">
-              <button class="tb-item">Layout</button>
-              <span class="tb-tag">Multicam</span>
+              <button class="tb-item" id="layoutTbItem">Layout</button>
+              <span class="tb-tag" id="layoutTbTag" style="cursor:pointer;">Multicam</span>
               <span class="tb-divider"></span>
               <button class="tb-item tb-secondary">
                 Background
@@ -3591,6 +3718,34 @@
         <path d="M4 4l8 8M12 4l-8 8"/>
       </svg>
     </button>
+  </div>
+
+  <!-- Edit multi-cam layout popover -->
+  <div class="layout-popover hidden" id="layoutPopover" role="dialog" aria-label="Edit multi-cam layout">
+    <div class="lp-header">
+      <button class="icon-btn dense" id="lpBack" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 8H3M7 3.5 2.5 8 7 12.5"/>
+        </svg>
+      </button>
+      <span class="lp-title">Edit multi-cam layout</span>
+    </div>
+    <div class="seg-tabs lp-tabs" role="tablist">
+      <button class="seg-tab selected" role="tab">This scene</button>
+      <button class="seg-tab" role="tab">Matching scenes</button>
+    </div>
+    <div class="lp-row">
+      <span class="grow">Speaker slots</span>
+      <button class="lp-add" id="lpAdd" aria-label="Add speaker slot">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+      </button>
+    </div>
+    <div class="lp-carousel">
+      <div class="lp-track" id="lpTrack"></div>
+    </div>
+    <div class="cc-chips" id="lpChips"></div>
+    <div class="pop-divider" style="width:100%;margin:2px 0;"></div>
+    <button class="amc-btn lp-apply" id="lpApply" disabled>Apply changes</button>
   </div>
 
   <!-- Automatic multicam callout -->
@@ -4292,6 +4447,139 @@
     });
   }
 
+  /* Edit multi-cam layout popover (scene toolbar > Layout) */
+  const layoutPopover = document.getElementById('layoutPopover');
+  const lpTrack = document.getElementById('lpTrack');
+  const lpChips = document.getElementById('lpChips');
+  const lpApply = document.getElementById('lpApply');
+  const LP_LAYOUTS = ['split', 'screen', 'focus'];
+  const LP_CARD = 110, LP_GAP = 8;
+  let lpLayoutIdx = 0;
+  let lpSavedLayout = 0;
+  const lpComboIdx = 0; // edits the selected scene (scene 1)
+
+  function lpCombo() {
+    if (!combos.length) seedCombos();
+    return combos[lpComboIdx];
+  }
+
+  function lpCardHTML(layout, combo, idx) {
+    const cell = s => `<div class="lp-cell" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</div>`;
+    let cells = '';
+    if (layout === 'screen') {
+      cells = `<div class="lp-cell screen"><span class="scr"></span></div>` + combo.map(cell).join('');
+    } else if (layout === 'focus') {
+      cells = combo.map((s, i) => i === 0
+        ? `<div class="lp-cell wide" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</div>`
+        : cell(s)).join('');
+    } else {
+      cells = combo.map(cell).join('');
+    }
+    return `<div class="lp-card${idx === lpLayoutIdx ? ' selected' : ''}" data-i="${idx}">${cells}</div>`;
+  }
+
+  function renderLayoutCarousel(instant) {
+    const combo = lpCombo();
+    lpTrack.innerHTML = LP_LAYOUTS.map((l, i) => lpCardHTML(l, combo, i)).join('');
+    const offset = lpLayoutIdx * (LP_CARD + LP_GAP) + LP_CARD / 2;
+    if (instant) lpTrack.style.transition = 'none';
+    lpTrack.style.transform = `translate(${-offset}px, -50%)`;
+    if (instant) requestAnimationFrame(() => { lpTrack.style.transition = ''; });
+    lpTrack.querySelectorAll('.lp-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const i = Number(card.dataset.i);
+        if (i === lpLayoutIdx) return;
+        lpLayoutIdx = i;
+        // re-select without rebuilding: pure transform animation
+        lpTrack.querySelectorAll('.lp-card').forEach(cd =>
+          cd.classList.toggle('selected', Number(cd.dataset.i) === i));
+        lpTrack.style.transform = `translate(${-(i * (LP_CARD + LP_GAP) + LP_CARD / 2)}px, -50%)`;
+        lpUpdateApply(true);
+      });
+    });
+  }
+
+  function renderLpChips() {
+    const combo = lpCombo();
+    lpChips.innerHTML = combo.map((s, pos) =>
+      `<div class="cc-chip" data-pos="${pos}" title="Click to change speaker"><span class="id">${pos + 1}</span><span class="nm" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml(speakers[s])}</span></div>`).join('');
+    lpChips.querySelectorAll('.cc-chip').forEach(chip => {
+      const pos = Number(chip.dataset.pos);
+      chip.addEventListener('click', e => {
+        e.stopPropagation();
+        if (openAnchor === chip) { closePopover(); return; }
+        closePopover();
+        chip.classList.add('editing');
+        openSinglePopover({
+          get: () => combos[lpComboIdx][pos],
+          set: idx => {
+            combos[lpComboIdx][pos] = idx;
+            renderLpChips();
+            renderLayoutCarousel(true);
+            renderCombos();
+            lpUpdateApply(true);
+          },
+        }, chip);
+      });
+    });
+  }
+
+  function lpUpdateApply(dirty) {
+    if (dirty) lpApply.removeAttribute('disabled');
+  }
+
+  function openLayoutPopover(anchor) {
+    lpLayoutIdx = lpSavedLayout;
+    renderLayoutCarousel(true);
+    renderLpChips();
+    lpApply.setAttribute('disabled', '');
+    layoutPopover.classList.remove('hidden');
+    const baseRect = screenEditor.getBoundingClientRect();
+    const aRect = anchor.getBoundingClientRect();
+    const h = layoutPopover.offsetHeight;
+    const left = Math.min(Math.max(8, aRect.left - baseRect.left - 60), baseRect.width - 240);
+    layoutPopover.style.left = `${left}px`;
+    layoutPopover.style.top = `${aRect.top - baseRect.top - h - 8}px`;
+    requestAnimationFrame(() => layoutPopover.classList.add('open'));
+  }
+
+  function closeLayoutPopover() {
+    layoutPopover.classList.remove('open');
+    setTimeout(() => layoutPopover.classList.add('hidden'), 200);
+  }
+
+  ['layoutTbItem', 'layoutTbTag'].forEach(id => {
+    document.getElementById(id).addEventListener('click', e => {
+      e.stopPropagation();
+      if (!amcTimelineEl.classList.contains('applied')) return;
+      if (!layoutPopover.classList.contains('hidden')) { closeLayoutPopover(); return; }
+      openLayoutPopover(e.currentTarget);
+    });
+  });
+  document.getElementById('lpBack').addEventListener('click', closeLayoutPopover);
+  layoutPopover.addEventListener('click', e => e.stopPropagation());
+  document.addEventListener('click', e => {
+    if (layoutPopover.classList.contains('hidden')) return;
+    if (e.target.closest('#layoutPopover')) return;
+    closeLayoutPopover();
+  });
+  document.getElementById('lpAdd').addEventListener('click', () => {
+    const combo = lpCombo();
+    if (combo.length >= 4) return;
+    const cand = assignedSpeakerIdxs().find(s => !combo.includes(s));
+    combo.push(cand !== undefined ? cand : combo.length % speakers.length);
+    renderLpChips();
+    renderLayoutCarousel(true);
+    renderCombos();
+    lpUpdateApply(true);
+  });
+  lpApply.addEventListener('click', () => {
+    lpSavedLayout = lpLayoutIdx;
+    renderTimelineScenes();
+    markDirty();
+    closeLayoutPopover();
+  });
+
   function resetApplyState() {
     applyTimers.forEach(clearTimeout);
     applyTimers = [];
@@ -4302,6 +4590,9 @@
     applyToast.classList.remove('visible');
     amcToast.classList.remove('visible');
     document.getElementById('amcTimeline').classList.remove('applied', 'storyboard');
+    lpSavedLayout = 0;
+    layoutPopover.classList.remove('open');
+    layoutPopover.classList.add('hidden');
   }
 
   /* Timeline <-> storyboard view toggles */
