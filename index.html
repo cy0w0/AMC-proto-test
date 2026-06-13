@@ -758,6 +758,72 @@
     display: block;
   }
 
+  /* Layer selection: toolbar, scope tabs, camera picker */
+  .canvas-pane { position: relative; }
+  .sel-toolbar {
+    position: absolute;
+    top: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    border-radius: 8px;
+    padding: 0;
+  }
+  .sel-toolbar .tb-item {
+    height: 32px;
+    border-radius: 0;
+    padding: 0 8px;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .sel-toolbar .tb-divider { height: 32px; margin: 0; }
+  .sel-toolbar #selMulticamBtn.active { background: rgba(88, 63, 74, 0.1); }
+  .cam-frame.layer-selected {
+    outline: 2px solid #3f2a32;
+    outline-offset: 1px;
+    border-radius: 2px;
+  }
+  .cam-frame[data-speaker] { cursor: pointer; }
+  .sel-scope {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-secondary);
+  }
+  .cam-picker {
+    position: absolute;
+    z-index: 35;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    box-shadow:
+      0 8px 16px 0 var(--drop-shadow-medium),
+      0 8px 8px 0 var(--drop-shadow-soft);
+    padding: 6px;
+    display: flex;
+    gap: 6px;
+  }
+  .cp-tile {
+    width: 60px;
+    height: 36px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(88, 63, 74, 0.1);
+    cursor: pointer;
+    padding: 0;
+    background: #241d20;
+  }
+  .cp-tile svg { width: 100%; height: 100%; display: block; }
+  .cp-tile:hover { border-color: var(--border-medium); }
+  .cp-tile.selected {
+    outline: 2px solid #3f2a32;
+    outline-offset: 1px;
+    border-color: transparent;
+  }
+
   /* Floating canvas toolbar */
   .canvas-toolbar {
     display: inline-flex;
@@ -3281,6 +3347,41 @@
             </button>
             <span></span>
           </div>
+          <!-- Layer selection toolbar -->
+          <div class="canvas-toolbar sel-toolbar hidden" id="selToolbar">
+            <button class="tb-item">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2.5 11 6l3.5 1.5L11 9l-1.5 3.5L8 9 4.5 7.5 8 6l1.5-3.5Z"/><path d="M3.5 10.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"/></svg>
+              Edit with AI
+            </button>
+            <span class="tb-divider"></span>
+            <button class="tb-item">Transform</button>
+            <span class="tb-divider"></span>
+            <button class="tb-item" aria-label="Shapes">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><circle cx="5.5" cy="5.5" r="3.5"/><rect x="7" y="7" width="7" height="7" rx="1"/></svg>
+            </button>
+            <span class="tb-divider"></span>
+            <button class="tb-item" aria-label="Swap">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 5.5a5 5 0 0 0-9-1.5"/><path d="M3.5 2.5v2.5H6"/><path d="M3.5 10.5a5 5 0 0 0 9 1.5"/><path d="M12.5 13.5V11H10"/></svg>
+            </button>
+            <span class="tb-divider"></span>
+            <button class="tb-item" aria-label="Crop">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 1.5v10h10"/><path d="M1.5 4.5h10v10"/></svg>
+            </button>
+            <span class="tb-divider"></span>
+            <button class="tb-item">Effects</button>
+            <span class="tb-divider"></span>
+            <button class="tb-item">Animation</button>
+            <span class="tb-divider"></span>
+            <button class="tb-item" id="selMulticamBtn" aria-label="Multicam camera">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><rect x="1.5" y="2.5" width="6" height="5" rx="1"/><rect x="8.5" y="2.5" width="6" height="5" rx="1"/><rect x="1.5" y="8.5" width="6" height="5" rx="1"/><rect x="8.5" y="8.5" width="6" height="5" rx="1"/></svg>
+            </button>
+            <span class="tb-divider"></span>
+            <button class="tb-item" aria-label="Sidebar">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M10 2.5v11"/></svg>
+            </button>
+          </div>
+          <div class="cam-picker hidden" id="camPicker"></div>
+
           <div class="canvas-stage">
             <div class="artboard">
               <div class="frames frames-grid">
@@ -3288,6 +3389,15 @@
                 <div class="cam-frame" data-cam="1" aria-label="Camera 2"></div>
                 <div class="cam-frame" data-cam="2" aria-label="Camera 3"></div>
                 <div class="cam-frame" data-cam="3" aria-label="Webinar"></div>
+              </div>
+            </div>
+
+            <!-- Selection scope -->
+            <div class="sel-scope hidden" id="selScope">
+              <span>Selected in</span>
+              <div class="seg-tabs">
+                <button class="seg-tab" data-scope="scene">Current scene</button>
+                <button class="seg-tab selected" data-scope="all">All scenes</button>
               </div>
             </div>
 
@@ -4565,8 +4675,19 @@
     return (combos.length ? combos : [[0], [1]]).slice(0, 5);
   }
 
-  function comboCamSeq(combo) {
-    const seq = combo.map(s => s % 3);
+  // camera overrides set from the canvas camera picker
+  let speakerCamOverride = {}; // speakerIdx -> camIdx (all scenes)
+  let layerCamOverride = {};   // "sceneIdx:pos" -> camIdx (current scene only)
+
+  function camForSpeaker(s, sceneIdx, pos) {
+    const key = `${sceneIdx}:${pos}`;
+    if (layerCamOverride[key] !== undefined) return layerCamOverride[key];
+    if (speakerCamOverride[s] !== undefined) return speakerCamOverride[s];
+    return s % 3;
+  }
+
+  function comboCamSeq(combo, sceneIdx) {
+    const seq = combo.map((s, pos) => camForSpeaker(s, sceneIdx, pos));
     if (combo.length > 1) seq.push(3);
     return seq;
   }
@@ -4576,7 +4697,7 @@
     tlScenes.innerHTML = '';
     timelineSceneList().forEach((combo, idx) => {
       const w = SCENE_WIDTHS[idx % SCENE_WIDTHS.length];
-      const seq = comboCamSeq(combo);
+      const seq = comboCamSeq(combo, idx);
       const scene = document.createElement('div');
       scene.className = 'tl-scene' + (idx === 0 ? ' selected' : '');
       scene.style.width = `${w}px`;
@@ -4599,7 +4720,7 @@
     const tick = () => { const t = document.createElement('span'); t.className = 'sb-tick'; return t; };
     sbCards.appendChild(tick());
     list.forEach((combo, idx) => {
-      const rep = combo.length > 1 ? 3 : combo[0] % 3;
+      const rep = combo.length > 1 ? 3 : camForSpeaker(combo[0], idx, 0);
       const item = document.createElement('div');
       item.className = 'sb-item' + (idx === 0 ? ' selected' : '');
       const card = idx === 0
@@ -4705,16 +4826,120 @@
     const layout = LP_LAYOUTS[lpSavedLayout];
     const combo = combos.length ? combos[lpComboIdx] : [0, 1, 2];
     framesEl.classList.remove('frames-grid');
-    const cam = s => `<div class="cam-frame" style="flex:1">${camSVGHTML(s % 3)}</div>`;
+    const cam = (s, pos, flex) =>
+      `<div class="cam-frame" data-speaker="${s}" data-pos="${pos}" style="flex:${flex}">${camSVGHTML(camForSpeaker(s, lpComboIdx, pos))}</div>`;
     if (layout === 'screen') {
-      framesEl.innerHTML = `<div class="cam-frame" style="flex:2">${screenShareSVG()}</div>` + combo.map(cam).join('');
+      framesEl.innerHTML = `<div class="cam-frame" style="flex:2">${screenShareSVG()}</div>` + combo.map((s, i) => cam(s, i, 1)).join('');
     } else if (layout === 'focus') {
-      framesEl.innerHTML = combo.map((s, i) =>
-        `<div class="cam-frame" style="flex:${i === 0 ? 2 : 1}">${camSVGHTML(s % 3)}</div>`).join('');
+      framesEl.innerHTML = combo.map((s, i) => cam(s, i, i === 0 ? 2 : 1)).join('');
     } else {
-      framesEl.innerHTML = combo.map(cam).join('');
+      framesEl.innerHTML = combo.map((s, i) => cam(s, i, 1)).join('');
+    }
+    if (selectedLayer) {
+      const el = framesEl.querySelector(`.cam-frame[data-pos="${selectedLayer.pos}"]`);
+      if (el) el.classList.add('layer-selected');
     }
   }
+
+  /* Canvas layer selection: toolbar + camera picker + scope */
+  const selToolbar = document.getElementById('selToolbar');
+  const selScope = document.getElementById('selScope');
+  const camPicker = document.getElementById('camPicker');
+  const selMulticamBtn = document.getElementById('selMulticamBtn');
+  let selectedLayer = null; // {pos, speaker}
+  let selScopeAll = true;   // "All scenes" selected by default
+
+  // cameras assigned to a speaker in the sequence intercept
+  function camsForSpeaker(s) {
+    const cams = [];
+    assignments.forEach((set, r) => { if (set.has(s)) cams.push(r); });
+    return cams.length ? cams : [0, 1, 2, 3];
+  }
+
+  function selectLayer(el) {
+    deselectLayer();
+    selectedLayer = { pos: Number(el.dataset.pos), speaker: Number(el.dataset.speaker) };
+    el.classList.add('layer-selected');
+    selToolbar.classList.remove('hidden');
+    selScope.classList.remove('hidden');
+  }
+
+  function deselectLayer() {
+    selectedLayer = null;
+    document.querySelectorAll('.cam-frame.layer-selected').forEach(f => f.classList.remove('layer-selected'));
+    selToolbar.classList.add('hidden');
+    selScope.classList.add('hidden');
+    closeCamPicker();
+  }
+
+  function renderCamPicker() {
+    const current = camForSpeaker(selectedLayer.speaker, lpComboIdx, selectedLayer.pos);
+    camPicker.innerHTML = camsForSpeaker(selectedLayer.speaker).map(camIdx =>
+      `<button class="cp-tile${camIdx === current ? ' selected' : ''}" data-cam="${camIdx}" aria-label="Camera ${camIdx + 1}">${camSVGHTML(camIdx)}</button>`).join('');
+    camPicker.querySelectorAll('.cp-tile').forEach(tile => {
+      tile.addEventListener('click', () => {
+        const camIdx = Number(tile.dataset.cam);
+        if (selScopeAll) {
+          // apply this camera to the speaker in every scene
+          speakerCamOverride[selectedLayer.speaker] = camIdx;
+          delete layerCamOverride[`${lpComboIdx}:${selectedLayer.pos}`];
+          renderTimelineScenes();
+        } else {
+          layerCamOverride[`${lpComboIdx}:${selectedLayer.pos}`] = camIdx;
+          renderTimelineScenes();
+        }
+        renderCanvasLayout(); // replaces the selected layer immediately
+        renderCamPicker();
+        markDirty();
+      });
+    });
+  }
+
+  function openCamPicker() {
+    renderCamPicker();
+    camPicker.classList.remove('hidden');
+    selMulticamBtn.classList.add('active');
+    const baseRect = selToolbar.offsetParent.getBoundingClientRect();
+    const bRect = selMulticamBtn.getBoundingClientRect();
+    camPicker.style.left = `${Math.max(8, bRect.left + bRect.width / 2 - baseRect.left - camPicker.offsetWidth / 2)}px`;
+    camPicker.style.top = `${bRect.bottom - baseRect.top + 6}px`;
+  }
+
+  function closeCamPicker() {
+    camPicker.classList.add('hidden');
+    selMulticamBtn.classList.remove('active');
+  }
+
+  selMulticamBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (camPicker.classList.contains('hidden')) openCamPicker();
+    else closeCamPicker();
+  });
+  selToolbar.addEventListener('click', e => e.stopPropagation());
+  camPicker.addEventListener('click', e => e.stopPropagation());
+  selScope.addEventListener('click', e => e.stopPropagation());
+
+  selScope.querySelectorAll('.seg-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      selScope.querySelectorAll('.seg-tab').forEach(t => t.classList.remove('selected'));
+      tab.classList.add('selected');
+      selScopeAll = tab.dataset.scope === 'all';
+    });
+  });
+
+  // click a speaker frame to select it; click elsewhere on the canvas to deselect
+  document.querySelector('#screenEditor .canvas-pane').addEventListener('click', e => {
+    const frame = e.target.closest('.cam-frame[data-speaker]');
+    if (frame && amcTimelineEl.classList.contains('applied')) {
+      e.stopPropagation();
+      if (selectedLayer && Number(frame.dataset.pos) === selectedLayer.pos) return;
+      selectLayer(frame);
+      return;
+    }
+    if (!e.target.closest('#selToolbar') && !e.target.closest('#camPicker') && !e.target.closest('#selScope')) {
+      deselectLayer();
+    }
+  });
 
   function openLayoutPopover(anchor) {
     lpLayoutIdx = lpSavedLayout;
@@ -4895,6 +5120,9 @@
     amcToast.classList.remove('visible');
     document.getElementById('amcTimeline').classList.remove('applied', 'storyboard');
     lpSavedLayout = 0;
+    speakerCamOverride = {};
+    layerCamOverride = {};
+    deselectLayer();
     renderCanvasLayout();
     layoutPopover.classList.remove('open');
     layoutPopover.classList.add('hidden');
