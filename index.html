@@ -796,32 +796,67 @@
   .cam-picker {
     position: absolute;
     z-index: 35;
+    width: 232px;
     background: var(--surface-elevated);
     border: 1px solid var(--border-medium);
     border-radius: 8px;
     box-shadow:
       0 8px 16px 0 var(--drop-shadow-medium),
       0 8px 8px 0 var(--drop-shadow-soft);
-    padding: 6px;
+    padding: 8px;
     display: flex;
-    gap: 6px;
+    flex-direction: column;
+    gap: 8px;
   }
-  .cp-tile {
-    width: 60px;
-    height: 36px;
-    border-radius: 4px;
+  .mt-header {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+  }
+  .mt-header .mt-title {
+    flex: 1;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    padding-left: 4px;
+  }
+  .mt-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+  .mt-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    padding: 0;
+  }
+  .mt-img {
+    width: 100%;
+    height: 68px;
+    border-radius: 6px;
     overflow: hidden;
     border: 1px solid rgba(88, 63, 74, 0.1);
-    cursor: pointer;
-    padding: 0;
     background: #241d20;
   }
-  .cp-tile svg { width: 100%; height: 100%; display: block; }
-  .cp-tile:hover { border-color: var(--border-medium); }
-  .cp-tile.selected {
-    outline: 2px solid #3f2a32;
-    outline-offset: 1px;
+  .mt-img svg { width: 100%; height: 100%; display: block; }
+  .mt-tile:hover .mt-img { border-color: var(--border-medium); }
+  .mt-tile.selected .mt-img {
     border-color: transparent;
+    outline: 2px solid #0093d6;
+    outline-offset: 1px;
+  }
+  .mt-name {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
   }
 
   /* Floating canvas toolbar */
@@ -3380,7 +3415,19 @@
               <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M10 2.5v11"/></svg>
             </button>
           </div>
-          <div class="cam-picker hidden" id="camPicker"></div>
+          <div class="cam-picker hidden" id="camPicker">
+            <div class="mt-header">
+              <span class="mt-title">Multi-cam tracks</span>
+              <button class="icon-btn dense" aria-label="Grid view">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+              </button>
+              <button class="icon-btn dense" id="mtUpload" aria-label="Upload recording">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10.5v-8M5 5l3-3 3 3"/><path d="M2.5 10.5V13a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2.5"/></svg>
+              </button>
+            </div>
+            <div class="mt-grid" id="mtGrid"></div>
+            <button class="amc-btn" id="mtApplyAll">Apply to all scenes</button>
+          </div>
 
           <div class="canvas-stage">
             <div class="artboard">
@@ -3389,15 +3436,6 @@
                 <div class="cam-frame" data-cam="1" aria-label="Camera 2"></div>
                 <div class="cam-frame" data-cam="2" aria-label="Camera 3"></div>
                 <div class="cam-frame" data-cam="3" aria-label="Webinar"></div>
-              </div>
-            </div>
-
-            <!-- Selection scope -->
-            <div class="sel-scope hidden" id="selScope">
-              <span>Selected in</span>
-              <div class="seg-tabs">
-                <button class="seg-tab" data-scope="scene">Current scene</button>
-                <button class="seg-tab selected" data-scope="all">All scenes</button>
               </div>
             </div>
 
@@ -4091,6 +4129,33 @@
     <button class="pop-add" id="popAdd">Add new speaker</button>
   </div>
 
+
+  <!-- Use-audio dialog (from Multi-cam tracks upload) -->
+  <div class="multicam-modal dismissed" id="audioModal" role="dialog" aria-modal="true" aria-labelledby="audioTitle">
+    <div class="mm-header" id="audioTitle" style="justify-content:space-between;">
+      Use audio from this recording in your video?
+      <button class="icon-btn dense" id="audioClose" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+      </button>
+    </div>
+    <p class="mm-desc">If so, you need to sync it with other recordings in the Sequence Editor first.</p>
+    <div class="mm-rows">
+      <div class="mm-row">
+        <div class="mm-filename">
+          <span class="mm-thumb" id="audioThumb"></span>
+          <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+        </div>
+        <button class="mm-select assigned" id="audioSpeakerSelect" aria-haspopup="menu">
+          <span class="mm-select-label" id="audioSpeakerLabel">Christina</span>
+          <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="mm-footer">
+      <button class="mm-keep" id="audioEdit">Yes, edit in sequence editor</button>
+      <button class="mm-create" id="audioVisualOnly">No, use visual only</button>
+    </div>
+  </div>
 
   <!-- Identify speakers dialog (add new speaker flow) -->
   <div class="identify-modal dismissed" id="identifyModal" role="dialog" aria-modal="true" aria-labelledby="imTitle">
@@ -4841,13 +4906,13 @@
     }
   }
 
-  /* Canvas layer selection: toolbar + camera picker + scope */
+  /* Canvas layer selection: toolbar + Multi-cam tracks menu */
   const selToolbar = document.getElementById('selToolbar');
-  const selScope = document.getElementById('selScope');
   const camPicker = document.getElementById('camPicker');
+  const mtGrid = document.getElementById('mtGrid');
   const selMulticamBtn = document.getElementById('selMulticamBtn');
+  const sceneToolbarEl = document.querySelector('#screenEditor .scene-toolbar');
   let selectedLayer = null; // {pos, speaker}
-  let selScopeAll = true;   // "All scenes" selected by default
 
   // cameras assigned to a speaker in the sequence intercept
   function camsForSpeaker(s) {
@@ -4861,34 +4926,37 @@
     selectedLayer = { pos: Number(el.dataset.pos), speaker: Number(el.dataset.speaker) };
     el.classList.add('layer-selected');
     selToolbar.classList.remove('hidden');
-    selScope.classList.remove('hidden');
+    // the canvas toolbar replaces the scene toolbar while a layer is selected
+    sceneToolbarEl.classList.add('hidden');
+    closeLayoutPopover();
+    hideLayoutCallout();
   }
 
   function deselectLayer() {
     selectedLayer = null;
     document.querySelectorAll('.cam-frame.layer-selected').forEach(f => f.classList.remove('layer-selected'));
     selToolbar.classList.add('hidden');
-    selScope.classList.add('hidden');
+    sceneToolbarEl.classList.remove('hidden');
     closeCamPicker();
   }
 
+  function currentLayerCam() {
+    return camForSpeaker(selectedLayer.speaker, lpComboIdx, selectedLayer.pos);
+  }
+
   function renderCamPicker() {
-    const current = camForSpeaker(selectedLayer.speaker, lpComboIdx, selectedLayer.pos);
-    camPicker.innerHTML = camsForSpeaker(selectedLayer.speaker).map(camIdx =>
-      `<button class="cp-tile${camIdx === current ? ' selected' : ''}" data-cam="${camIdx}" aria-label="Camera ${camIdx + 1}">${camSVGHTML(camIdx)}</button>`).join('');
-    camPicker.querySelectorAll('.cp-tile').forEach(tile => {
+    const current = currentLayerCam();
+    mtGrid.innerHTML = camsForSpeaker(selectedLayer.speaker).map(camIdx => `
+      <button class="mt-tile${camIdx === current ? ' selected' : ''}" data-cam="${camIdx}">
+        <span class="mt-img">${camSVGHTML(camIdx)}</span>
+        <span class="mt-name">Cam ${camIdx + 1}</span>
+      </button>`).join('');
+    mtGrid.querySelectorAll('.mt-tile').forEach(tile => {
       tile.addEventListener('click', () => {
-        const camIdx = Number(tile.dataset.cam);
-        if (selScopeAll) {
-          // apply this camera to the speaker in every scene
-          speakerCamOverride[selectedLayer.speaker] = camIdx;
-          delete layerCamOverride[`${lpComboIdx}:${selectedLayer.pos}`];
-          renderTimelineScenes();
-        } else {
-          layerCamOverride[`${lpComboIdx}:${selectedLayer.pos}`] = camIdx;
-          renderTimelineScenes();
-        }
-        renderCanvasLayout(); // replaces the selected layer immediately
+        // selecting a camera replaces this layer in the current scene immediately
+        layerCamOverride[`${lpComboIdx}:${selectedLayer.pos}`] = Number(tile.dataset.cam);
+        renderCanvasLayout();
+        renderTimelineScenes();
         renderCamPicker();
         markDirty();
       });
@@ -4917,14 +4985,62 @@
   });
   selToolbar.addEventListener('click', e => e.stopPropagation());
   camPicker.addEventListener('click', e => e.stopPropagation());
-  selScope.addEventListener('click', e => e.stopPropagation());
 
-  selScope.querySelectorAll('.seg-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      selScope.querySelectorAll('.seg-tab').forEach(t => t.classList.remove('selected'));
-      tab.classList.add('selected');
-      selScopeAll = tab.dataset.scope === 'all';
-    });
+  // only this button promotes the camera to every scene the speaker appears in
+  document.getElementById('mtApplyAll').addEventListener('click', () => {
+    if (!selectedLayer) return;
+    speakerCamOverride[selectedLayer.speaker] = currentLayerCam();
+    Object.keys(layerCamOverride).forEach(k => delete layerCamOverride[k]);
+    renderCanvasLayout();
+    renderTimelineScenes();
+    renderCamPicker();
+    markDirty();
+  });
+
+  /* Use-audio dialog (upload icon in the tracks menu) */
+  const audioModal = document.getElementById('audioModal');
+  const audioSpeakerSelect = document.getElementById('audioSpeakerSelect');
+  const audioSpeakerLabel = document.getElementById('audioSpeakerLabel');
+  let audioScrimWasDismissed = false;
+  let audioSpeakerIdx = 0;
+
+  function openAudioModal() {
+    closeCamPicker();
+    audioSpeakerIdx = selectedLayer ? selectedLayer.speaker : 0;
+    audioSpeakerLabel.textContent = speakers[audioSpeakerIdx];
+    document.getElementById('audioThumb').innerHTML =
+      camSVGHTML(selectedLayer ? currentLayerCam() : 0);
+    audioScrimWasDismissed = modalScrim.classList.contains('dismissed');
+    modalScrim.classList.remove('dismissed');
+    audioModal.classList.remove('dismissed');
+  }
+
+  function closeAudioModal() {
+    closePopover();
+    audioModal.classList.add('dismissed');
+    if (audioScrimWasDismissed) modalScrim.classList.add('dismissed');
+  }
+
+  document.getElementById('mtUpload').addEventListener('click', e => {
+    e.stopPropagation();
+    openAudioModal();
+  });
+  ['audioClose', 'audioEdit', 'audioVisualOnly'].forEach(id =>
+    document.getElementById(id).addEventListener('click', closeAudioModal));
+  audioModal.addEventListener('click', e => e.stopPropagation());
+
+  // speaker field follows the standing rule: shared Identified speakers dropdown
+  audioSpeakerSelect.addEventListener('click', e => {
+    e.stopPropagation();
+    if (openAnchor === audioSpeakerSelect) { closePopover(); return; }
+    openSinglePopover({
+      get: () => audioSpeakerIdx,
+      set: idx => {
+        audioSpeakerIdx = idx;
+        audioSpeakerLabel.textContent = speakers[idx];
+      },
+    }, audioSpeakerSelect);
+    audioSpeakerSelect.classList.add('open');
   });
 
   // click a speaker frame to select it; click elsewhere on the canvas to deselect
@@ -4936,7 +5052,7 @@
       selectLayer(frame);
       return;
     }
-    if (!e.target.closest('#selToolbar') && !e.target.closest('#camPicker') && !e.target.closest('#selScope')) {
+    if (!e.target.closest('#selToolbar') && !e.target.closest('#camPicker')) {
       deselectLayer();
     }
   });
