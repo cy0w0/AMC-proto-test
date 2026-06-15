@@ -1099,7 +1099,7 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
     padding: 12px 0;
     scrollbar-width: none;
   }
@@ -1123,6 +1123,7 @@
   }
 
   /* Agent message */
+  .ul-agent:has(.ul-setup:not(.open)) { height: 39px; }
   .ul-agent .ul-bubble {
     background: var(--chrome-0-elevated);
     border: 1px solid var(--border-medium);
@@ -1616,13 +1617,15 @@
     border-radius: 8px;
     background: var(--surface-elevated);
     overflow: hidden;
-    margin-top: 8px;
+    margin-top: 0;
   }
   .ul-setup-head {
     display: flex;
     align-items: center;
     gap: 8px;
     width: 100%;
+    height: 39px;
+    box-sizing: border-box;
     border: none;
     background: transparent;
     cursor: pointer;
@@ -1630,7 +1633,7 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--fg-primary);
-    padding: 10px 12px;
+    padding: 0 12px;
   }
   .ul-setup-head .ul-setup-icon { display: inline-flex; color: #6b6bcf; }
   .ul-setup-head .ul-setup-sub { font-weight: 400; font-size: 11px; color: var(--fg-secondary); }
@@ -6961,11 +6964,6 @@
     const n = ulAgentNode();
     n.innerHTML = `
       <div class="ul-setup" id="ulSetup">
-        <button class="ul-setup-head" type="button">
-          <span class="ul-flex">Quick questions</span>
-          <span class="ul-status-chip" id="ulStatusChip">Unreviewed</span>
-          <span class="ul-setup-icon">${ICON_SLIDERS}</span>
-        </button>
         <div class="ul-setup-body">
           <div class="amc-module">
             <div class="ul-q-title">Where should this go</div>
@@ -6982,6 +6980,11 @@
           <div id="ulSetupHost"></div>
           <button class="ul-gen-btn" data-gen>Generate preview</button>
         </div>
+        <button class="ul-setup-head" type="button">
+          <span class="ul-flex">Quick questions</span>
+          <span class="ul-status-chip" id="ulStatusChip">Unreviewed</span>
+          <span class="ul-setup-icon">${ICON_SLIDERS}</span>
+        </button>
       </div>`;
     // "Create new sequence" dims the existing-sequence picker
     const seqSwitch = n.querySelector('#ulNewSeqSwitch');
@@ -7003,7 +7006,11 @@
     if (innerEdit) innerEdit.style.display = 'none';
 
     const setup = n.querySelector('.ul-setup');
-    setup.querySelector('.ul-setup-head').addEventListener('click', () => setup.classList.toggle('open'));
+    setup.querySelector('.ul-setup-head').addEventListener('click', () => {
+      const opened = setup.classList.toggle('open');
+      // Expand downward from the header instead of letting the scroll bottom stay pinned
+      if (opened) requestAnimationFrame(() => setup.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+    });
     n.querySelector('[data-gen]').addEventListener('click', () => ulConfirmSetup(setup));
     ulScrollToEnd();
   }
