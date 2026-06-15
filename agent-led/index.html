@@ -1610,6 +1610,35 @@
   /* Reused AMC combo card, embedded in chat */
   .ul-agent .combo-card { width: 100%; margin-top: 8px; box-shadow: none; }
 
+  /* Inline expandable camera-setup module (reuses the AMC camera-setup rows) */
+  .ul-setup {
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    background: var(--surface-elevated);
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .ul-setup-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fg-primary);
+    padding: 10px 12px;
+  }
+  .ul-setup-head .ul-setup-icon { display: inline-flex; color: #6b6bcf; }
+  .ul-setup-head .ul-setup-sub { font-weight: 400; font-size: 11px; color: var(--fg-secondary); }
+  .ul-setup-head .chev { transition: transform 0.15s ease; color: var(--fg-secondary); }
+  .ul-setup.open .chev { transform: rotate(90deg); }
+  .ul-setup-body { display: none; padding: 0 12px 12px; }
+  .ul-setup.open .ul-setup-body { display: block; }
+
   /* AMC timeline (skeleton state) */
   .amc-timeline {
     background: var(--chrome-0-elevated);
@@ -4308,7 +4337,6 @@
         <div class="ul-drawer" id="ulDrawer"><span class="ul-flex">Thinking…</span>
           <svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10 8 6.5 11.5 10"/></svg>
         </div>
-        <span class="ul-context-chip" id="ulContext"><span class="ul-cc-thumb" data-cam="0"></span>4 recordings</span>
         <textarea id="ulInput" rows="1" placeholder="Ask Underlord">Can you help me create edit this project showing multiple camera angle and make it engaging?</textarea>
         <div class="ul-action-bar">
           <button class="ul-attach" title="Attach" aria-label="Attach">
@@ -6159,8 +6187,6 @@
   const mmCreate = document.getElementById('mmCreate');
   mmCreate.addEventListener('click', e => {
     e.stopPropagation();
-    // Agent-led variant: this modal is reused as Underlord's "review setup" surface
-    if (agentReview) { dismissModal(); onAgentReviewConfirm(); return; }
     dismissModal();
     setTimeout(showCallout, 350);
   });
@@ -6750,7 +6776,6 @@
   const UL_SEQ = 'Interview';
   const UL_DEFAULT = ulInput.value;
   let ulFlowStarted = false;
-  let agentReview = false;
   let ulApproveCb = null;
 
   const ICON_MERGE = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="4" cy="3.5" r="1.5"/><circle cx="4" cy="12.5" r="1.5"/><circle cx="12" cy="8" r="1.5"/><path d="M4 5v6M5.4 4.5C8 5 10.5 6 11 7M5.4 11.5C8 11 10.5 10 11 9"/></svg>`;
@@ -6827,7 +6852,8 @@
       return;
     }
     ulFlowStarted = true;
-    ulThink(1200, () => { ulPlanMessage(); ulAskCombine(); });
+    // Plan comes out first, then the next message follows
+    ulThink(1200, () => { ulPlanMessage(); ulThink(900, ulAskCombine); });
   }
 
   // Education + transparency: reuse the collapsible Plan section
@@ -6836,7 +6862,7 @@
     n.innerHTML = `
       <div class="ul-bubble">
         <div class="ul-text-top">To cut between your camera angles I'll combine these 4 recordings into a multi-cam <b>sequence</b> — that syncs them on one timeline so I can switch to whoever's speaking. I'll use <b>Automatic Multicam (AMC)</b> to do it.</div>
-        <div class="ul-toggle open">
+        <div class="ul-toggle">
           <div class="ul-toggle-header"><span class="ul-toggle-label">Plan</span>${CHEV}</div>
           <div class="ul-toggle-content"><ul>
             <li>Add to an existing sequence, or create a new one.</li>
@@ -6889,14 +6915,14 @@
 
   function ulChooseNew() {
     ulThink(1000, () => {
-      const n = ulMsg(`
-        <div class="ul-text-top" style="padding:0">A few questions before I build this — let's confirm who appears in each camera. Once you approve, I'll generate a preview so you can check the cuts.</div>
-        <button class="ul-action-btn" data-review>${ICON_SLIDERS} Review setup</button>`);
-      n.querySelector('[data-review]').addEventListener('click', openAmcReview);
+      ulMsg(`<div class="ul-text-top" style="padding:0">A few questions before I build this — confirm who appears in each camera so cuts follow the conversation. Once you approve, I'll generate a preview and apply it.</div>`);
+      ulInsertSetupModule();
+      ulSetApprove(true, onApprovePlan);
     });
   }
 
-  /* Reuse the AMC manual-flow speaker-assignment modal as the "questions" surface */
+  /* Inline expandable camera-setup module — reuses the AMC manual-flow rows
+     (#camSetupRows: speaker dropdown, Identified-speakers popover, add new speaker) */
   function preseedAssignments() {
     assignments[0] = new Set([0]);
     assignments[1] = new Set([1]);
@@ -6905,17 +6931,23 @@
     selects.forEach((_, r) => updateSelectLabel(r));
     updateConfirm();
   }
-  function openAmcReview() {
-    agentReview = true;
-    document.getElementById('mmTitle').textContent = 'Set up your multi-cam sequence';
-    multicamModal.querySelector('.mm-desc').textContent = 'Confirm who appears in each camera so cuts follow the conversation. Double-click a recording to rename it.';
-    document.getElementById('mmKeep').style.display = 'none';
-    mmCreateCaret.style.display = 'none';
-    mmCreateMenu.classList.add('hidden');
-    mmCreate.innerHTML = `${GRID} Generate preview`;
+  function ulInsertSetupModule() {
     preseedAssignments();
-    modalScrim.classList.remove('dismissed');
-    multicamModal.classList.remove('dismissed');
+    const n = ulAgentNode();
+    n.innerHTML = `
+      <div class="ul-setup open" id="ulSetup">
+        <button class="ul-setup-head" type="button">
+          <span class="ul-setup-icon">${ICON_SLIDERS}</span>
+          <span class="ul-flex">Camera setup</span>
+          <span class="ul-setup-sub">4 cameras</span>${CHEV}
+        </button>
+        <div class="ul-setup-body"><div id="ulSetupHost"></div></div>
+      </div>`;
+    n.querySelector('#ulSetupHost').appendChild(camSetupRows); // move the reused rows into the chat
+    renderCamSetup();
+    const setup = n.querySelector('.ul-setup');
+    setup.querySelector('.ul-setup-head').addEventListener('click', () => setup.classList.toggle('open'));
+    ulScrollToEnd();
   }
 
   // Reuse the AMC combo card to show the speaker-cut preview in chat
@@ -6932,18 +6964,13 @@
     return `<div class="combo-card"><div class="cc-header"><span>${idxs.length} speaker${idxs.length === 1 ? '' : 's'}</span></div><div class="cc-stage"><div class="cc-strip">${cells}</div></div><div class="cc-chips">${chips}</div></div>`;
   }
 
-  // Called from the reused modal's "Generate preview" button (mmCreate, agent mode)
-  function onAgentReviewConfirm() {
-    agentReview = false;
-    ulThink(1400, () => {
-      ulMsg(`<div class="ul-text-top" style="padding:0">Here's a preview of your new multi-cam sequence — I cut to whoever's speaking. Approve to apply it to your project.</div>${comboPreviewHTML()}`);
-      ulSetApprove(true, onApprovePlan);
-    });
-  }
+  // Approve plan (prompt box) → generate preview + apply, shown together in chat
   function onApprovePlan() {
-    ulThink(1400, () => {
+    const setup = document.getElementById('ulSetup');
+    if (setup) setup.classList.remove('open'); // collapse the setup once approved
+    ulThink(1600, () => {
       const n = ulMsg(`
-        <div class="ul-text-top" style="padding:0">✓ Applied your new multi-cam sequence to the project.</div>
+        <div class="ul-text-top" style="padding:0">✓ Generated the preview and applied your new multi-cam sequence — I cut to whoever's speaking.</div>${comboPreviewHTML()}
         <button class="ul-action-btn" data-edit>${ICON_EDIT} Edit cameras in Sequence Editor</button>`);
       n.querySelector('[data-edit]').addEventListener('click', () => ulToast('Opening Sequence Editor — not part of this prototype'));
     });
