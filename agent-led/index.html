@@ -1588,6 +1588,9 @@
     white-space: nowrap;
   }
   .ul-ctx-pill:hover { border-color: #6b6bcf; background: #faf8ff; }
+  /* Create-combination module in chat: full-width Generate preview */
+  .ul-create .pv-actions { display: flex; }
+  .ul-create .pv-actions .amc-btn-primary { flex: 1; }
 
   .ul-context-chip {
     display: inline-flex;
@@ -4430,8 +4433,8 @@
           <svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10 8 6.5 11.5 10"/></svg>
         </div>
         <div class="ul-ctx-row" id="ulCtxRow">
-          <button class="ul-ctx-pill" id="ulReeditPill" type="button">Re-edit multi-cam setup</button>
-          <button class="ul-ctx-pill" id="ulAddComboPill" type="button">Add speaker combination</button>
+          <button class="ul-ctx-pill" id="ulReeditPill" type="button">Re-edit setup</button>
+          <button class="ul-ctx-pill" id="ulAddComboPill" type="button">Add speaker combo</button>
         </div>
         <textarea id="ulInput" rows="1" placeholder="Ask Underlord">Can you help me create edit this project showing multiple camera angle and make it engaging?</textarea>
         <div class="ul-action-bar">
@@ -4711,8 +4714,7 @@
             </div>
 
             <div class="pv-actions">
-              <button class="amc-btn" id="csCancel">Cancel</button>
-              <button class="amc-btn-primary" id="csAdd" disabled>Add</button>
+              <button class="amc-btn-primary" id="csAdd" disabled>Generate preview</button>
             </div>
           </div>
 
@@ -6294,10 +6296,8 @@
     setAmcPage('preview');
     markDirty();
   });
-  document.getElementById('csCancel').addEventListener('click', () => {
-    if (agentCreate) { ulCloseCreate(); ulPromptEl.classList.add('has-ctx'); ulPreviewActive = true; return; }
-    setAmcPage('preview');
-  });
+  const csCancelBtn = document.getElementById('csCancel');
+  if (csCancelBtn) csCancelBtn.addEventListener('click', () => setAmcPage('preview'));
 
   const mmCreate = document.getElementById('mmCreate');
   mmCreate.addEventListener('click', e => {
@@ -6933,17 +6933,15 @@
     if (cb) cb();
   });
 
-  // "Re-edit multi-cam setup" pill → pull the setup module back up (expanded)
+  // "Re-edit multi-cam setup" pill → pull the setup module back up (expanded). Pills stay.
   document.getElementById('ulReeditPill').addEventListener('click', () => {
-    ulPromptEl.classList.remove('has-ctx');
     ulPreviewActive = false;
     ulMsg(`<div class="ul-text-top" style="padding:0">Sure — tweak the setup, then generate again.</div>`);
     ulInsertSetupModule(true);
   });
 
-  // "Add speaker combination" pill → bring up the AMC create-combination module in chat
+  // "Add speaker combo" pill → bring up the AMC create-combination module in chat. Pills stay.
   document.getElementById('ulAddComboPill').addEventListener('click', () => {
-    ulPromptEl.classList.remove('has-ctx');
     ulPreviewActive = false;
     ulMsg(`<div class="ul-text-top" style="padding:0">Pick the speakers for the new combination:</div>`);
     ulInsertCreateModule();
