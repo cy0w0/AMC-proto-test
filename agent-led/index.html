@@ -1630,7 +1630,7 @@
     background: transparent;
     cursor: pointer;
     font-family: inherit;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--fg-primary);
     padding: 0 12px;
@@ -1638,7 +1638,8 @@
   .ul-setup-head .ul-setup-icon { display: inline-flex; color: #6b6bcf; }
   .ul-setup-head .ul-setup-sub { font-weight: 400; font-size: 11px; color: var(--fg-secondary); }
   .ul-setup-head .chev { transition: transform 0.15s ease; color: var(--fg-secondary); }
-  .ul-setup.open .ul-setup-head .chev { transform: rotate(90deg); }
+  .ul-agent:has(.ul-setup.open) .ul-setup-head .chev { transform: rotate(90deg); }
+  .ul-setup:not(.open) { display: none; }
   .ul-setup-body { display: none; padding: 0 12px 12px; }
   .ul-setup.open .ul-setup-body { display: block; }
   /* AMC modules relocated into the chat: flatten panel chrome */
@@ -1660,7 +1661,7 @@
   .ul-preview .amc-module { padding: 0; border: none; margin: 0 0 8px; background: transparent; }
   .ul-preview .amc-module:last-of-type { margin-bottom: 0; }
   /* Question sections inside the setup module */
-  .ul-q-title { font-size: 13px; font-weight: 600; color: var(--fg-primary); }
+  .ul-q-title { font-size: 12px; font-weight: 600; color: var(--fg-primary); }
   .ul-q-sub {
     font-size: 11px;
     line-height: 15px;
@@ -4171,6 +4172,7 @@
             <!-- Scene toolbar -->
             <div class="canvas-toolbar scene-toolbar">
               <button class="tb-item" id="layoutTbItem">Layout</button>
+              <span class="tb-tag" id="layoutTbTag" style="cursor:pointer;">Multicam</span>
               <span class="tb-divider"></span>
               <button class="tb-item tb-secondary">
                 Background
@@ -5910,7 +5912,7 @@
     setTimeout(() => layoutPopover.classList.add('hidden'), 200);
   }
 
-  ['layoutTbItem'].forEach(id => {
+  ['layoutTbItem', 'layoutTbTag'].forEach(id => {
     document.getElementById(id).addEventListener('click', e => {
       e.stopPropagation();
       if (!amcTimelineEl.classList.contains('applied')) return;
@@ -6971,12 +6973,12 @@
     preseedAssignments();
     const n = ulAgentNode();
     n.innerHTML = `
+      <button class="ul-setup-head" type="button">
+        <span class="ul-flex">Quick questions</span>
+        <span class="ul-status-chip" id="ulStatusChip">Unreviewed</span>
+        <span class="ul-setup-icon">${ICON_SLIDERS}</span>
+      </button>
       <div class="ul-setup" id="ulSetup">
-        <button class="ul-setup-head" type="button">
-          <span class="ul-flex">Quick questions</span>
-          <span class="ul-status-chip" id="ulStatusChip">Unreviewed</span>
-          <span class="ul-setup-icon">${ICON_SLIDERS}</span>
-        </button>
         <div class="ul-setup-body">
           <div class="amc-module">
             <div class="ul-q-title">Where should this go</div>
@@ -7017,7 +7019,7 @@
     if (innerEdit) innerEdit.style.display = 'none';
 
     const setup = n.querySelector('.ul-setup');
-    setup.querySelector('.ul-setup-head').addEventListener('click', () => {
+    n.querySelector('.ul-setup-head').addEventListener('click', () => {
       const opened = setup.classList.toggle('open');
       // Expand downward from the header instead of letting the scroll bottom stay pinned
       if (opened) requestAnimationFrame(() => setup.scrollIntoView({ block: 'start', behavior: 'smooth' }));
@@ -7027,7 +7029,7 @@
   }
 
   function ulConfirmSetup(setup) {
-    const chip = setup.querySelector('#ulStatusChip');
+    const chip = setup.parentElement.querySelector('#ulStatusChip');
     if (chip) chip.textContent = 'Reviewed';
     setup.classList.remove('open'); // collapse the setup once generated
     ulThink(1500, () => {
@@ -7134,7 +7136,15 @@
   function ulApplyTo(target) {
     const where = target === 'new' ? 'a new composition' : 'this composition';
     ulThink(1500, () => {
+      // Reflect the multicam on the canvas + timeline, then toast → layout callout
+      // (reuses the manual AMC flow's apply outcome)
+      renderTimelineScenes();
+      amcTimelineEl.classList.add('applied');
+      renderCanvasLayout();
       ulMsg(`<div class="ul-text-top" style="padding:0">✓ Applied to ${where}.</div>`);
+      setTimeout(() => amcToast.classList.add('visible'), 300);
+      setTimeout(() => amcToast.classList.remove('visible'), 5500);
+      setTimeout(() => showLayoutCallout(), 5900);
     });
   }
 
