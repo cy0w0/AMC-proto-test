@@ -1544,6 +1544,72 @@
   }
   .ul-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* Prompt box states (DS: Thinking… drawer, Approve plan, context chip) */
+  .ul-drawer {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 6px 8px;
+    margin: -2px 0 2px;
+    border-bottom: 1px solid var(--grey-50-a);
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b6bcf;
+  }
+  .ul-drawer .ul-flex { flex: 1; }
+  .ul-drawer .chev { color: var(--fg-secondary); }
+  .ul-prompt.thinking .ul-drawer { display: flex; }
+  .ul-prompt.thinking textarea { opacity: 0.45; pointer-events: none; }
+
+  .ul-context-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    height: 24px;
+    padding: 0 8px 0 6px;
+    margin: 2px 0;
+    border: 1px solid var(--grey-50-a);
+    border-radius: 6px;
+    background: var(--chrome-0-elevated);
+    font-size: 11px;
+    color: var(--fg-primary);
+  }
+  .ul-context-chip .ul-cc-thumb {
+    width: 18px; height: 14px; border-radius: 3px; overflow: hidden; flex-shrink: 0;
+  }
+  .ul-context-chip .ul-cc-thumb svg { width: 100%; height: 100%; display: block; }
+
+  /* send → stop while thinking */
+  .ul-send .stop-sq { display: none; }
+  .ul-prompt.thinking .ul-send { opacity: 1; background: #6b6bcf; cursor: pointer; }
+  .ul-prompt.thinking .ul-send .send-arrow { display: none; }
+  .ul-prompt.thinking .ul-send .stop-sq { display: block; }
+
+  /* Approve plan pill replaces send */
+  .ul-approve {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    border-radius: 16px;
+    background: #6b6bcf;
+    color: #fff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    height: 32px;
+    padding: 0 14px;
+    cursor: pointer;
+  }
+  .ul-approve:hover { background: #5a5ac0; }
+  .ul-prompt.approve .ul-send { display: none; }
+  .ul-prompt.approve .ul-approve { display: inline-flex; }
+
+  /* Reused AMC combo card, embedded in chat */
+  .ul-agent .combo-card { width: 100%; margin-top: 8px; box-shadow: none; }
+
   /* AMC timeline (skeleton state) */
   .amc-timeline {
     background: var(--chrome-0-elevated);
@@ -4239,6 +4305,10 @@
       <div class="ul-stack" id="ulStack"></div>
 
       <div class="ul-prompt" id="ulPrompt">
+        <div class="ul-drawer" id="ulDrawer"><span class="ul-flex">Thinking…</span>
+          <svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10 8 6.5 11.5 10"/></svg>
+        </div>
+        <span class="ul-context-chip" id="ulContext"><span class="ul-cc-thumb" data-cam="0"></span>4 recordings</span>
         <textarea id="ulInput" rows="1" placeholder="Ask Underlord">Can you help me create edit this project showing multiple camera angle and make it engaging?</textarea>
         <div class="ul-action-bar">
           <button class="ul-attach" title="Attach" aria-label="Attach">
@@ -4255,61 +4325,18 @@
           </button>
           <div class="ul-flex"></div>
           <button class="ul-send" id="ulSend" aria-label="Send">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="send-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M8 13V3.5M4 7l4-4 4 4"/>
             </svg>
+            <svg class="stop-sq" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="4.5" y="4.5" width="7" height="7" rx="1.5"/></svg>
+          </button>
+          <button class="ul-approve" id="ulApprove">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11.5 12.5 5"/></svg>
+            Approve plan
           </button>
         </div>
       </div>
     </aside>
-
-    <!-- Underlord review modal (consolidated setup) -->
-    <div class="rv-scrim" id="rvScrim"></div>
-    <div class="rv-modal" id="rvModal" role="dialog" aria-modal="true" aria-labelledby="rvTitle">
-      <div class="rv-title" id="rvTitle">Review multi-cam setup</div>
-      <p class="rv-desc">Underlord proposes this setup for your new sequence. Adjust anything, then confirm.</p>
-
-      <div class="rv-section-label">Speaker assignment</div>
-      <div class="rv-row">
-        <span class="rv-row-label"><span class="rv-thumb" data-cam="0"></span>Camera 1</span>
-        <select class="rv-select" data-cam-speaker="0"><option>Speaker 1</option><option>Speaker 2</option><option>Speaker 3</option></select>
-      </div>
-      <div class="rv-row">
-        <span class="rv-row-label"><span class="rv-thumb" data-cam="1"></span>Camera 2</span>
-        <select class="rv-select" data-cam-speaker="1"><option>Speaker 2</option><option>Speaker 1</option><option>Speaker 3</option></select>
-      </div>
-      <div class="rv-row">
-        <span class="rv-row-label"><span class="rv-thumb" data-cam="2"></span>Camera 3</span>
-        <select class="rv-select" data-cam-speaker="2"><option>Speaker 3</option><option>Speaker 1</option><option>Speaker 2</option></select>
-      </div>
-      <div class="rv-row">
-        <span class="rv-row-label"><span class="rv-thumb" data-cam="3"></span>Webinar</span>
-        <select class="rv-select" data-cam-speaker="3"><option>All speakers</option><option>Speaker 1</option><option>Speaker 2</option><option>Speaker 3</option></select>
-      </div>
-
-      <div class="rv-section-label">Style</div>
-      <div class="rv-row">
-        <span class="rv-row-label">Cutting style</span>
-        <select class="rv-select" id="rvStyle"><option>Dynamic</option><option>Conversational</option><option>Subtle</option></select>
-      </div>
-
-      <div class="rv-section-label">Scene count</div>
-      <div class="rv-row">
-        <span class="rv-row-label">Estimated scenes</span>
-        <select class="rv-select" id="rvScenes"><option>Auto (≈8)</option><option>More cuts (≈12)</option><option>Fewer cuts (≈5)</option></select>
-      </div>
-
-      <div class="rv-section-label">Layout pack</div>
-      <div class="rv-row">
-        <span class="rv-row-label">Layout</span>
-        <select class="rv-select" id="rvLayout"><option>Multicam full screen</option><option>Split screen</option><option>Picture-in-picture</option></select>
-      </div>
-
-      <div class="rv-footer">
-        <button class="rv-cancel" id="rvCancel">Cancel</button>
-        <button class="rv-confirm" id="rvConfirm">Confirm setup</button>
-      </div>
-    </div>
 
     <div class="ul-toast" id="ulToast" role="status"></div>
 
@@ -6132,6 +6159,8 @@
   const mmCreate = document.getElementById('mmCreate');
   mmCreate.addEventListener('click', e => {
     e.stopPropagation();
+    // Agent-led variant: this modal is reused as Underlord's "review setup" surface
+    if (agentReview) { dismissModal(); onAgentReviewConfirm(); return; }
     dismissModal();
     setTimeout(showCallout, 350);
   });
@@ -6721,15 +6750,19 @@
   const UL_SEQ = 'Interview';
   const UL_DEFAULT = ulInput.value;
   let ulFlowStarted = false;
+  let agentReview = false;
+  let ulApproveCb = null;
 
   const ICON_MERGE = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="4" cy="3.5" r="1.5"/><circle cx="4" cy="12.5" r="1.5"/><circle cx="12" cy="8" r="1.5"/><path d="M4 5v6M5.4 4.5C8 5 10.5 6 11 7M5.4 11.5C8 11 10.5 10 11 9"/></svg>`;
   const ICON_PLUS = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>`;
-  const ICON_Q = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6a2 2 0 1 1 2.7 1.9c-.5.2-.7.6-.7 1.1"/><circle cx="8" cy="11.5" r="0.6" fill="currentColor" stroke="none"/></svg>`;
   const ICON_SLIDERS = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h6M11 4h2M3 12h2M7 12h6"/><circle cx="10" cy="4" r="1.4"/><circle cx="6" cy="12" r="1.4"/></svg>`;
-  const ICON_CHECK = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11.5 12.5 5"/></svg>`;
   const ICON_EDIT = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2.5l2.5 2.5L6 12.5l-3 .8.8-3L11 2.5Z"/></svg>`;
+  const CHEV = `<svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>`;
+  const GRID = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><rect x="1.5" y="2.5" width="6" height="5" rx="1"/><rect x="8.5" y="2.5" width="6" height="5" rx="1"/><rect x="1.5" y="8.5" width="6" height="5" rx="1"/><rect x="8.5" y="8.5" width="6" height="5" rx="1"/></svg>`;
 
   const ulToastEl = document.getElementById('ulToast');
+  const ulPromptEl = document.getElementById('ulPrompt');
+  const ulApproveBtn = document.getElementById('ulApprove');
   let ulToastTimer = null;
   function ulToast(msg) {
     ulToastEl.textContent = msg;
@@ -6737,6 +6770,19 @@
     clearTimeout(ulToastTimer);
     ulToastTimer = setTimeout(() => ulToastEl.classList.remove('show'), 2600);
   }
+
+  /* Prompt-box states reused from the DS sticker sheet */
+  function ulSetThinking(on) { ulPromptEl.classList.toggle('thinking', on); }
+  function ulSetApprove(on, cb) {
+    ulPromptEl.classList.toggle('approve', on);
+    ulApproveCb = on ? cb : null;
+  }
+  function ulThink(ms, cb) { ulSetThinking(true); setTimeout(() => { ulSetThinking(false); cb(); }, ms); }
+  ulApproveBtn.addEventListener('click', () => {
+    const cb = ulApproveCb;
+    ulSetApprove(false);
+    if (cb) cb();
+  });
 
   function ulAddUser(text) {
     const el = document.createElement('div');
@@ -6760,9 +6806,10 @@
     ulScrollToEnd();
     return n;
   }
-  function ulTyping() {
+  // DS message: bold-title + body (+ optional inline CTA passed as html)
+  function ulMsg(html) {
     const n = ulAgentNode();
-    n.innerHTML = `<div class="ul-typing"><span></span><span></span><span></span></div>`;
+    n.innerHTML = `<div class="ul-bubble" style="padding:10px 16px 12px">${html}</div>`;
     ulScrollToEnd();
     return n;
   }
@@ -6776,28 +6823,46 @@
     ulRefreshSend();
 
     if (ulFlowStarted) {
-      const t = ulTyping();
-      setTimeout(() => { t.remove(); ulText("Noted — let me know if you'd like to adjust the setup."); }, 800);
+      ulThink(800, () => ulText("Noted — tell me if you'd like to adjust anything."));
       return;
     }
     ulFlowStarted = true;
-    const t = ulTyping();
-    setTimeout(() => { t.remove(); ulAskCombine(); }, 1100);
+    ulThink(1200, () => { ulPlanMessage(); ulAskCombine(); });
+  }
+
+  // Education + transparency: reuse the collapsible Plan section
+  function ulPlanMessage() {
+    const n = ulAgentNode();
+    n.innerHTML = `
+      <div class="ul-bubble">
+        <div class="ul-text-top">To cut between your camera angles I'll combine these 4 recordings into a multi-cam <b>sequence</b> — that syncs them on one timeline so I can switch to whoever's speaking. I'll use <b>Automatic Multicam (AMC)</b> to do it.</div>
+        <div class="ul-toggle open">
+          <div class="ul-toggle-header"><span class="ul-toggle-label">Plan</span>${CHEV}</div>
+          <div class="ul-toggle-content"><ul>
+            <li>Add to an existing sequence, or create a new one.</li>
+            <li>Assign each camera to its speaker so cuts follow the conversation.</li>
+            <li>Generate a preview so you can review the cuts before applying.</li>
+          </ul></div>
+        </div>
+      </div>`;
+    const tog = n.querySelector('.ul-toggle');
+    tog.querySelector('.ul-toggle-header').addEventListener('click', () => tog.classList.toggle('open'));
+    ulScrollToEnd();
   }
 
   function ulAskCombine() {
     const n = ulAgentNode();
     n.innerHTML = `
       <div class="ul-bubble" style="padding:10px 16px 12px">
-        <div class="ul-text-top" style="padding:0">You already have a multi-cam sequence <b>“${UL_SEQ}”</b> in this project. Want me to combine these 4 recordings into it, or start a new sequence?</div>
+        <div class="ul-text-top" style="padding:0">First though — you already have a multi-cam sequence <b>“${UL_SEQ}”</b> in this project. Add these recordings to it, or start a new sequence?</div>
         <div class="ul-choices">
           <button class="ul-choice" data-c="combine">
             <span class="ul-choice-icon">${ICON_MERGE}</span>
-            <span>Combine into “${UL_SEQ}”<br><span class="ul-choice-sub">Autosync the 4 cameras into the existing sequence</span></span>
+            <span>Add to “${UL_SEQ}”<br><span class="ul-choice-sub">Autosync the 4 cameras into the existing sequence</span></span>
           </button>
           <button class="ul-choice" data-c="new">
             <span class="ul-choice-icon">${ICON_PLUS}</span>
-            <span>Create a new sequence<br><span class="ul-choice-sub">Set up speakers, style, scenes and layout from scratch</span></span>
+            <span>Create a new sequence<br><span class="ul-choice-sub">Set up speakers and layout from scratch</span></span>
           </button>
         </div>
       </div>`;
@@ -6814,84 +6879,81 @@
   }
 
   function ulChooseCombine() {
-    const t = ulTyping();
-    setTimeout(() => {
-      t.remove();
-      const n = ulAgentNode();
-      n.innerHTML = `
-        <div class="ul-bubble" style="padding:10px 16px 12px">
-          <div class="ul-text-top" style="padding:0">Done — I synced the 4 cameras into <b>“${UL_SEQ}”</b> and aligned them by audio. You can fine-tune which camera shows when in the Sequence Editor.</div>
-          <button class="ul-action-btn" data-edit>${ICON_EDIT} Edit cameras in Sequence Editor</button>
-        </div>`;
+    ulThink(1300, () => {
+      const n = ulMsg(`
+        <div class="ul-text-top" style="padding:0">Done — I synced the 4 cameras into <b>“${UL_SEQ}”</b> and aligned them by audio. You can fine-tune which camera shows when in the Sequence Editor.</div>
+        <button class="ul-action-btn" data-edit>${ICON_EDIT} Edit cameras in Sequence Editor</button>`);
       n.querySelector('[data-edit]').addEventListener('click', () => ulToast('Opening Sequence Editor — not part of this prototype'));
-      ulScrollToEnd();
-    }, 1300);
+    });
   }
 
   function ulChooseNew() {
-    const t = ulTyping();
-    setTimeout(() => {
-      t.remove();
-      ulText("Here's the setup I'd propose for a new multi-cam sequence:");
-      const n = ulAgentNode();
-      n.innerHTML = `
-        <div class="ul-module">
-          <div class="ul-module-head"><span class="ul-module-badge">${ICON_Q}</span> Review multi-cam setup</div>
-          <div class="ul-module-sub">4 cameras · 3 speakers · Dynamic · Multicam full screen</div>
-          <button class="ul-module-btn">${ICON_SLIDERS} Review &amp; confirm</button>
-        </div>`;
-      n.querySelector('.ul-module-btn').addEventListener('click', () => openReviewModal(n));
-      ulScrollToEnd();
-    }, 1100);
+    ulThink(1000, () => {
+      const n = ulMsg(`
+        <div class="ul-text-top" style="padding:0">A few questions before I build this — let's confirm who appears in each camera. Once you approve, I'll generate a preview so you can check the cuts.</div>
+        <button class="ul-action-btn" data-review>${ICON_SLIDERS} Review setup</button>`);
+      n.querySelector('[data-review]').addEventListener('click', openAmcReview);
+    });
   }
 
-  /* Review modal */
-  const rvScrim = document.getElementById('rvScrim');
-  const rvModal = document.getElementById('rvModal');
-  let rvModuleNode = null;
-
-  function openReviewModal(moduleNode) {
-    rvModuleNode = moduleNode;
-    rvScrim.classList.add('show');
-    rvModal.classList.add('show');
+  /* Reuse the AMC manual-flow speaker-assignment modal as the "questions" surface */
+  function preseedAssignments() {
+    assignments[0] = new Set([0]);
+    assignments[1] = new Set([1]);
+    assignments[2] = new Set([2]);
+    assignments[3] = new Set([0, 1, 2]);
+    selects.forEach((_, r) => updateSelectLabel(r));
+    updateConfirm();
   }
-  function closeReviewModal() {
-    rvScrim.classList.remove('show');
-    rvModal.classList.remove('show');
+  function openAmcReview() {
+    agentReview = true;
+    document.getElementById('mmTitle').textContent = 'Set up your multi-cam sequence';
+    multicamModal.querySelector('.mm-desc').textContent = 'Confirm who appears in each camera so cuts follow the conversation. Double-click a recording to rename it.';
+    document.getElementById('mmKeep').style.display = 'none';
+    mmCreateCaret.style.display = 'none';
+    mmCreateMenu.classList.add('hidden');
+    mmCreate.innerHTML = `${GRID} Generate preview`;
+    preseedAssignments();
+    modalScrim.classList.remove('dismissed');
+    multicamModal.classList.remove('dismissed');
   }
-  rvScrim.addEventListener('click', closeReviewModal);
-  document.getElementById('rvCancel').addEventListener('click', closeReviewModal);
-  document.getElementById('rvConfirm').addEventListener('click', () => {
-    const style = document.getElementById('rvStyle').value;
-    const layout = document.getElementById('rvLayout').value;
-    closeReviewModal();
 
-    if (rvModuleNode) {
-      rvModuleNode.innerHTML = `<div class="ul-chip"><span class="ul-chip-check">${ICON_CHECK}</span><span>Setup confirmed — 3 speakers, <b>${style}</b>, <b>${layout}</b></span></div>`;
-    }
+  // Reuse the AMC combo card to show the speaker-cut preview in chat
+  function comboPreviewHTML() {
+    const idxs = assignedSpeakerIdxs();
+    const cells = idxs.map(s => {
+      const c = speakerColors[s % speakerColors.length];
+      return `<div class="cc-cell"><span style="color:${c}">${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</span></div>`;
+    }).join('');
+    const chips = idxs.map(s => {
+      const c = speakerColors[s % speakerColors.length];
+      return `<div class="cc-chip"><span class="id">${s + 1}</span><span class="nm" style="color:${c}">${escapeHtml(speakers[s])}</span></div>`;
+    }).join('');
+    return `<div class="combo-card"><div class="cc-header"><span>${idxs.length} speaker${idxs.length === 1 ? '' : 's'}</span></div><div class="cc-stage"><div class="cc-strip">${cells}</div></div><div class="cc-chips">${chips}</div></div>`;
+  }
 
-    const t = ulTyping();
-    setTimeout(() => {
-      t.remove();
-      ulText('Generating a preview of your new sequence…');
-      const t2 = ulTyping();
-      setTimeout(() => {
-        t2.remove();
-        const n = ulAgentNode();
-        n.innerHTML = `
-          <div class="ul-bubble" style="padding:10px 16px 12px">
-            <div class="ul-text-top" style="padding:0">✓ Created your new multi-cam sequence and applied it to the project.</div>
-            <button class="ul-action-btn" data-edit>${ICON_EDIT} Edit cameras in Sequence Editor</button>
-          </div>`;
-        n.querySelector('[data-edit]').addEventListener('click', () => ulToast('Opening Sequence Editor — not part of this prototype'));
-        ulScrollToEnd();
-      }, 1400);
-    }, 1000);
-  });
+  // Called from the reused modal's "Generate preview" button (mmCreate, agent mode)
+  function onAgentReviewConfirm() {
+    agentReview = false;
+    ulThink(1400, () => {
+      ulMsg(`<div class="ul-text-top" style="padding:0">Here's a preview of your new multi-cam sequence — I cut to whoever's speaking. Approve to apply it to your project.</div>${comboPreviewHTML()}`);
+      ulSetApprove(true, onApprovePlan);
+    });
+  }
+  function onApprovePlan() {
+    ulThink(1400, () => {
+      const n = ulMsg(`
+        <div class="ul-text-top" style="padding:0">✓ Applied your new multi-cam sequence to the project.</div>
+        <button class="ul-action-btn" data-edit>${ICON_EDIT} Edit cameras in Sequence Editor</button>`);
+      n.querySelector('[data-edit]').addEventListener('click', () => ulToast('Opening Sequence Editor — not part of this prototype'));
+    });
+  }
 
   ulNewChat.addEventListener('click', () => {
     ulStack.innerHTML = '';
     ulFlowStarted = false;
+    ulSetThinking(false);
+    ulSetApprove(false);
     ulInput.value = UL_DEFAULT;
     ulAutoGrow();
     ulRefreshSend();
