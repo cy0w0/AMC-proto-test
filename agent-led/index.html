@@ -1638,6 +1638,13 @@
   .ul-setup.open .chev { transform: rotate(90deg); }
   .ul-setup-body { display: none; padding: 0 12px 12px; }
   .ul-setup.open .ul-setup-body { display: block; }
+  /* AMC modules relocated into the chat: flatten panel chrome */
+  .ul-setup-body .amc-module { padding: 0; border: none; margin: 0 0 12px; background: transparent; }
+  .ul-setup-body .amc-module:last-of-type { margin-bottom: 0; }
+  .ul-setup-cta { display: flex; gap: 8px; margin-top: 14px; }
+  .ul-setup-cta .amc-btn,
+  .ul-setup-cta .amc-btn-primary { flex: 1; }
+  .ul-preview-host .amc-module { margin-top: 8px; }
 
   /* AMC timeline (skeleton state) */
   .amc-timeline {
@@ -4480,7 +4487,7 @@
 
           <!-- Page 1 · Settings -->
           <div class="amc-page" id="settingsPage">
-            <div class="amc-module">
+            <div class="amc-module" id="editModule">
               <div class="amc-row"><span class="amc-row-header">Edit</span></div>
               <div class="amc-row">
                 <span class="amc-row-label grow">Show only active speakers</span>
@@ -4542,7 +4549,7 @@
               </div>
             </div>
 
-            <div class="amc-module" style="border-color: var(--border-medium); padding-bottom: 16px;">
+            <div class="amc-module" id="pvCombosModule" style="border-color: var(--border-medium); padding-bottom: 16px;">
               <div class="amc-row">
                 <span class="amc-row-header grow">Speaker combinations</span>
                 <button class="amc-toggle" id="pvAdd" aria-label="Add combination">
@@ -6915,14 +6922,14 @@
 
   function ulChooseNew() {
     ulThink(1000, () => {
-      ulMsg(`<div class="ul-text-top" style="padding:0">A few questions before I build this — confirm who appears in each camera so cuts follow the conversation. Once you approve, I'll generate a preview and apply it.</div>`);
+      ulMsg(`<div class="ul-text-top" style="padding:0">A few questions before I build this — here's the setup I'd propose. Review the scene count, speakers and layout, then confirm.</div>`);
       ulInsertSetupModule();
-      ulSetApprove(true, onApprovePlan);
     });
   }
 
-  /* Inline expandable camera-setup module — reuses the AMC manual-flow rows
-     (#camSetupRows: speaker dropdown, Identified-speakers popover, add new speaker) */
+  /* Inline expandable setup module — reuses the AMC manual-flow settings wholesale:
+     scene count + camera setup (speaker dropdown / Identified-speakers popover /
+     add new speaker) + layout-pack toggle & picker. */
   function preseedAssignments() {
     assignments[0] = new Set([0]);
     assignments[1] = new Set([1]);
@@ -6938,15 +6945,56 @@
       <div class="ul-setup open" id="ulSetup">
         <button class="ul-setup-head" type="button">
           <span class="ul-setup-icon">${ICON_SLIDERS}</span>
-          <span class="ul-flex">Camera setup</span>
+          <span class="ul-flex">Multi-cam setup</span>
           <span class="ul-setup-sub">4 cameras</span>${CHEV}
         </button>
-        <div class="ul-setup-body"><div id="ulSetupHost"></div></div>
+        <div class="ul-setup-body">
+          <div id="ulSetupHost"></div>
+          <div class="ul-setup-cta">
+            <button class="amc-btn" data-edit>Edit cameras in sequence editor</button>
+            <button class="amc-btn-primary" data-confirm>Confirm</button>
+          </div>
+        </div>
       </div>`;
-    n.querySelector('#ulSetupHost').appendChild(camSetupRows); // move the reused rows into the chat
+    const host = n.querySelector('#ulSetupHost');
+    // Relocate the real AMC settings modules into the chat module
+    host.appendChild(document.getElementById('editModule'));
+    host.appendChild(document.getElementById('camSetupModule'));
+    host.appendChild(document.getElementById('layoutPackModule'));
     renderCamSetup();
+    // hide the camera-setup module's own inner "Edit cameras…" button (we surface it as a CTA)
+    const innerEdit = document.getElementById('camSetupModule').querySelector('.amc-collapsible > .amc-btn');
+    if (innerEdit) innerEdit.style.display = 'none';
+
     const setup = n.querySelector('.ul-setup');
     setup.querySelector('.ul-setup-head').addEventListener('click', () => setup.classList.toggle('open'));
+    n.querySelector('[data-edit]').addEventListener('click', () => ulToast('Opening Sequence Editor — not part of this prototype'));
+    n.querySelector('[data-confirm]').addEventListener('click', () => ulConfirmSetup(setup));
+    ulScrollToEnd();
+  }
+
+  function ulConfirmSetup(setup) {
+    const btn = setup.querySelector('[data-confirm]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Confirmed'; }
+    setup.classList.remove('open'); // collapse the setup once confirmed
+    ulThink(1500, () => {
+      ulMsg(`<div class="ul-text-top" style="padding:0">Here's a preview of the speaker combinations I'll cut between. Use the icon to switch to list view, or approve to apply.</div>`);
+      ulInsertPreviewModule();
+      ulSetApprove(true, onApprovePlan);
+    });
+  }
+
+  // Reuse the AMC preview combos module (carousel + list/gallery view toggle)
+  function ulInsertPreviewModule() {
+    seedCombos();
+    comboView = 'card';
+    comboIdx = 0;
+    const n = ulAgentNode();
+    n.innerHTML = `<div class="ul-preview-host" id="ulPreviewHost"></div>`;
+    n.querySelector('#ulPreviewHost').appendChild(document.getElementById('pvCombosModule'));
+    const addBtn = document.getElementById('pvAdd');
+    if (addBtn) addBtn.style.display = 'none'; // create-combo flow lives on a page we don't surface
+    renderCombos();
     ulScrollToEnd();
   }
 
@@ -6964,13 +7012,11 @@
     return `<div class="combo-card"><div class="cc-header"><span>${idxs.length} speaker${idxs.length === 1 ? '' : 's'}</span></div><div class="cc-stage"><div class="cc-strip">${cells}</div></div><div class="cc-chips">${chips}</div></div>`;
   }
 
-  // Approve plan (prompt box) → generate preview + apply, shown together in chat
+  // Approve plan (prompt box) → apply the previewed sequence
   function onApprovePlan() {
-    const setup = document.getElementById('ulSetup');
-    if (setup) setup.classList.remove('open'); // collapse the setup once approved
     ulThink(1600, () => {
       const n = ulMsg(`
-        <div class="ul-text-top" style="padding:0">✓ Generated the preview and applied your new multi-cam sequence — I cut to whoever's speaking.</div>${comboPreviewHTML()}
+        <div class="ul-text-top" style="padding:0">✓ Applied your new multi-cam sequence to the project — I cut to whoever's speaking.</div>
         <button class="ul-action-btn" data-edit>${ICON_EDIT} Edit cameras in Sequence Editor</button>`);
       n.querySelector('[data-edit]').addEventListener('click', () => ulToast('Opening Sequence Editor — not part of this prototype'));
     });
