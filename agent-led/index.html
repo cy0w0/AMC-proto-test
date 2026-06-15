@@ -1654,35 +1654,42 @@
   }
   .ul-preview .amc-module { padding: 0; border: none; margin: 0 0 12px; background: transparent; }
   .ul-preview .amc-module:last-of-type { margin-bottom: 0; }
-  /* User-centric question blocks inside the setup module */
-  .ul-q-title { font-size: 12px; font-weight: 600; color: var(--fg-primary); }
+  /* Question sections inside the setup module */
+  .ul-q-title { font-size: 13px; font-weight: 600; color: var(--fg-primary); }
   .ul-q-sub {
     font-size: 11px;
     line-height: 15px;
     color: var(--fg-secondary);
-    margin-top: 3px;
+    margin-top: 2px;
   }
   .ul-q-sub b { color: var(--fg-primary); font-weight: 600; }
-  /* Claude-style selectable pills (Descript tokens) */
-  .ul-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  .ul-pill {
-    border: 1px solid var(--border-medium);
-    background: var(--surface-elevated);
-    border-radius: 999px;
-    padding: 7px 14px;
-    font-family: inherit;
-    font-size: 12px;
+  /* "Unreviewed" status chip in the collapsed header */
+  .ul-status-chip {
+    font-size: 11px;
     line-height: 16px;
-    color: var(--fg-primary);
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    color: var(--fg-secondary);
+    background: var(--chrome-0-elevated);
+    border: 1px solid var(--grey-50-a);
+    border-radius: 6px;
+    padding: 1px 8px;
   }
-  .ul-pill:hover { background: #faf8f8; border-color: #6b6bcf; }
-  .ul-pill.selected {
-    background: var(--fg-primary);
+  /* Generate-preview primary button (blurple) */
+  .ul-gen-btn {
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    background: #6b6bcf;
     color: #fff;
-    border-color: var(--fg-primary);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 14px;
+    margin-top: 14px;
+    cursor: pointer;
+    transition: background 0.15s ease;
   }
+  .ul-gen-btn:hover { background: #5a5ac0; }
+  .ul-gen-btn:disabled { opacity: 0.5; cursor: default; }
 
   /* AMC timeline (skeleton state) */
   .amc-timeline {
@@ -4403,6 +4410,10 @@
             </svg>
             <svg class="stop-sq" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="4.5" y="4.5" width="7" height="7" rx="1.5"/></svg>
           </button>
+          <button class="ul-approve" id="ulApprove">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11.5 12.5 5"/></svg>
+            Approve plan
+          </button>
         </div>
       </div>
     </aside>
@@ -4522,14 +4533,13 @@
           <!-- Page 1 · Settings -->
           <div class="amc-page" id="settingsPage">
             <div class="amc-module" id="editModule">
-              <div class="ul-q-title">How should the cutting feel?</div>
-              <div class="ul-q-sub">I switch angles as people speak. Set how often I cut, and whether to hide a camera while its speaker is quiet.</div>
-              <div class="amc-row" style="margin-top:10px;">
-                <span class="amc-row-label grow">Only show whoever's talking</span>
-                <button class="switch" role="switch" aria-checked="false" aria-label="Only show whoever's talking"></button>
+              <div class="ul-q-title">How should the editing feel</div>
+              <div class="amc-row" style="margin-top:8px;">
+                <span class="amc-row-label grow">Show only active speakers</span>
+                <button class="switch" role="switch" aria-checked="false" aria-label="Show only active speakers"></button>
               </div>
               <div class="amc-row">
-                <span class="amc-row-header grow">How many cuts</span>
+                <span class="amc-row-header grow">Scene count</span>
                 <div class="seg-tabs" role="tablist">
                   <button class="seg-tab" role="tab">Total</button>
                   <button class="seg-tab selected" role="tab">Per min</button>
@@ -4543,12 +4553,11 @@
 
             <div class="amc-module" id="camSetupModule">
               <div class="amc-row">
-                <span class="amc-row-header grow">Who's in each camera?</span>
-                <button class="amc-toggle" id="camSetupToggle" aria-label="Collapse camera setup">
+                <span class="ul-q-title grow">Who's in each camera</span>
+                <button class="amc-toggle" id="camSetupToggle" aria-label="Collapse camera setup" style="display:none;">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
                 </button>
               </div>
-              <div class="ul-q-sub" style="margin:0 0 6px;">So I cut to the right angle when someone speaks. I matched each camera to a speaker — fix any that are off.</div>
               <div class="amc-collapsible">
                 <div id="camSetupRows" style="display:flex;flex-direction:column;gap:8px;width:100%;"></div>
                 <button class="amc-btn">Edit cameras in sequence editor</button>
@@ -4557,10 +4566,9 @@
 
             <div class="amc-module collapsed" id="layoutPackModule">
               <div class="amc-row">
-                <span class="amc-row-header grow">Frame it with a layout pack?</span>
-                <button class="switch" id="layoutPackSwitch" role="switch" aria-checked="false" aria-label="Frame it with a layout pack"></button>
+                <span class="amc-row-label grow">Use layout pack</span>
+                <button class="switch" id="layoutPackSwitch" role="switch" aria-checked="false" aria-label="Use layout pack"></button>
               </div>
-              <div class="ul-q-sub" style="margin:0;">Gives every scene a consistent multi-cam frame instead of plain full-screen cuts.</div>
               <div class="amc-collapsible">
                 <button class="select-jumbo">
                   <span class="sj-thumb" aria-hidden="true"><span class="sj-cell"></span><span class="sj-cell"></span></span>
@@ -6831,7 +6839,9 @@
 
   const ulToastEl = document.getElementById('ulToast');
   const ulPromptEl = document.getElementById('ulPrompt');
+  const ulApproveBtn = document.getElementById('ulApprove');
   let ulToastTimer = null;
+  let ulApproveCb = null;
   function ulToast(msg) {
     ulToastEl.textContent = msg;
     ulToastEl.classList.add('show');
@@ -6839,9 +6849,18 @@
     ulToastTimer = setTimeout(() => ulToastEl.classList.remove('show'), 2600);
   }
 
-  /* "Thinking…" prompt-box state reused from the DS sticker sheet */
+  /* Prompt-box states reused from the DS sticker sheet: Thinking… and Approve plan */
   function ulSetThinking(on) { ulPromptEl.classList.toggle('thinking', on); }
   function ulThink(ms, cb) { ulSetThinking(true); setTimeout(() => { ulSetThinking(false); cb(); }, ms); }
+  function ulSetApprove(on, cb) {
+    ulPromptEl.classList.toggle('approve', on);
+    ulApproveCb = on ? cb : null;
+  }
+  ulApproveBtn.addEventListener('click', () => {
+    const cb = ulApproveCb;
+    ulSetApprove(false);
+    if (cb) cb();
+  });
 
   function ulAddUser(text) {
     const el = document.createElement('div');
@@ -6886,8 +6905,8 @@
       return;
     }
     ulFlowStarted = true;
-    // Plan comes out first, then the next message follows
-    ulThink(1200, () => { ulPlanMessage(); ulThink(900, ulStartSetup); });
+    // Plan comes out first; the prompt box then offers "Approve plan"
+    ulThink(1200, () => { ulPlanMessage(); ulSetApprove(true, ulStartSetup); });
   }
 
   // Education + transparency: reuse the collapsible Plan section
@@ -6895,13 +6914,13 @@
     const n = ulAgentNode();
     n.innerHTML = `
       <div class="ul-bubble">
-        <div class="ul-text-top">To cut between your camera angles I'll combine these 4 recordings into a multi-cam <b>sequence</b> — that syncs them on one timeline so I can switch to whoever's speaking. I'll use <b>Automatic Multicam (AMC)</b> to do it.</div>
+        <div class="ul-text-top">I'll sync your 4 cameras into one multi-cam <b>sequence</b> and cut to whoever's speaking — using <b>Automatic Multicam</b>.</div>
         <div class="ul-toggle">
           <div class="ul-toggle-header"><span class="ul-toggle-label">Plan</span>${CHEV}</div>
           <div class="ul-toggle-content"><ul>
-            <li>Add to an existing sequence, or create a new one.</li>
-            <li>Assign each camera to its speaker so cuts follow the conversation.</li>
-            <li>Generate a preview so you can review the cuts before applying.</li>
+            <li>Pick a sequence — new or existing.</li>
+            <li>Match each camera to its speaker.</li>
+            <li>Preview the cuts, then apply.</li>
           </ul></div>
         </div>
       </div>`;
@@ -6912,7 +6931,7 @@
 
   // The sequence choice (add to existing vs new) is folded into the setup module
   function ulStartSetup() {
-    ulMsg(`<div class="ul-text-top" style="padding:0">A few questions before I build this — here's the setup I'd propose. Pick the sequence, review the scene count, speakers and layout, then confirm.</div>`);
+    ulMsg(`<div class="ul-text-top" style="padding:0">A few quick questions first:</div>`);
     ulInsertSetupModule();
   }
 
@@ -6920,6 +6939,7 @@
      scene count + camera setup (speaker dropdown / Identified-speakers popover /
      add new speaker) + layout-pack toggle & picker. */
   function preseedAssignments() {
+    speakers = ['Christina', 'Jack', 'Sherry'];
     assignments[0] = new Set([0]);
     assignments[1] = new Set([1]);
     assignments[2] = new Set([2]);
@@ -6933,60 +6953,58 @@
     n.innerHTML = `
       <div class="ul-setup open" id="ulSetup">
         <button class="ul-setup-head" type="button">
+          <span class="ul-flex">Quick questions</span>
+          <span class="ul-status-chip" id="ulStatusChip">Unreviewed</span>
           <span class="ul-setup-icon">${ICON_SLIDERS}</span>
-          <span class="ul-flex">Let's set up your multi-cam</span>
-          <span class="ul-setup-sub">4 cameras</span>${CHEV}
         </button>
         <div class="ul-setup-body">
-          <div class="amc-module ul-seq-module">
-            <div class="ul-q-title">Where should this go?</div>
-            <div class="ul-q-sub">I spotted an existing multi-cam sequence, <b>“${UL_SEQ}”</b>, in this project — so you can fold these in instead of starting over.</div>
-            <div class="ul-pills ul-seq-pills">
-              <button class="ul-pill selected" data-seq="new">Start a new sequence</button>
-              <button class="ul-pill" data-seq="existing">Add to “${UL_SEQ}”</button>
+          <div class="amc-module">
+            <div class="ul-q-title">Where should this go</div>
+            <div class="ul-q-sub">I found an existing sequence in this project.</div>
+            <div class="amc-row" style="margin-top:8px;">
+              <span class="amc-row-label grow">Create new sequence</span>
+              <button class="switch" id="ulNewSeqSwitch" role="switch" aria-checked="false" aria-label="Create new sequence"></button>
             </div>
-            <div class="ul-q-sub ul-seq-outcome">I'll create a new sequence and sync the 4 cameras onto one timeline.</div>
+            <div class="amc-row">
+              <span class="amc-row-label grow">Add to sequence</span>
+              <select class="rv-select" id="ulSeqSelect"><option>${UL_SEQ}</option><option>Sequence 02</option></select>
+            </div>
           </div>
           <div id="ulSetupHost"></div>
-          <div class="ul-setup-cta">
-            <button class="amc-btn" data-edit>Edit cameras in sequence editor</button>
-            <button class="amc-btn-primary" data-confirm>Confirm</button>
-          </div>
+          <button class="ul-gen-btn" data-gen>Generate preview</button>
         </div>
       </div>`;
-    const seqOutcome = n.querySelector('.ul-seq-outcome');
-    n.querySelectorAll('.ul-seq-pills .ul-pill').forEach(pill => {
-      pill.addEventListener('click', () => {
-        n.querySelectorAll('.ul-seq-pills .ul-pill').forEach(p => p.classList.remove('selected'));
-        pill.classList.add('selected');
-        seqOutcome.textContent = pill.dataset.seq === 'existing'
-          ? `I'll add the 4 cameras into “${UL_SEQ}” and re-sync the timeline.`
-          : `I'll create a new sequence and sync the 4 cameras onto one timeline.`;
-      });
+    // "Create new sequence" dims the existing-sequence picker
+    const seqSwitch = n.querySelector('#ulNewSeqSwitch');
+    const seqSelect = n.querySelector('#ulSeqSelect');
+    seqSwitch.addEventListener('click', () => {
+      seqSwitch.classList.toggle('on');
+      const on = seqSwitch.classList.contains('on');
+      seqSwitch.setAttribute('aria-checked', on);
+      seqSelect.disabled = on;
+      seqSelect.style.opacity = on ? '0.4' : '';
     });
     const host = n.querySelector('#ulSetupHost');
-    // Relocate the real AMC settings modules into the chat module
+    // Relocate the real AMC settings modules into the chat module (editing → layout → cameras)
     host.appendChild(document.getElementById('editModule'));
-    host.appendChild(document.getElementById('camSetupModule'));
     host.appendChild(document.getElementById('layoutPackModule'));
+    host.appendChild(document.getElementById('camSetupModule'));
     renderCamSetup();
-    // hide the camera-setup module's own inner "Edit cameras…" button (we surface it as a CTA)
     const innerEdit = document.getElementById('camSetupModule').querySelector('.amc-collapsible > .amc-btn');
     if (innerEdit) innerEdit.style.display = 'none';
 
     const setup = n.querySelector('.ul-setup');
     setup.querySelector('.ul-setup-head').addEventListener('click', () => setup.classList.toggle('open'));
-    n.querySelector('[data-edit]').addEventListener('click', () => ulToast('Opening Sequence Editor — not part of this prototype'));
-    n.querySelector('[data-confirm]').addEventListener('click', () => ulConfirmSetup(setup));
+    n.querySelector('[data-gen]').addEventListener('click', () => ulConfirmSetup(setup));
     ulScrollToEnd();
   }
 
   function ulConfirmSetup(setup) {
-    const btn = setup.querySelector('[data-confirm]');
-    if (btn) { btn.disabled = true; btn.textContent = 'Confirmed'; }
-    setup.classList.remove('open'); // collapse the setup once confirmed
+    const chip = setup.querySelector('#ulStatusChip');
+    if (chip) chip.textContent = 'Reviewed';
+    setup.classList.remove('open'); // collapse the setup once generated
     ulThink(1500, () => {
-      ulMsg(`<div class="ul-text-top" style="padding:0">Here's a preview of the speaker combinations I'll cut between. Switch to list view with the icon, then confirm to apply.</div>`);
+      ulMsg(`<div class="ul-text-top" style="padding:0">Here's the preview — I cut to whoever's speaking. Switch views with the icon, then run.</div>`);
       ulInsertPreviewModule();
     });
   }
@@ -7037,15 +7055,15 @@
       const n = ulAgentNode();
       n.innerHTML = `
         <div class="ul-bubble" style="padding:10px 16px 12px">
-          <div class="ul-text-top" style="padding:0">Your multi-cam sequence is ready. Apply it to this composition, or put the result in a new one?</div>
+          <div class="ul-text-top" style="padding:0">Done. Where should it go?</div>
           <div class="ul-choices">
             <button class="ul-choice" data-t="this">
               <span class="ul-choice-icon">${ICON_LAYERS}</span>
-              <span>Apply to this composition<br><span class="ul-choice-sub">Update your current project with the multi-cam edit</span></span>
+              <span>This composition<br><span class="ul-choice-sub">Apply to your current project</span></span>
             </button>
             <button class="ul-choice" data-t="new">
               <span class="ul-choice-icon">${ICON_PLUS}</span>
-              <span>Apply to a new composition<br><span class="ul-choice-sub">Keep this project and create a separate one with the result</span></span>
+              <span>A new composition<br><span class="ul-choice-sub">Keep this one untouched</span></span>
             </button>
           </div>
         </div>`;
@@ -7064,7 +7082,7 @@
   function ulApplyTo(target) {
     const where = target === 'new' ? 'a new composition' : 'this composition';
     ulThink(1500, () => {
-      ulMsg(`<div class="ul-text-top" style="padding:0">✓ Applied your multi-cam sequence to ${where} — I cut to whoever's speaking.</div>`);
+      ulMsg(`<div class="ul-text-top" style="padding:0">✓ Applied to ${where}.</div>`);
     });
   }
 
@@ -7072,6 +7090,7 @@
     ulStack.innerHTML = '';
     ulFlowStarted = false;
     ulSetThinking(false);
+    ulSetApprove(false);
     ulInput.value = UL_DEFAULT;
     ulAutoGrow();
     ulRefreshSend();
