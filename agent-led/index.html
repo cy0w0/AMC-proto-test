@@ -1638,7 +1638,7 @@
   .ul-setup-head .ul-setup-icon { display: inline-flex; color: #6b6bcf; }
   .ul-setup-head .ul-setup-sub { font-weight: 400; font-size: 11px; color: var(--fg-secondary); }
   .ul-setup-head .chev { transition: transform 0.15s ease; color: var(--fg-secondary); }
-  .ul-setup.open .chev { transform: rotate(90deg); }
+  .ul-setup.open .ul-setup-head .chev { transform: rotate(90deg); }
   .ul-setup-body { display: none; padding: 0 12px 12px; }
   .ul-setup.open .ul-setup-body { display: block; }
   /* AMC modules relocated into the chat: flatten panel chrome */
@@ -6951,7 +6951,7 @@
 
   // The sequence choice (add to existing vs new) is folded into the setup module
   function ulStartSetup() {
-    ulMsg(`<div class="ul-text-top" style="padding:0">A few quick questions first:</div>`);
+    ulMsg(`<div class="ul-text-top" style="padding:0">Before I build the preview, a few quick questions:</div>`);
     ulInsertSetupModule();
   }
 
@@ -6983,9 +6983,9 @@
             <div class="ul-q-sub">I found an existing sequence in this project.</div>
             <div class="amc-row" style="margin-top:8px;">
               <span class="amc-row-label grow">Create new sequence</span>
-              <button class="switch" id="ulNewSeqSwitch" role="switch" aria-checked="false" aria-label="Create new sequence"></button>
+              <button class="switch on" id="ulNewSeqSwitch" role="switch" aria-checked="true" aria-label="Create new sequence"></button>
             </div>
-            <div class="amc-row">
+            <div class="amc-row" id="ulAddSeqRow" style="display:none;">
               <span class="amc-row-label grow">Add to sequence</span>
               <select class="rv-select" id="ulSeqSelect"><option>${UL_SEQ}</option><option>Sequence 02</option></select>
             </div>
@@ -6996,13 +6996,13 @@
       </div>`;
     // "Create new sequence" dims the existing-sequence picker
     const seqSwitch = n.querySelector('#ulNewSeqSwitch');
-    const seqSelect = n.querySelector('#ulSeqSelect');
+    const addSeqRow = n.querySelector('#ulAddSeqRow');
     seqSwitch.addEventListener('click', () => {
       seqSwitch.classList.toggle('on');
       const on = seqSwitch.classList.contains('on');
       seqSwitch.setAttribute('aria-checked', on);
-      seqSelect.disabled = on;
-      seqSelect.style.opacity = on ? '0.4' : '';
+      // Creating a new sequence ON → hide "Add to sequence"; OFF → reveal it
+      addSeqRow.style.display = on ? 'none' : '';
     });
     const host = n.querySelector('#ulSetupHost');
     const divider = () => { const d = document.createElement('div'); d.className = 'ul-divider'; return d; };
