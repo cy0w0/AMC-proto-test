@@ -6952,6 +6952,7 @@
   });
 
   function ulInsertCreateModule() {
+    if (ulCreateMsg) ulCloseCreate();   // return any already-open create module first
     csSlots = [null];
     csSlotCount.value = '1';
     agentCreate = true;
@@ -6960,8 +6961,10 @@
     const host = n.querySelector('#ulCreateHost');
     const cp = document.getElementById('createPage');
     const card = cp.querySelector('.amc-module');     // "Create speaker combination" card
+    const addBtn = document.getElementById('csAdd');
+    if (!card || !addBtn) { n.remove(); return; }     // safety: nodes unavailable
     host.appendChild(card);
-    card.appendChild(document.getElementById('csAdd')); // Generate preview lives inside the card
+    card.appendChild(addBtn);                         // Generate preview lives inside the card
     renderCreate();
     ulCreateMsg = n;
     ulScrollToEnd();
