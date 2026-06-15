@@ -7064,10 +7064,7 @@
   function ulApplyTo(target) {
     const where = target === 'new' ? 'a new composition' : 'this composition';
     ulThink(1500, () => {
-      const n = ulMsg(`
-        <div class="ul-text-top" style="padding:0">✓ Applied your multi-cam sequence to ${where} — I cut to whoever's speaking.</div>
-        <button class="ul-action-btn" data-edit>${ICON_EDIT} Edit cameras in Sequence Editor</button>`);
-      n.querySelector('[data-edit]').addEventListener('click', () => ulToast('Opening Sequence Editor — not part of this prototype'));
+      ulMsg(`<div class="ul-text-top" style="padding:0">✓ Applied your multi-cam sequence to ${where} — I cut to whoever's speaking.</div>`);
     });
   }
 
