@@ -6868,6 +6868,8 @@
   function ulSetApprove(on, cb) {
     ulPromptEl.classList.toggle('approve', on);
     ulApproveCb = on ? cb : null;
+    // Prompt the user to review/approve/adjust while a plan is awaiting approval
+    ulInput.placeholder = on ? 'Approve, or tell me what to change' : 'Ask Underlord';
   }
   ulApproveBtn.addEventListener('click', () => {
     const cb = ulApproveCb;
