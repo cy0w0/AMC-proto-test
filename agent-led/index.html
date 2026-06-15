@@ -4431,6 +4431,7 @@
         </div>
         <div class="ul-ctx-row" id="ulCtxRow">
           <button class="ul-ctx-pill" id="ulReeditPill" type="button">Re-edit multi-cam setup</button>
+          <button class="ul-ctx-pill" id="ulAddComboPill" type="button">Add speaker combination</button>
         </div>
         <textarea id="ulInput" rows="1" placeholder="Ask Underlord">Can you help me create edit this project showing multiple camera angle and make it engaging?</textarea>
         <div class="ul-action-bar">
@@ -6282,11 +6283,21 @@
     combos.push(csSlots.filter(s => s !== null));
     comboView = 'card';
     comboIdx = combos.length - 1;
+    if (agentCreate) {
+      ulCloseCreate();
+      ulMsg(`<div class="ul-text-top" style="padding:0">Added a combination — regenerated the preview.</div>`);
+      ulInsertPreviewModule();
+      markDirty();
+      return;
+    }
     renderCombos();
     setAmcPage('preview');
     markDirty();
   });
-  document.getElementById('csCancel').addEventListener('click', () => setAmcPage('preview'));
+  document.getElementById('csCancel').addEventListener('click', () => {
+    if (agentCreate) { ulCloseCreate(); ulPromptEl.classList.add('has-ctx'); ulPreviewActive = true; return; }
+    setAmcPage('preview');
+  });
 
   const mmCreate = document.getElementById('mmCreate');
   mmCreate.addEventListener('click', e => {
@@ -6883,6 +6894,8 @@
   let ulPreviewActive = false;
   let ulPreviewMsg = null;
   let ulSetupMsg = null;
+  let ulCreateMsg = null;
+  let agentCreate = false;
   let ulRunBtn = null;
 
   const ICON_MERGE = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="4" cy="3.5" r="1.5"/><circle cx="4" cy="12.5" r="1.5"/><circle cx="12" cy="8" r="1.5"/><path d="M4 5v6M5.4 4.5C8 5 10.5 6 11 7M5.4 11.5C8 11 10.5 10 11 9"/></svg>`;
@@ -6927,6 +6940,41 @@
     ulMsg(`<div class="ul-text-top" style="padding:0">Sure — tweak the setup, then generate again.</div>`);
     ulInsertSetupModule(true);
   });
+
+  // "Add speaker combination" pill → bring up the AMC create-combination module in chat
+  document.getElementById('ulAddComboPill').addEventListener('click', () => {
+    ulPromptEl.classList.remove('has-ctx');
+    ulPreviewActive = false;
+    ulMsg(`<div class="ul-text-top" style="padding:0">Pick the speakers for the new combination:</div>`);
+    ulInsertCreateModule();
+  });
+
+  function ulInsertCreateModule() {
+    csSlots = [null];
+    csSlotCount.value = '1';
+    agentCreate = true;
+    const n = ulAgentNode();
+    n.innerHTML = `<div class="ul-create" id="ulCreateHost"></div>`;
+    const host = n.querySelector('#ulCreateHost');
+    const cp = document.getElementById('createPage');
+    host.appendChild(cp.querySelector('.amc-module'));  // "Create speaker combination" card
+    host.appendChild(cp.querySelector('.pv-actions'));   // Cancel / Add
+    renderCreate();
+    ulCreateMsg = n;
+    ulScrollToEnd();
+  }
+  function ulCloseCreate() {
+    const cp = document.getElementById('createPage');
+    if (ulCreateMsg) {
+      const card = ulCreateMsg.querySelector('.amc-module');
+      const acts = ulCreateMsg.querySelector('.pv-actions');
+      if (card) cp.appendChild(card);   // return nodes so they can be reused
+      if (acts) cp.appendChild(acts);
+      ulCreateMsg.remove();
+      ulCreateMsg = null;
+    }
+    agentCreate = false;
+  }
 
   function ulAddUser(text) {
     const el = document.createElement('div');
@@ -7200,7 +7248,22 @@
     });
   }
 
+  // Return relocated AMC nodes to their home pages so clearing the chat
+  // doesn't destroy them (they'd be needed on the next run)
+  function ulRehomeAmcNodes() {
+    if (ulCreateMsg) ulCloseCreate();
+    const settings = document.getElementById('settingsPage');
+    const preview = document.getElementById('previewPage');
+    if (settings) ['editModule', 'layoutPackModule', 'camSetupModule'].forEach(id => {
+      const el = document.getElementById(id); if (el) settings.appendChild(el);
+    });
+    if (preview) ['pvScenesModule', 'pvCombosModule'].forEach(id => {
+      const el = document.getElementById(id); if (el) preview.appendChild(el);
+    });
+  }
+
   ulNewChat.addEventListener('click', () => {
+    ulRehomeAmcNodes();
     ulStack.innerHTML = '';
     ulFlowStarted = false;
     ulPreviewActive = false;
