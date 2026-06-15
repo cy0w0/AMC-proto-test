@@ -5460,10 +5460,13 @@
   // Clicking a chip opens the shared Identified speakers dropdown
   // (single-select: picks the speaker for that position in the combo)
   function attachChipEditing(scope) {
-    scope.querySelectorAll('.cc-chips').forEach(chipsWrap => {
-      chipsWrap.querySelectorAll('.cc-chip').forEach((chip, pos) => {
-        chip.addEventListener('click', e => {
-          e.stopPropagation();
+    // Each combo card: clicking a speaker block (cell) OR its chip opens the
+    // dropdown for that position, and lights up the matching speaker input.
+    scope.querySelectorAll('.combo-card').forEach(card => {
+      const chips = card.querySelectorAll('.cc-chip');
+      const cells = card.querySelectorAll('.cc-cell');
+      chips.forEach((chip, pos) => {
+        const open = () => {
           if (openAnchor === chip) { closePopover(); return; }
           closePopover();
           const ci = comboIdx;
@@ -5472,7 +5475,13 @@
             get: () => combos[ci][pos],
             set: idx => { combos[ci][pos] = idx; renderCombos(); markDirty(); },
           }, chip);
-        });
+        };
+        chip.addEventListener('click', e => { e.stopPropagation(); open(); });
+        const cell = cells[pos];
+        if (cell) {
+          cell.style.cursor = 'pointer';
+          cell.addEventListener('click', e => { e.stopPropagation(); open(); });
+        }
       });
     });
   }
@@ -6906,7 +6915,7 @@
     }
     ulFlowStarted = true;
     // Plan comes out first; the prompt box then offers "Approve plan"
-    ulThink(1200, () => { ulPlanMessage(); ulSetApprove(true, ulStartSetup); });
+    ulThink(1200, () => { ulPlanMessage(); ulSetApprove(true, () => ulThink(1300, ulStartSetup)); });
   }
 
   // Education + transparency: reuse the collapsible Plan section
@@ -6951,7 +6960,7 @@
     preseedAssignments();
     const n = ulAgentNode();
     n.innerHTML = `
-      <div class="ul-setup open" id="ulSetup">
+      <div class="ul-setup" id="ulSetup">
         <button class="ul-setup-head" type="button">
           <span class="ul-flex">Quick questions</span>
           <span class="ul-status-chip" id="ulStatusChip">Unreviewed</span>
@@ -7004,7 +7013,9 @@
     if (chip) chip.textContent = 'Reviewed';
     setup.classList.remove('open'); // collapse the setup once generated
     ulThink(1500, () => {
-      ulMsg(`<div class="ul-text-top" style="padding:0">Here's the preview — I cut to whoever's speaking. Switch views with the icon, then run.</div>`);
+      seedCombos();
+      const scenes = Math.max(combos.length * 2, 0);
+      ulMsg(`<div class="ul-text-top" style="padding:0">Here's the preview: ~${scenes} scenes from ${combos.length} speaker combinations. Review and tweak the combinations below, then run when you're happy.</div>`);
       ulInsertPreviewModule();
     });
   }

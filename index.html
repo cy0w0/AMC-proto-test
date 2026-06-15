@@ -4753,10 +4753,13 @@
   // Clicking a chip opens the shared Identified speakers dropdown
   // (single-select: picks the speaker for that position in the combo)
   function attachChipEditing(scope) {
-    scope.querySelectorAll('.cc-chips').forEach(chipsWrap => {
-      chipsWrap.querySelectorAll('.cc-chip').forEach((chip, pos) => {
-        chip.addEventListener('click', e => {
-          e.stopPropagation();
+    // Each combo card: clicking a speaker block (cell) OR its chip opens the
+    // dropdown for that position, and lights up the matching speaker input.
+    scope.querySelectorAll('.combo-card').forEach(card => {
+      const chips = card.querySelectorAll('.cc-chip');
+      const cells = card.querySelectorAll('.cc-cell');
+      chips.forEach((chip, pos) => {
+        const open = () => {
           if (openAnchor === chip) { closePopover(); return; }
           closePopover();
           const ci = comboIdx;
@@ -4765,7 +4768,13 @@
             get: () => combos[ci][pos],
             set: idx => { combos[ci][pos] = idx; renderCombos(); markDirty(); },
           }, chip);
-        });
+        };
+        chip.addEventListener('click', e => { e.stopPropagation(); open(); });
+        const cell = cells[pos];
+        if (cell) {
+          cell.style.cursor = 'pointer';
+          cell.addEventListener('click', e => { e.stopPropagation(); open(); });
+        }
       });
     });
   }
