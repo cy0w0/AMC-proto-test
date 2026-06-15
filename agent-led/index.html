@@ -1588,9 +1588,13 @@
     white-space: nowrap;
   }
   .ul-ctx-pill:hover { border-color: #6b6bcf; background: #faf8ff; }
-  /* Create-combination module in chat: full-width Generate preview */
-  .ul-create .pv-actions { display: flex; }
-  .ul-create .pv-actions .amc-btn-primary { flex: 1; }
+  /* Create-combination module in chat: Generate preview sits inside the card */
+  .ul-create .amc-module .amc-btn-primary { width: 100%; margin-top: 8px; }
+  /* Primary CTAs in chat modules use blurple */
+  .ul-setup-cta .amc-btn-primary,
+  .ul-create .amc-btn-primary { background: #6b6bcf; }
+  .ul-setup-cta .amc-btn-primary:hover,
+  .ul-create .amc-btn-primary:hover { background: #5a5ac0; }
 
   .ul-context-chip {
     display: inline-flex;
@@ -6955,8 +6959,9 @@
     n.innerHTML = `<div class="ul-create" id="ulCreateHost"></div>`;
     const host = n.querySelector('#ulCreateHost');
     const cp = document.getElementById('createPage');
-    host.appendChild(cp.querySelector('.amc-module'));  // "Create speaker combination" card
-    host.appendChild(cp.querySelector('.pv-actions'));   // Cancel / Add
+    const card = cp.querySelector('.amc-module');     // "Create speaker combination" card
+    host.appendChild(card);
+    card.appendChild(document.getElementById('csAdd')); // Generate preview lives inside the card
     renderCreate();
     ulCreateMsg = n;
     ulScrollToEnd();
@@ -6964,10 +6969,11 @@
   function ulCloseCreate() {
     const cp = document.getElementById('createPage');
     if (ulCreateMsg) {
+      const addBtn = document.getElementById('csAdd');
+      const acts = cp.querySelector('.pv-actions');
+      if (addBtn && acts) acts.appendChild(addBtn);     // return the button to its home
       const card = ulCreateMsg.querySelector('.amc-module');
-      const acts = ulCreateMsg.querySelector('.pv-actions');
-      if (card) cp.appendChild(card);   // return nodes so they can be reused
-      if (acts) cp.appendChild(acts);
+      if (card) cp.appendChild(card);                   // return the card so it can be reused
       ulCreateMsg.remove();
       ulCreateMsg = null;
     }
