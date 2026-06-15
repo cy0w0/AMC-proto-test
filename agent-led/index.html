@@ -1654,6 +1654,9 @@
   }
   .ul-preview .amc-module { padding: 0; border: none; margin: 0 0 12px; background: transparent; }
   .ul-preview .amc-module:last-of-type { margin-bottom: 0; }
+  /* Sequence picker (add-to-existing vs new) folded into the setup module */
+  .ul-seq-seg { display: flex; width: 100%; }
+  .ul-seq-seg .seg-tab { flex: 1; text-align: center; justify-content: center; }
 
   /* AMC timeline (skeleton state) */
   .amc-timeline {
@@ -6855,7 +6858,7 @@
     }
     ulFlowStarted = true;
     // Plan comes out first, then the next message follows
-    ulThink(1200, () => { ulPlanMessage(); ulThink(900, ulAskCombine); });
+    ulThink(1200, () => { ulPlanMessage(); ulThink(900, ulStartSetup); });
   }
 
   // Education + transparency: reuse the collapsible Plan section
@@ -6878,48 +6881,10 @@
     ulScrollToEnd();
   }
 
-  function ulAskCombine() {
-    const n = ulAgentNode();
-    n.innerHTML = `
-      <div class="ul-bubble" style="padding:10px 16px 12px">
-        <div class="ul-text-top" style="padding:0">First though — you already have a multi-cam sequence <b>“${UL_SEQ}”</b> in this project. Add these recordings to it, or start a new sequence?</div>
-        <div class="ul-choices">
-          <button class="ul-choice" data-c="combine">
-            <span class="ul-choice-icon">${ICON_MERGE}</span>
-            <span>Add to “${UL_SEQ}”<br><span class="ul-choice-sub">Autosync the 4 cameras into the existing sequence</span></span>
-          </button>
-          <button class="ul-choice" data-c="new">
-            <span class="ul-choice-icon">${ICON_PLUS}</span>
-            <span>Create a new sequence<br><span class="ul-choice-sub">Set up speakers and layout from scratch</span></span>
-          </button>
-        </div>
-      </div>`;
-    const choices = n.querySelector('.ul-choices');
-    choices.querySelectorAll('.ul-choice').forEach(btn => {
-      btn.addEventListener('click', () => {
-        choices.classList.add('answered');
-        btn.classList.add('chosen');
-        if (btn.dataset.c === 'combine') ulChooseCombine();
-        else ulChooseNew();
-      });
-    });
-    ulScrollToEnd();
-  }
-
-  function ulChooseCombine() {
-    ulThink(1300, () => {
-      const n = ulMsg(`
-        <div class="ul-text-top" style="padding:0">Done — I synced the 4 cameras into <b>“${UL_SEQ}”</b> and aligned them by audio. You can fine-tune which camera shows when in the Sequence Editor.</div>
-        <button class="ul-action-btn" data-edit>${ICON_EDIT} Edit cameras in Sequence Editor</button>`);
-      n.querySelector('[data-edit]').addEventListener('click', () => ulToast('Opening Sequence Editor — not part of this prototype'));
-    });
-  }
-
-  function ulChooseNew() {
-    ulThink(1000, () => {
-      ulMsg(`<div class="ul-text-top" style="padding:0">A few questions before I build this — here's the setup I'd propose. Review the scene count, speakers and layout, then confirm.</div>`);
-      ulInsertSetupModule();
-    });
+  // The sequence choice (add to existing vs new) is folded into the setup module
+  function ulStartSetup() {
+    ulMsg(`<div class="ul-text-top" style="padding:0">A few questions before I build this — here's the setup I'd propose. Pick the sequence, review the scene count, speakers and layout, then confirm.</div>`);
+    ulInsertSetupModule();
   }
 
   /* Inline expandable setup module — reuses the AMC manual-flow settings wholesale:
@@ -6944,6 +6909,13 @@
           <span class="ul-setup-sub">4 cameras</span>${CHEV}
         </button>
         <div class="ul-setup-body">
+          <div class="amc-module ul-seq-module">
+            <div class="amc-row"><span class="amc-row-header grow">Sequence</span></div>
+            <div class="seg-tabs ul-seq-seg" role="tablist">
+              <button class="seg-tab selected" data-seq="new" role="tab">New sequence</button>
+              <button class="seg-tab" data-seq="existing" role="tab">Add to “${UL_SEQ}”</button>
+            </div>
+          </div>
           <div id="ulSetupHost"></div>
           <div class="ul-setup-cta">
             <button class="amc-btn" data-edit>Edit cameras in sequence editor</button>
@@ -6951,6 +6923,12 @@
           </div>
         </div>
       </div>`;
+    n.querySelectorAll('.ul-seq-seg .seg-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        n.querySelectorAll('.ul-seq-seg .seg-tab').forEach(t => t.classList.remove('selected'));
+        tab.classList.add('selected');
+      });
+    });
     const host = n.querySelector('#ulSetupHost');
     // Relocate the real AMC settings modules into the chat module
     host.appendChild(document.getElementById('editModule'));
