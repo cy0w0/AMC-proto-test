@@ -1630,9 +1630,8 @@
     background: transparent;
     cursor: pointer;
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
-    letter-spacing: -0.14px;
     color: var(--fg-primary);
     padding: 0 12px;
   }
@@ -1645,6 +1644,8 @@
   /* AMC modules relocated into the chat: flatten panel chrome */
   .ul-setup-body .amc-module { padding: 0; border: none; margin: 0 0 8px; background: transparent; }
   .ul-setup-body .amc-module:last-of-type { margin-bottom: 0; }
+  /* Faded separator between sections (DS Separator · Faded) */
+  .ul-divider { height: 1px; background: var(--grey-50-a); margin: 0 0 8px; }
   .ul-setup-cta { display: flex; gap: 8px; margin-top: 8px; }
   .ul-setup-cta .amc-btn,
   .ul-setup-cta .amc-btn-primary { flex: 1; }
@@ -6841,6 +6842,9 @@
   const UL_SEQ = 'Interview';
   const UL_DEFAULT = ulInput.value;
   let ulFlowStarted = false;
+  let ulPreviewActive = false;
+  let ulPreviewMsg = null;
+  let ulRunBtn = null;
 
   const ICON_MERGE = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="4" cy="3.5" r="1.5"/><circle cx="4" cy="12.5" r="1.5"/><circle cx="12" cy="8" r="1.5"/><path d="M4 5v6M5.4 4.5C8 5 10.5 6 11 7M5.4 11.5C8 11 10.5 10 11 9"/></svg>`;
   const ICON_PLUS = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>`;
@@ -6916,6 +6920,7 @@
     ulRefreshSend();
 
     if (ulFlowStarted) {
+      if (ulPreviewActive) { ulRegenPreview(text); return; }
       ulThink(800, () => ulText("Noted — tell me if you'd like to adjust anything."));
       return;
     }
@@ -7000,9 +7005,12 @@
       seqSelect.style.opacity = on ? '0.4' : '';
     });
     const host = n.querySelector('#ulSetupHost');
-    // Relocate the real AMC settings modules into the chat module (editing → layout → cameras)
+    const divider = () => { const d = document.createElement('div'); d.className = 'ul-divider'; return d; };
+    // Relocate the real AMC settings modules, with faded dividers between sections
+    host.appendChild(divider());                                   // sequence | editing
     host.appendChild(document.getElementById('editModule'));
     host.appendChild(document.getElementById('layoutPackModule'));
+    host.appendChild(divider());                                   // editing | cameras
     host.appendChild(document.getElementById('camSetupModule'));
     renderCamSetup();
     const innerEdit = document.getElementById('camSetupModule').querySelector('.amc-collapsible > .amc-btn');
@@ -7024,18 +7032,19 @@
     setup.classList.remove('open'); // collapse the setup once generated
     ulThink(1500, () => {
       seedCombos();
+      comboIdx = 0;
       const scenes = Math.max(combos.length * 2, 0);
-      ulMsg(`<div class="ul-text-top" style="padding:0">Here's the preview: ~${scenes} scenes from ${combos.length} speaker combinations. Review and tweak the combinations below, then run when you're happy.</div>`);
+      ulMsg(`<div class="ul-text-top" style="padding:0">Here's the preview — ~${scenes} scenes from ${combos.length} combinations. Edit a combination, or ask me to add one (@mention speakers). Run when ready.</div>`);
       ulInsertPreviewModule();
     });
   }
 
   // Reuse the AMC preview: estimated scenes + speaker-combination carousel
-  // (list/gallery view toggle), with the Confirm CTA inside the module
+  // (list/gallery view toggle), with the Run CTA inside the module.
+  // Re-inserting moves the singleton AMC nodes here and drops the prior preview.
   function ulInsertPreviewModule() {
-    seedCombos();
     comboView = 'card';
-    comboIdx = 0;
+    const prev = ulPreviewMsg;
     const n = ulAgentNode();
     n.innerHTML = `
       <div class="ul-preview">
@@ -7048,12 +7057,33 @@
     const addBtn = document.getElementById('pvAdd');
     if (addBtn) addBtn.style.display = 'none'; // create-combo flow lives on a page we don't surface
     renderCombos();
-    n.querySelector('[data-run]').addEventListener('click', e => {
+    ulRunBtn = n.querySelector('[data-run]');
+    ulRunBtn.addEventListener('click', e => {
+      ulPreviewActive = false;
       e.currentTarget.disabled = true;
-      e.currentTarget.textContent = 'Running…';
+      e.currentTarget.innerHTML = `${btnSpinnerSVG} Running…`;
       onRun();
     });
+    if (prev) prev.remove();
+    ulPreviewMsg = n;
+    ulPreviewActive = true;
     ulScrollToEnd();
+  }
+
+  // Sending a message while the preview is up regenerates it with a new combination
+  function ulRegenPreview(text) {
+    const mentioned = speakers
+      .map((s, i) => ({ s, i }))
+      .filter(o => text.toLowerCase().includes(o.s.toLowerCase()))
+      .map(o => o.i);
+    const combo = (mentioned.length ? mentioned : [0, 1]).slice(0, 4);
+    ulThink(1500, () => {
+      combos.push(combo);
+      comboIdx = combos.length - 1;
+      const names = combo.map(i => speakers[i]).join(' + ');
+      ulMsg(`<div class="ul-text-top" style="padding:0">Added a combination — ${names}. Regenerated the preview.</div>`);
+      ulInsertPreviewModule();
+    });
   }
 
   // Reuse the AMC combo card to show the speaker-cut preview in chat
@@ -7073,6 +7103,7 @@
   // Run → Underlord asks where to apply the result
   function onRun() {
     ulThink(1600, () => {
+      if (ulRunBtn) ulRunBtn.innerHTML = '✓ Done';
       const n = ulAgentNode();
       n.innerHTML = `
         <div class="ul-bubble" style="padding:10px 16px 12px">
@@ -7110,6 +7141,9 @@
   ulNewChat.addEventListener('click', () => {
     ulStack.innerHTML = '';
     ulFlowStarted = false;
+    ulPreviewActive = false;
+    ulPreviewMsg = null;
+    ulRunBtn = null;
     ulSetThinking(false);
     ulSetApprove(false);
     ulInput.value = UL_DEFAULT;
