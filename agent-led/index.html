@@ -1123,7 +1123,6 @@
   }
 
   /* Agent message */
-  .ul-agent:has(.ul-setup:not(.open)) { height: 39px; }
   .ul-agent .ul-bubble {
     background: var(--chrome-0-elevated);
     border: 1px solid var(--border-medium);
@@ -1623,24 +1622,30 @@
   .ul-setup-head {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     width: 100%;
-    height: 39px;
     box-sizing: border-box;
     border: none;
     background: transparent;
     cursor: pointer;
     font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
     color: var(--fg-primary);
-    padding: 0 12px;
+    padding: 4px 8px 4px 12px;
   }
-  .ul-setup-head .ul-setup-icon { display: inline-flex; color: #6b6bcf; }
-  .ul-setup-head .ul-setup-sub { font-weight: 400; font-size: 11px; color: var(--fg-secondary); }
-  .ul-setup-head .chev { transition: transform 0.15s ease; color: var(--fg-secondary); }
-  .ul-agent:has(.ul-setup.open) .ul-setup-head .chev { transform: rotate(90deg); }
-  .ul-setup:not(.open) { display: none; }
+  .ul-setup-head-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .ul-setup-title { font-size: 12px; font-weight: 600; letter-spacing: 0.01px; }
+  .ul-setup-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: var(--fg-secondary);
+  }
+  .ul-setup-head:hover .ul-setup-icon { background: rgba(63, 42, 50, 0.06); }
   .ul-setup-body { display: none; padding: 0 12px 12px; }
   .ul-setup.open .ul-setup-body { display: block; }
   /* AMC modules relocated into the chat: flatten panel chrome */
@@ -1675,10 +1680,10 @@
     font-size: 11px;
     line-height: 16px;
     color: var(--fg-secondary);
-    background: var(--chrome-0-elevated);
-    border: 1px solid var(--grey-50-a);
+    background: var(--grey-50-a);
+    border: none;
     border-radius: 6px;
-    padding: 1px 8px;
+    padding: 4px 8px;
   }
   /* Generate-preview primary button (blurple) */
   .ul-gen-btn {
@@ -6976,8 +6981,10 @@
     n.innerHTML = `
       <div class="ul-setup" id="ulSetup">
         <button class="ul-setup-head" type="button">
-          <span class="ul-flex">Quick questions</span>
-          <span class="ul-status-chip" id="ulStatusChip">Unreviewed</span>
+          <span class="ul-setup-head-left">
+            <span class="ul-setup-title">Multi-cam setup</span>
+            <span class="ul-status-chip" id="ulStatusChip">Unreviewed</span>
+          </span>
           <span class="ul-setup-icon">${ICON_SLIDERS}</span>
         </button>
         <div class="ul-setup-body">
