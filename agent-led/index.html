@@ -1363,7 +1363,9 @@
     background: var(--skeleton);
     border: 1px solid var(--grey-50-a);
     flex-shrink: 0;
+    overflow: hidden;
   }
+  .scene-thumb svg { width: 100%; height: 100%; display: block; }
 
   .amc-timeline .wordbar {
     display: flex;
@@ -3766,18 +3768,14 @@
 
           <div class="canvas-stage">
             <div class="artboard">
-              <div class="frames frames-grid">
+              <div class="frames">
                 <div class="cam-frame" data-cam="0" aria-label="Camera 1"></div>
-                <div class="cam-frame" data-cam="1" aria-label="Camera 2"></div>
-                <div class="cam-frame" data-cam="2" aria-label="Camera 3"></div>
-                <div class="cam-frame" data-cam="3" aria-label="Webinar"></div>
               </div>
             </div>
 
             <!-- Scene toolbar -->
             <div class="canvas-toolbar scene-toolbar">
               <button class="tb-item" id="layoutTbItem">Layout</button>
-              <span class="tb-tag" id="layoutTbTag" style="cursor:pointer;">Multicam</span>
               <span class="tb-divider"></span>
               <button class="tb-item tb-secondary">
                 Background
@@ -3894,8 +3892,10 @@
                 <path d="M8 3v10M3 8h10"/>
               </svg>
             </button>
-            <span class="scene-thumb"></span>
-            <span class="scene-thumb"></span>
+            <span class="scene-thumb" data-cam="0" aria-label="Camera 1"></span>
+            <span class="scene-thumb" data-cam="1" aria-label="Camera 2"></span>
+            <span class="scene-thumb" data-cam="2" aria-label="Camera 3"></span>
+            <span class="scene-thumb" data-cam="3" aria-label="Webinar"></span>
           </div>
           <div class="wordbar">
             <span class="skel" style="width:190px;height:10px;"></span>
@@ -3996,7 +3996,7 @@
       <div class="ul-stack" id="ulStack"></div>
 
       <div class="ul-prompt" id="ulPrompt">
-        <textarea id="ulInput" rows="1" placeholder="Ask Underlord"></textarea>
+        <textarea id="ulInput" rows="1" placeholder="Ask Underlord">Can you help me create edit this project showing multiple camera angle and make it engaging?</textarea>
         <div class="ul-action-bar">
           <button class="ul-attach" title="Attach" aria-label="Attach">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
@@ -5496,7 +5496,7 @@
     setTimeout(() => layoutPopover.classList.add('hidden'), 200);
   }
 
-  ['layoutTbItem', 'layoutTbTag'].forEach(id => {
+  ['layoutTbItem'].forEach(id => {
     document.getElementById(id).addEventListener('click', e => {
       e.stopPropagation();
       if (!amcTimelineEl.classList.contains('applied')) return;
@@ -6460,6 +6460,8 @@
   // The manual-flow intercept modal is suppressed — the agent chat drives this variant.
   showEditor();
   dismissModal();
+  ulAutoGrow();
+  ulRefreshSend();
   ulInput.focus();
 
   const origResetModalState = resetModalState;
