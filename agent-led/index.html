@@ -1654,9 +1654,35 @@
   }
   .ul-preview .amc-module { padding: 0; border: none; margin: 0 0 12px; background: transparent; }
   .ul-preview .amc-module:last-of-type { margin-bottom: 0; }
-  /* Sequence picker (add-to-existing vs new) folded into the setup module */
-  .ul-seq-seg { display: flex; width: 100%; }
-  .ul-seq-seg .seg-tab { flex: 1; text-align: center; justify-content: center; }
+  /* User-centric question blocks inside the setup module */
+  .ul-q-title { font-size: 12px; font-weight: 600; color: var(--fg-primary); }
+  .ul-q-sub {
+    font-size: 11px;
+    line-height: 15px;
+    color: var(--fg-secondary);
+    margin-top: 3px;
+  }
+  .ul-q-sub b { color: var(--fg-primary); font-weight: 600; }
+  /* Claude-style selectable pills (Descript tokens) */
+  .ul-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ul-pill {
+    border: 1px solid var(--border-medium);
+    background: var(--surface-elevated);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  .ul-pill:hover { background: #faf8f8; border-color: #6b6bcf; }
+  .ul-pill.selected {
+    background: var(--fg-primary);
+    color: #fff;
+    border-color: var(--fg-primary);
+  }
 
   /* AMC timeline (skeleton state) */
   .amc-timeline {
@@ -4496,13 +4522,14 @@
           <!-- Page 1 · Settings -->
           <div class="amc-page" id="settingsPage">
             <div class="amc-module" id="editModule">
-              <div class="amc-row"><span class="amc-row-header">Edit</span></div>
-              <div class="amc-row">
-                <span class="amc-row-label grow">Show only active speakers</span>
-                <button class="switch" role="switch" aria-checked="false" aria-label="Show only active speakers"></button>
+              <div class="ul-q-title">How should the cutting feel?</div>
+              <div class="ul-q-sub">I switch angles as people speak. Set how often I cut, and whether to hide a camera while its speaker is quiet.</div>
+              <div class="amc-row" style="margin-top:10px;">
+                <span class="amc-row-label grow">Only show whoever's talking</span>
+                <button class="switch" role="switch" aria-checked="false" aria-label="Only show whoever's talking"></button>
               </div>
               <div class="amc-row">
-                <span class="amc-row-header grow">Scene count</span>
+                <span class="amc-row-header grow">How many cuts</span>
                 <div class="seg-tabs" role="tablist">
                   <button class="seg-tab" role="tab">Total</button>
                   <button class="seg-tab selected" role="tab">Per min</button>
@@ -4516,11 +4543,12 @@
 
             <div class="amc-module" id="camSetupModule">
               <div class="amc-row">
-                <span class="amc-row-header grow">Camera setup for speakers</span>
+                <span class="amc-row-header grow">Who's in each camera?</span>
                 <button class="amc-toggle" id="camSetupToggle" aria-label="Collapse camera setup">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
                 </button>
               </div>
+              <div class="ul-q-sub" style="margin:0 0 6px;">So I cut to the right angle when someone speaks. I matched each camera to a speaker — fix any that are off.</div>
               <div class="amc-collapsible">
                 <div id="camSetupRows" style="display:flex;flex-direction:column;gap:8px;width:100%;"></div>
                 <button class="amc-btn">Edit cameras in sequence editor</button>
@@ -4529,9 +4557,10 @@
 
             <div class="amc-module collapsed" id="layoutPackModule">
               <div class="amc-row">
-                <span class="amc-row-header grow">Use layout pack</span>
-                <button class="switch" id="layoutPackSwitch" role="switch" aria-checked="false" aria-label="Use layout pack"></button>
+                <span class="amc-row-header grow">Frame it with a layout pack?</span>
+                <button class="switch" id="layoutPackSwitch" role="switch" aria-checked="false" aria-label="Frame it with a layout pack"></button>
               </div>
+              <div class="ul-q-sub" style="margin:0;">Gives every scene a consistent multi-cam frame instead of plain full-screen cuts.</div>
               <div class="amc-collapsible">
                 <button class="select-jumbo">
                   <span class="sj-thumb" aria-hidden="true"><span class="sj-cell"></span><span class="sj-cell"></span></span>
@@ -6905,16 +6934,18 @@
       <div class="ul-setup open" id="ulSetup">
         <button class="ul-setup-head" type="button">
           <span class="ul-setup-icon">${ICON_SLIDERS}</span>
-          <span class="ul-flex">Multi-cam setup</span>
+          <span class="ul-flex">Let's set up your multi-cam</span>
           <span class="ul-setup-sub">4 cameras</span>${CHEV}
         </button>
         <div class="ul-setup-body">
           <div class="amc-module ul-seq-module">
-            <div class="amc-row"><span class="amc-row-header grow">Sequence</span></div>
-            <div class="seg-tabs ul-seq-seg" role="tablist">
-              <button class="seg-tab selected" data-seq="new" role="tab">New sequence</button>
-              <button class="seg-tab" data-seq="existing" role="tab">Add to “${UL_SEQ}”</button>
+            <div class="ul-q-title">Where should this go?</div>
+            <div class="ul-q-sub">I spotted an existing multi-cam sequence, <b>“${UL_SEQ}”</b>, in this project — so you can fold these in instead of starting over.</div>
+            <div class="ul-pills ul-seq-pills">
+              <button class="ul-pill selected" data-seq="new">Start a new sequence</button>
+              <button class="ul-pill" data-seq="existing">Add to “${UL_SEQ}”</button>
             </div>
+            <div class="ul-q-sub ul-seq-outcome">I'll create a new sequence and sync the 4 cameras onto one timeline.</div>
           </div>
           <div id="ulSetupHost"></div>
           <div class="ul-setup-cta">
@@ -6923,10 +6954,14 @@
           </div>
         </div>
       </div>`;
-    n.querySelectorAll('.ul-seq-seg .seg-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        n.querySelectorAll('.ul-seq-seg .seg-tab').forEach(t => t.classList.remove('selected'));
-        tab.classList.add('selected');
+    const seqOutcome = n.querySelector('.ul-seq-outcome');
+    n.querySelectorAll('.ul-seq-pills .ul-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        n.querySelectorAll('.ul-seq-pills .ul-pill').forEach(p => p.classList.remove('selected'));
+        pill.classList.add('selected');
+        seqOutcome.textContent = pill.dataset.seq === 'existing'
+          ? `I'll add the 4 cameras into “${UL_SEQ}” and re-sync the timeline.`
+          : `I'll create a new sequence and sync the 4 cameras onto one timeline.`;
       });
     });
     const host = n.querySelector('#ulSetupHost');
