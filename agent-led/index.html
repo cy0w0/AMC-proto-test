@@ -1562,6 +1562,27 @@
   .ul-prompt.thinking .ul-drawer { display: flex; }
   .ul-prompt.thinking textarea { opacity: 0.45; pointer-events: none; }
 
+  /* Suggestion / context pill in the prompt box (DS node 4379-33784) */
+  .ul-ctx-row { display: none; flex-wrap: wrap; gap: 4px; width: 100%; }
+  .ul-prompt.has-ctx .ul-ctx-row { display: flex; }
+  .ul-ctx-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    max-width: 192px;
+    padding: 0 8px;
+    border: 1px dashed var(--border-medium);
+    border-radius: 8px;
+    background: var(--surface-elevated);
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ul-ctx-pill:hover { border-color: #6b6bcf; background: #faf8ff; }
+
   .ul-context-chip {
     display: inline-flex;
     align-items: center;
@@ -4402,6 +4423,9 @@
         <div class="ul-drawer" id="ulDrawer"><span class="ul-flex">Thinking…</span>
           <svg class="chev" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10 8 6.5 11.5 10"/></svg>
         </div>
+        <div class="ul-ctx-row" id="ulCtxRow">
+          <button class="ul-ctx-pill" id="ulReeditPill" type="button">Re-edit multi-cam setup</button>
+        </div>
         <textarea id="ulInput" rows="1" placeholder="Ask Underlord">Can you help me create edit this project showing multiple camera angle and make it engaging?</textarea>
         <div class="ul-action-bar">
           <button class="ul-attach" title="Attach" aria-label="Attach">
@@ -6852,6 +6876,7 @@
   let ulFlowStarted = false;
   let ulPreviewActive = false;
   let ulPreviewMsg = null;
+  let ulSetupMsg = null;
   let ulRunBtn = null;
 
   const ICON_MERGE = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="4" cy="3.5" r="1.5"/><circle cx="4" cy="12.5" r="1.5"/><circle cx="12" cy="8" r="1.5"/><path d="M4 5v6M5.4 4.5C8 5 10.5 6 11 7M5.4 11.5C8 11 10.5 10 11 9"/></svg>`;
@@ -6887,6 +6912,14 @@
     const cb = ulApproveCb;
     ulSetApprove(false);
     if (cb) cb();
+  });
+
+  // "Re-edit multi-cam setup" pill → pull the setup module back up (expanded)
+  document.getElementById('ulReeditPill').addEventListener('click', () => {
+    ulPromptEl.classList.remove('has-ctx');
+    ulPreviewActive = false;
+    ulMsg(`<div class="ul-text-top" style="padding:0">Sure — tweak the setup, then generate again.</div>`);
+    ulInsertSetupModule(true);
   });
 
   function ulAddUser(text) {
@@ -6975,11 +7008,12 @@
     selects.forEach((_, r) => updateSelectLabel(r));
     updateConfirm();
   }
-  function ulInsertSetupModule() {
+  function ulInsertSetupModule(open) {
     preseedAssignments();
+    const prevSetup = ulSetupMsg;
     const n = ulAgentNode();
     n.innerHTML = `
-      <div class="ul-setup" id="ulSetup">
+      <div class="ul-setup${open ? ' open' : ''}" id="ulSetup">
         <button class="ul-setup-head" type="button">
           <span class="ul-setup-head-left">
             <span class="ul-setup-title">Multi-cam setup</span>
@@ -7033,6 +7067,8 @@
       if (opened) requestAnimationFrame(() => setup.scrollIntoView({ block: 'start', behavior: 'smooth' }));
     });
     n.querySelector('[data-gen]').addEventListener('click', () => ulConfirmSetup(setup));
+    if (prevSetup) prevSetup.remove(); // re-edit replaces the previous setup module
+    ulSetupMsg = n;
     ulScrollToEnd();
   }
 
@@ -7077,6 +7113,7 @@
     if (prev) prev.remove();
     ulPreviewMsg = n;
     ulPreviewActive = true;
+    ulPromptEl.classList.add('has-ctx'); // surface the "Re-edit multi-cam setup" pill
     ulScrollToEnd();
   }
 
@@ -7163,9 +7200,11 @@
     ulFlowStarted = false;
     ulPreviewActive = false;
     ulPreviewMsg = null;
+    ulSetupMsg = null;
     ulRunBtn = null;
     ulSetThinking(false);
     ulSetApprove(false);
+    ulPromptEl.classList.remove('has-ctx');
     ulInput.value = UL_DEFAULT;
     ulAutoGrow();
     ulRefreshSend();
