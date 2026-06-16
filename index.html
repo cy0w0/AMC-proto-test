@@ -4816,10 +4816,7 @@
       const color = speakerColors[slot % speakerColors.length];
       return `<div class="cc-chip" data-pos="${pos}" title="Pinned · click to change"><span class="id pinned" title="Pinned">${pinSVG}</span><span class="nm" style="color:${color}">${escapeHtml(speakers[slot])}</span></div>`;
     }).join('');
-    const hasActive = combo.some(s => s === ACTIVE);
-    const SHOT_NAMES = ['', 'Single', 'Two-shot', 'Three-shot', 'Four-shot', 'Five-shot'];
-    const shotName = SHOT_NAMES[combo.length] || `${combo.length}-shot`;
-    const header = hasActive ? `${shotName} · whoever's speaking` : shotName;
+    const header = 'Pin speakers';
     return `
       <div class="pv-slide">
         <div class="combo-card">
