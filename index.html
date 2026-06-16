@@ -1579,29 +1579,58 @@
   .mm-select.open .chev { transform: rotate(180deg); }
   .mm-select.assigned { color: var(--fg-primary); }
 
-  /* Pinned-speaker grid-location picker */
+  /* Pin speakers: a layout grid where each cell is a position */
   .pin-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 2px;
-    width: 44px;
-    height: 30px;
-    flex-shrink: 0;
+    gap: 6px;
+    width: 100%;
   }
   .pin-cell {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: 1px solid var(--border-medium);
-    border-radius: 2px;
-    background: transparent;
+    border-radius: 6px;
+    background: rgba(63, 42, 50, 0.02);
     cursor: pointer;
-    padding: 0;
-    transition: background 0.12s, border-color 0.12s;
+    padding: 4px 6px;
+    font-size: 12px;
+    color: var(--grey-400);
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
   }
-  .pin-cell:hover { background: rgba(63, 42, 50, 0.08); }
-  .pin-cell.selected {
-    background: var(--fg-primary);
+  .pin-cell:hover { border-color: var(--fg-primary); color: var(--fg-primary); }
+  .pin-cell.open { border-color: var(--fg-primary); }
+  .pin-cell.filled {
+    background: var(--surface-elevated);
     border-color: var(--fg-primary);
+    color: var(--fg-primary);
+    font-weight: 500;
   }
+  .pin-cell .pin-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pin-cell .pin-clear {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    color: var(--fg-primary);
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+  .pin-cell:hover .pin-clear { opacity: 0.6; }
+  .pin-cell .pin-clear:hover { opacity: 1; background: rgba(63, 42, 50, 0.08); }
   .mm-footer {
     display: flex;
     align-items: center;
@@ -3855,21 +3884,10 @@
                 <span class="amc-row-label grow">Show only active speakers</span>
                 <button class="switch" role="switch" aria-checked="false" aria-label="Show only active speakers"></button>
               </div>
-              <div class="amc-row">
-                <span class="amc-row-label grow">Pin speaker</span>
-                <button class="mm-select" id="pinSpeakerSelect"><span class="mm-select-label" id="pinSpeakerLabel">Select speaker</span>
-                  <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
-                </button>
+              <div class="amc-row" style="margin-top:8px;">
+                <span class="amc-row-label grow">Pin speakers to a position</span>
               </div>
-              <div class="amc-row hidden" id="pinPositionRow">
-                <span class="amc-row-label grow">Position</span>
-                <div class="pin-grid" role="group" aria-label="Pinned speaker position">
-                  <button class="pin-cell selected" data-cell="0" aria-label="Top left"></button>
-                  <button class="pin-cell" data-cell="1" aria-label="Top right"></button>
-                  <button class="pin-cell" data-cell="2" aria-label="Bottom left"></button>
-                  <button class="pin-cell" data-cell="3" aria-label="Bottom right"></button>
-                </div>
-              </div>
+              <div class="pin-grid" id="pinGrid" role="group" aria-label="Pin speakers to layout positions"></div>
               <div class="amc-row">
                 <span class="amc-row-label grow">Scene count</span>
                 <div class="seg-tabs" role="tablist">
@@ -5197,43 +5215,50 @@
   // Pin speaker: keep one speaker on screen regardless of who's talking.
   // Single-select via the shared Identified speakers dropdown; clicking the
   // already-pinned speaker unpins.
-  let pinnedSpeaker = null;
-  let pinnedCell = 0; // grid location: 0 TL, 1 TR, 2 BL, 3 BR
-  const pinSpeakerSelect = document.getElementById('pinSpeakerSelect');
-  const pinSpeakerLabel = document.getElementById('pinSpeakerLabel');
-  const pinPositionRow = document.getElementById('pinPositionRow');
-  function updatePinLabel() {
-    if (pinnedSpeaker === null) {
-      pinSpeakerLabel.textContent = 'Select speaker';
-      pinSpeakerSelect.classList.remove('assigned');
-      pinPositionRow.classList.add('hidden');
-    } else {
-      pinSpeakerLabel.textContent = speakers[pinnedSpeaker];
-      pinSpeakerSelect.classList.add('assigned');
-      pinPositionRow.classList.remove('hidden');
-    }
-  }
-  pinPositionRow.querySelectorAll('.pin-cell').forEach(cell => {
-    cell.addEventListener('click', e => {
-      e.stopPropagation();
-      pinnedCell = Number(cell.dataset.cell);
-      pinPositionRow.querySelectorAll('.pin-cell').forEach(c =>
-        c.classList.toggle('selected', c === cell));
-      markDirty();
+  // Each grid cell is a layout position (0 TL, 1 TR, 2 BL, 3 BR). Tap a cell to
+  // assign a speaker to that position; fill several cells to pin several speakers.
+  let pinnedByCell = [null, null, null, null];
+  const PIN_CELL_LABELS = ['Top left', 'Top right', 'Bottom left', 'Bottom right'];
+  const pinGrid = document.getElementById('pinGrid');
+
+  function renderPinGrid() {
+    pinGrid.innerHTML = '';
+    pinnedByCell.forEach((sp, cell) => {
+      const btn = document.createElement('button');
+      btn.className = 'pin-cell' + (sp !== null ? ' filled' : '');
+      btn.dataset.cell = cell;
+      btn.setAttribute('aria-label', sp !== null
+        ? `${speakers[sp]} pinned ${PIN_CELL_LABELS[cell].toLowerCase()}`
+        : `Pin a speaker ${PIN_CELL_LABELS[cell].toLowerCase()}`);
+      btn.innerHTML = sp !== null
+        ? `<span class="pin-name">${escapeHtml(speakers[sp])}</span><span class="pin-clear" aria-label="Unpin">${xSVG}</span>`
+        : `<span class="pin-add">+ Pin</span>`;
+      pinGrid.appendChild(btn);
     });
-  });
-  pinSpeakerSelect.addEventListener('click', e => {
+  }
+  renderPinGrid();
+
+  pinGrid.addEventListener('click', e => {
+    const cellEl = e.target.closest('.pin-cell');
+    if (!cellEl) return;
     e.stopPropagation();
-    if (openAnchor === pinSpeakerSelect) { closePopover(); return; }
+    const cell = Number(cellEl.dataset.cell);
+    if (e.target.closest('.pin-clear')) {
+      pinnedByCell[cell] = null;
+      renderPinGrid();
+      markDirty();
+      return;
+    }
+    if (openAnchor === cellEl) { closePopover(); return; }
     openSinglePopover({
-      get: () => pinnedSpeaker,
+      get: () => pinnedByCell[cell],
       set: idx => {
-        pinnedSpeaker = (pinnedSpeaker === idx) ? null : idx;
-        updatePinLabel();
+        pinnedByCell[cell] = (pinnedByCell[cell] === idx) ? null : idx;
+        renderPinGrid();
         markDirty();
       },
-    }, pinSpeakerSelect);
-    pinSpeakerSelect.classList.add('open');
+    }, cellEl);
+    cellEl.classList.add('open');
   });
 
   // click a speaker frame to select it; click elsewhere on the canvas to deselect
@@ -5727,7 +5752,7 @@
           renderPopover();
           selects.forEach((_, r) => updateSelectLabel(r));
           updateAllCamLabels();
-          updatePinLabel();
+          renderPinGrid();
           renderCombos();
           renderCreate();
           markDirty();
