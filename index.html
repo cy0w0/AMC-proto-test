@@ -2251,7 +2251,7 @@
     padding-right: 4px;
   }
 
-  /* ===== Preview panel (speaker arrangements) ===== */
+  /* ===== Preview panel (speaker placements) ===== */
   /* Sliding pages: header/description stay static, module stacks swipe */
   .amc-stage {
     flex: 1;
@@ -2280,7 +2280,7 @@
   }
   .amc-page::-webkit-scrollbar { display: none; }
 
-  /* Create speaker arrangement page */
+  /* Create speaker placement page */
   .cs-stage {
     height: 124px;
     width: 100%;
@@ -2500,19 +2500,29 @@
   }
   /* Pinned slot: pin glyph in the id badge */
   .cc-chip .id.pinned { color: var(--grey-400); display: flex; align-items: center; justify-content: center; }
-  /* Active-speaker slot: dashed/open treatment, muted */
-  .cc-chip-active { border-style: dashed; }
-  .cc-chip-active .id { color: var(--grey-400); display: flex; align-items: center; justify-content: center; }
-  .cc-chip-active .nm { color: var(--grey-400); font-weight: 475; }
+  /* Dynamic "whoever's speaking" slot: full-width, dashed, with a live pulse so
+     it clearly reads as not-a-fixed-person */
+  .cc-chip-active {
+    grid-column: 1 / -1;
+    border-style: dashed;
+    background: rgba(139, 111, 122, 0.05);
+  }
+  .cc-chip-active .id { color: var(--fg-primary); display: flex; align-items: center; justify-content: center; }
+  .cc-chip-active .nm { color: var(--fg-primary); font-weight: 475; }
   .cc-cell-active {
     background: transparent;
     border: 1px dashed var(--border-medium);
-    color: var(--grey-400);
+    color: var(--fg-primary);
   }
-  .cc-cell-active .cc-active-ico { display: flex; color: var(--grey-400); }
-  .gal-cell-active { color: var(--grey-400); display: flex; align-items: center; justify-content: center; }
-  /* "Active speaker" row in the speakers dropdown */
+  .cc-cell-active .cc-active-ico { display: flex; color: var(--fg-primary); }
+  .gal-cell-active { color: var(--fg-primary); display: flex; align-items: center; justify-content: center; }
+  /* Live pulse on the waveform conveys "actively speaking" */
+  .cc-active-ico svg, .cc-chip-active .id svg, .gal-cell-active svg { animation: wave-pulse 1.4s ease-in-out infinite; }
+  @keyframes wave-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+  /* "Whoever's speaking" row in the speakers dropdown */
   .pop-row-active { border-bottom: 1px solid var(--border-medium); }
+  .pop-row-active .pop-name { display: flex; flex-direction: column; line-height: 1.25; }
+  .pop-row-active .pop-sub { font-size: 11px; color: var(--grey-400); font-weight: 400; }
   .pop-row-active .pop-active-ico { margin-left: auto; display: flex; color: var(--grey-400); padding-right: 4px; }
   .pv-actions {
     display: flex;
@@ -3911,8 +3921,8 @@
 
             <div class="amc-module" style="border-color: var(--border-medium); padding-bottom: 16px;">
               <div class="amc-row">
-                <span class="amc-row-header grow">Speaker arrangements</span>
-                <button class="amc-toggle" id="pvAdd" aria-label="Add arrangement">
+                <span class="amc-row-header grow">Speaker placements</span>
+                <button class="amc-toggle" id="pvAdd" aria-label="Add placement">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
                 </button>
                 <button class="amc-toggle" id="pvViewToggle" aria-label="Toggle gallery view">
@@ -3928,10 +3938,10 @@
 
               <div class="pv-carousel" id="pvCarousel">
                 <div class="pv-track" id="pvTrack"></div>
-                <button class="im-nav prev hidden-nav" id="pvPrev" aria-label="Previous arrangement">
+                <button class="im-nav prev hidden-nav" id="pvPrev" aria-label="Previous placement">
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 3.5 2.5 8 7 12.5"/></svg>
                 </button>
-                <button class="im-nav next" id="pvNext" aria-label="Next arrangement">
+                <button class="im-nav next" id="pvNext" aria-label="Next placement">
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 3.5 13.5 8 9 12.5"/></svg>
                 </button>
               </div>
@@ -3964,10 +3974,10 @@
             </div>
           </div>
 
-          <!-- Page 3 · Create speaker arrangement -->
+          <!-- Page 3 · Create speaker placement -->
           <div class="amc-page" id="createPage">
             <div class="amc-module" style="background: var(--surface-elevated); border-color: var(--border-medium);">
-              <div class="amc-row"><span class="amc-row-header">Create speaker arrangement</span></div>
+              <div class="amc-row"><span class="amc-row-header">Create speaker placement</span></div>
               <div class="amc-row">
                 <span class="amc-row-header grow">Speaker slots</span>
                 <div class="cs-slots-field">
@@ -4697,7 +4707,7 @@
   document.querySelectorAll('#settingsPage .num-field input').forEach(inp =>
     inp.addEventListener('input', markDirty));
 
-  /* Preview page: speaker arrangements */
+  /* Preview page: speaker placements */
   const pvCarousel = document.getElementById('pvCarousel');
   const pvGallery = document.getElementById('pvGallery');
   const galChips = document.getElementById('galChips');
@@ -4737,7 +4747,7 @@
   }
 
   function showComboDeleted(count) {
-    pvConfirmText.textContent = `Speaker arrangement deleted.`;
+    pvConfirmText.textContent = `Speaker placement deleted.`;
     pvConfirm.classList.add('visible');
     clearTimeout(pvConfirmTimer);
     pvConfirmTimer = setTimeout(() => pvConfirm.classList.remove('visible'), 2600);
@@ -4776,22 +4786,22 @@
     }).join('');
     const chips = combo.map((slot, pos) => {
       if (slot === ACTIVE) {
-        return `<div class="cc-chip cc-chip-active" data-pos="${pos}" title="Click to change"><span class="id">${waveSVG}</span><span class="nm">Active speaker</span></div>`;
+        return `<div class="cc-chip cc-chip-active" data-pos="${pos}" title="Follows whoever is speaking · click to change"><span class="id">${waveSVG}</span><span class="nm">Whoever's speaking</span></div>`;
       }
       const color = speakerColors[slot % speakerColors.length];
-      return `<div class="cc-chip" data-pos="${pos}" title="Click to change"><span class="id pinned" title="Pinned">${pinSVG}</span><span class="nm" style="color:${color}">${escapeHtml(speakers[slot])}</span></div>`;
+      return `<div class="cc-chip" data-pos="${pos}" title="Pinned · click to change"><span class="id pinned" title="Pinned">${pinSVG}</span><span class="nm" style="color:${color}">${escapeHtml(speakers[slot])}</span></div>`;
     }).join('');
     const fixed = combo.filter(s => s !== ACTIVE).length;
     const hasActive = combo.some(s => s === ACTIVE);
     const header = hasActive
-      ? (fixed ? `${fixed} pinned · active speaker` : 'Active speaker')
+      ? (fixed ? `${fixed} pinned · whoever's speaking` : `Whoever's speaking`)
       : `${combo.length} speaker${combo.length === 1 ? '' : 's'}`;
     return `
       <div class="pv-slide">
         <div class="combo-card">
           <div class="cc-header">
             <span>${header}</span>
-            <button class="cc-trash" data-combo="${idx}" aria-label="Delete arrangement">${trashSVG}</button>
+            <button class="cc-trash" data-combo="${idx}" aria-label="Delete placement">${trashSVG}</button>
           </div>
           <div class="cc-stage"><div class="cc-strip">${cells}</div></div>
           <div class="cc-chips">${chips}</div>
@@ -4848,8 +4858,8 @@
           <div class="gal-tile" data-idx="${idx}">
             ${cells}
             <div class="tile-actions">
-              <button class="ta-btn ta-edit" data-idx="${idx}" aria-label="Edit arrangement">${pencilSVG}</button>
-              <button class="ta-btn ta-del" data-idx="${idx}" aria-label="Delete arrangement">${trashSVG}</button>
+              <button class="ta-btn ta-edit" data-idx="${idx}" aria-label="Edit placement">${pencilSVG}</button>
+              <button class="ta-btn ta-del" data-idx="${idx}" aria-label="Delete placement">${trashSVG}</button>
             </div>
           </div>`;
       }).join('');
@@ -4894,7 +4904,7 @@
     <path d="M8 2a6 6 0 0 1 6 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`;
   let applyTimers = [];
 
-  // Timeline reflects the applied multicam: one scene per arrangement.
+  // Timeline reflects the applied multicam: one scene per placement.
   // Filmstrip cells cycle through the combo's solo cams, plus the webinar
   // frame when the combo has multiple speakers.
   const SCENE_WIDTHS = [212, 164, 100, 316];
@@ -5019,8 +5029,8 @@
     const combo = lpCombo();
     lpChips.innerHTML = combo.map((s, pos) =>
       s === ACTIVE
-        ? `<div class="cc-chip cc-chip-active" data-pos="${pos}" title="Click to change speaker"><span class="id">${waveSVG}</span><span class="nm">Active speaker</span></div>`
-        : `<div class="cc-chip" data-pos="${pos}" title="Click to change speaker"><span class="id pinned" title="Pinned">${pinSVG}</span><span class="nm" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml(speakers[s])}</span></div>`).join('');
+        ? `<div class="cc-chip cc-chip-active" data-pos="${pos}" title="Follows whoever is speaking · click to change"><span class="id">${waveSVG}</span><span class="nm">Whoever's speaking</span></div>`
+        : `<div class="cc-chip" data-pos="${pos}" title="Pinned · click to change"><span class="id pinned" title="Pinned">${pinSVG}</span><span class="nm" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml(speakers[s])}</span></div>`).join('');
     lpChips.querySelectorAll('.cc-chip').forEach(chip => {
       const pos = Number(chip.dataset.pos);
       chip.addEventListener('click', e => {
@@ -5525,7 +5535,7 @@
     renderCombos();
   });
 
-  /* Create speaker arrangement page */
+  /* Create speaker placement page */
   const csStrip = document.getElementById('csStrip');
   const csFields = document.getElementById('csFields');
   const csSlotCount = document.getElementById('csSlotCount');
@@ -5705,7 +5715,7 @@
       const checked = popSingle.get() === ACTIVE;
       const arow = document.createElement('div');
       arow.className = 'pop-row pop-row-active' + (checked ? ' checked' : '');
-      arow.innerHTML = `<span class="pop-check">${checkMark}</span><span class="pop-name">Active speaker</span><span class="pop-active-ico">${waveSVG}</span>`;
+      arow.innerHTML = `<span class="pop-check">${checkMark}</span><span class="pop-name">Whoever's speaking<span class="pop-sub">follows the active speaker</span></span><span class="pop-active-ico">${waveSVG}</span>`;
       arow.addEventListener('click', e => { e.stopPropagation(); popSingle.set(ACTIVE); closePopover(); });
       popList.appendChild(arow);
     }
