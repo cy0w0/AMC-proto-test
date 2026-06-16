@@ -839,6 +839,7 @@
     padding: 0;
   }
   .mt-img {
+    position: relative;
     width: 100%;
     height: 68px;
     border-radius: 6px;
@@ -852,6 +853,19 @@
     border-color: transparent;
     outline: 2px solid #0093d6;
     outline-offset: 1px;
+  }
+  .mt-current {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #0093d6;
+    color: #fff;
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
   }
   .mt-name {
     font-size: 12px;
@@ -3511,7 +3525,7 @@
             <span class="tb-divider"></span>
             <button class="tb-item">Animation</button>
             <span class="tb-divider"></span>
-            <button class="tb-item" id="selMulticamBtn" aria-label="Multicam camera">
+            <button class="tb-item" id="selMulticamBtn" aria-label="Switch cameras">
               <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><rect x="1.5" y="2.5" width="6" height="5" rx="1"/><rect x="8.5" y="2.5" width="6" height="5" rx="1"/><rect x="1.5" y="8.5" width="6" height="5" rx="1"/><rect x="8.5" y="8.5" width="6" height="5" rx="1"/></svg>
             </button>
             <span class="tb-divider"></span>
@@ -3521,7 +3535,7 @@
           </div>
           <div class="cam-picker hidden" id="camPicker">
             <div class="mt-header">
-              <span class="mt-title">Multi-cam tracks</span>
+              <span class="mt-title">Switch cameras</span>
               <button class="icon-btn dense" aria-label="Grid view">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
               </button>
@@ -4411,13 +4425,24 @@
      </g>`,
   ];
 
+  // Extra cameras (4+) reuse the animal art with a distinct color tint so each
+  // reads as a different angle/lighting setup in the switcher.
+  const CAM_TINT = {
+    4: 'rgba(193, 99, 53, 0.22)',
+    5: 'rgba(0, 147, 214, 0.22)',
+    6: 'rgba(62, 139, 106, 0.22)',
+  };
   function camInner(cam) {
     if (cam < 3) return ANIMAL_ART[cam];
-    // cam 3: webinar — the three animals together in a call grid
-    return `<rect width="198" height="214" fill="#241d20"/>
-      <svg x="6" y="74" width="60" height="66" viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice">${ANIMAL_ART[0]}</svg>
-      <svg x="69" y="74" width="60" height="66" viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice">${ANIMAL_ART[1]}</svg>
-      <svg x="132" y="74" width="60" height="66" viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice">${ANIMAL_ART[2]}</svg>`;
+    if (cam === 3) {
+      // webinar — the three animals together in a call grid
+      return `<rect width="198" height="214" fill="#241d20"/>
+        <svg x="6" y="74" width="60" height="66" viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice">${ANIMAL_ART[0]}</svg>
+        <svg x="69" y="74" width="60" height="66" viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice">${ANIMAL_ART[1]}</svg>
+        <svg x="132" y="74" width="60" height="66" viewBox="0 0 198 214" preserveAspectRatio="xMidYMid slice">${ANIMAL_ART[2]}</svg>`;
+    }
+    const tint = CAM_TINT[cam] || 'rgba(88, 63, 74, 0.22)';
+    return `${ANIMAL_ART[cam % 3]}<rect width="198" height="214" fill="${tint}"/>`;
   }
 
   // white presentation slide used by the screen-share layout
@@ -4791,11 +4816,10 @@
       const color = speakerColors[slot % speakerColors.length];
       return `<div class="cc-chip" data-pos="${pos}" title="Pinned · click to change"><span class="id pinned" title="Pinned">${pinSVG}</span><span class="nm" style="color:${color}">${escapeHtml(speakers[slot])}</span></div>`;
     }).join('');
-    const fixed = combo.filter(s => s !== ACTIVE).length;
     const hasActive = combo.some(s => s === ACTIVE);
-    const header = hasActive
-      ? (fixed ? `${fixed} pinned · whoever's speaking` : `Whoever's speaking`)
-      : `${combo.length} speaker${combo.length === 1 ? '' : 's'}`;
+    const SHOT_NAMES = ['', 'Single', 'Two-shot', 'Three-shot', 'Four-shot', 'Five-shot'];
+    const shotName = SHOT_NAMES[combo.length] || `${combo.length}-shot`;
+    const header = hasActive ? `${shotName} · whoever's speaking` : shotName;
     return `
       <div class="pv-slide">
         <div class="combo-card">
@@ -5096,7 +5120,7 @@
   function camsForSpeaker(s) {
     const cams = [];
     assignments.forEach((set, r) => { if (set.has(s)) cams.push(r); });
-    return cams.length ? cams : [0, 1, 2, 3];
+    return cams.length ? cams : [0, 1, 2, 3, 4, 5, 6];
   }
 
   function selectLayer(el) {
@@ -5124,11 +5148,14 @@
 
   function renderCamPicker() {
     const current = currentLayerCam();
-    mtGrid.innerHTML = camsForSpeaker(selectedLayer.speaker).map(camIdx => `
-      <button class="mt-tile${camIdx === current ? ' selected' : ''}" data-cam="${camIdx}">
-        <span class="mt-img">${camSVGHTML(camIdx)}</span>
+    mtGrid.innerHTML = camsForSpeaker(selectedLayer.speaker).map(camIdx => {
+      const isCurrent = camIdx === current;
+      return `
+      <button class="mt-tile${isCurrent ? ' selected' : ''}" data-cam="${camIdx}">
+        <span class="mt-img">${camSVGHTML(camIdx)}${isCurrent ? '<span class="mt-current">Current</span>' : ''}</span>
         <span class="mt-name">Cam ${camIdx + 1}</span>
-      </button>`).join('');
+      </button>`;
+    }).join('');
     mtGrid.querySelectorAll('.mt-tile').forEach(tile => {
       tile.addEventListener('click', () => {
         // selecting a camera replaces this layer in the current scene immediately
