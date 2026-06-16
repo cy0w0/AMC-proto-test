@@ -2533,10 +2533,19 @@
     color: var(--fg-primary);
     opacity: 0.65;
   }
-  /* Active block: a small tappable icon that explains itself inline */
+  /* Active block: a small tappable icon + subtitle that explains itself inline */
   .cc-cell-empty {
     background: transparent;
     border: 1px dashed var(--border-medium);
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px;
+  }
+  .cc-active-sub {
+    font-size: 11px;
+    line-height: 14px;
+    text-align: center;
+    color: var(--grey-400);
   }
   .cc-active-btn {
     display: flex;
@@ -4847,7 +4856,7 @@
     // for an inline explanation. The chip below is just the speaker name.
     const cells = combo.map((slot, pos) => {
       if (slot === ACTIVE) {
-        return `<div class="cc-cell cc-cell-empty"><button class="cc-active-btn" data-pos="${pos}" aria-label="Active speaker — what is this?">${waveSVG}</button></div>`;
+        return `<div class="cc-cell cc-cell-empty"><button class="cc-active-btn" data-pos="${pos}" aria-label="Active speaker — what is this?">${waveSVG}</button><span class="cc-active-sub">Whoever's speaking</span></div>`;
       }
       const color = speakerColors[slot % speakerColors.length];
       const initial = (speakers[slot] || '?').charAt(0).toUpperCase();
