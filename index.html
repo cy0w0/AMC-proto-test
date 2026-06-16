@@ -2514,26 +2514,22 @@
   }
   /* Pinned slot: pin glyph in the id badge */
   .cc-chip .id.pinned { color: var(--grey-400); display: flex; align-items: center; justify-content: center; }
-  /* Dynamic "whoever's speaking" slot: full-width, dashed, with a live pulse so
-     it clearly reads as not-a-fixed-person */
-  .cc-chip-active {
-    grid-column: 1 / -1;
+  /* Unpinned slot: dashed + muted, invites pinning ("Click to pin speaker") */
+  .cc-chip-empty {
     border-style: dashed;
-    background: rgba(139, 111, 122, 0.05);
+    background: transparent;
   }
-  .cc-chip-active .id { color: var(--fg-primary); display: flex; align-items: center; justify-content: center; }
-  .cc-chip-active .nm { color: var(--fg-primary); font-weight: 475; }
-  .cc-cell-active {
+  .cc-chip-empty .id { color: var(--grey-400); display: flex; align-items: center; justify-content: center; }
+  .cc-chip-empty .nm { color: var(--grey-400); font-weight: 475; }
+  .cc-cell-empty {
     background: transparent;
     border: 1px dashed var(--border-medium);
-    color: var(--fg-primary);
   }
-  .cc-cell-active .cc-active-ico { display: flex; color: var(--fg-primary); }
-  .gal-cell-active { color: var(--fg-primary); display: flex; align-items: center; justify-content: center; }
-  /* Live pulse on the waveform conveys "actively speaking" */
-  .cc-active-ico svg, .cc-chip-active .id svg, .gal-cell-active svg { animation: wave-pulse 1.4s ease-in-out infinite; }
-  @keyframes wave-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
-  /* "Whoever's speaking" row in the speakers dropdown */
+  .gal-cell-empty {
+    border: 1px dashed var(--border-medium);
+    background: transparent;
+  }
+  /* "Whoever's speaking" row in the speakers (Pin) dropdown */
   .pop-row-active { border-bottom: 1px solid var(--border-medium); }
   .pop-row-active .pop-name { display: flex; flex-direction: column; line-height: 1.25; }
   .pop-row-active .pop-sub { font-size: 11px; color: var(--grey-400); font-weight: 400; }
@@ -4271,7 +4267,7 @@
 
   <!-- Identified speakers popover (shared by the intercept modal and the AMC panel) -->
   <div class="mm-popover hidden" id="mmPopover" role="menu">
-    <div class="pop-header">Identified speakers</div>
+    <div class="pop-header" id="popHeader">Identified speakers</div>
     <div class="pop-list" id="popList"></div>
     <div class="pop-divider"></div>
     <button class="pop-add" id="popAdd">Add new speaker</button>
@@ -4431,6 +4427,7 @@
     4: 'rgba(193, 99, 53, 0.22)',
     5: 'rgba(0, 147, 214, 0.22)',
     6: 'rgba(62, 139, 106, 0.22)',
+    7: 'rgba(156, 93, 225, 0.22)',
   };
   function camInner(cam) {
     if (cam < 3) return ANIMAL_ART[cam];
@@ -4803,7 +4800,7 @@
   function comboCard(combo, idx) {
     const cells = combo.map(slot => {
       if (slot === ACTIVE) {
-        return `<div class="cc-cell cc-cell-active"><span class="cc-active-ico">${waveSVG}</span></div>`;
+        return `<div class="cc-cell cc-cell-empty"></div>`;
       }
       const color = speakerColors[slot % speakerColors.length];
       const initial = (speakers[slot] || '?').charAt(0).toUpperCase();
@@ -4811,12 +4808,12 @@
     }).join('');
     const chips = combo.map((slot, pos) => {
       if (slot === ACTIVE) {
-        return `<div class="cc-chip cc-chip-active" data-pos="${pos}" title="Follows whoever is speaking · click to change"><span class="id">${waveSVG}</span><span class="nm">Whoever's speaking</span></div>`;
+        return `<div class="cc-chip cc-chip-empty" data-pos="${pos}" title="Unpinned — follows whoever is speaking. Click to pin a speaker."><span class="id">${pinSVG}</span><span class="nm">Click to pin speaker</span></div>`;
       }
       const color = speakerColors[slot % speakerColors.length];
       return `<div class="cc-chip" data-pos="${pos}" title="Pinned · click to change"><span class="id pinned" title="Pinned">${pinSVG}</span><span class="nm" style="color:${color}">${escapeHtml(speakers[slot])}</span></div>`;
     }).join('');
-    const header = 'Pin speakers';
+    const header = `${combo.length} speaker${combo.length === 1 ? '' : 's'}`;
     return `
       <div class="pv-slide">
         <div class="combo-card">
@@ -4873,7 +4870,7 @@
       galGrid.innerHTML = combos.map((combo, idx) => {
         const cells = combo.map(s =>
           s === ACTIVE
-            ? `<div class="gal-cell gal-cell-active">${waveSVG}</div>`
+            ? `<div class="gal-cell gal-cell-empty"></div>`
             : `<div class="gal-cell" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</div>`).join('');
         return `
           <div class="gal-tile" data-idx="${idx}">
@@ -5050,7 +5047,7 @@
     const combo = lpCombo();
     lpChips.innerHTML = combo.map((s, pos) =>
       s === ACTIVE
-        ? `<div class="cc-chip cc-chip-active" data-pos="${pos}" title="Follows whoever is speaking · click to change"><span class="id">${waveSVG}</span><span class="nm">Whoever's speaking</span></div>`
+        ? `<div class="cc-chip cc-chip-empty" data-pos="${pos}" title="Unpinned — follows whoever is speaking. Click to pin a speaker."><span class="id">${pinSVG}</span><span class="nm">Click to pin speaker</span></div>`
         : `<div class="cc-chip" data-pos="${pos}" title="Pinned · click to change"><span class="id pinned" title="Pinned">${pinSVG}</span><span class="nm" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml(speakers[s])}</span></div>`).join('');
     lpChips.querySelectorAll('.cc-chip').forEach(chip => {
       const pos = Number(chip.dataset.pos);
@@ -5143,9 +5140,12 @@
     return camForSpeaker(selectedLayer.speaker, lpComboIdx, selectedLayer.pos);
   }
 
+  // The Switch cameras panel offers every available camera angle (not just the
+  // ones this speaker is assigned to) so you can cut to any of them.
+  const ALL_CAMS = [0, 1, 2, 3, 4, 5, 6, 7];
   function renderCamPicker() {
     const current = currentLayerCam();
-    mtGrid.innerHTML = camsForSpeaker(selectedLayer.speaker).map(camIdx => {
+    mtGrid.innerHTML = ALL_CAMS.map(camIdx => {
       const isCurrent = camIdx === current;
       return `
       <button class="mt-tile${isCurrent ? ' selected' : ''}" data-cam="${camIdx}">
@@ -5911,11 +5911,14 @@
     popover.style.top = `${aRect.bottom - baseRect.top + 4}px`;
   }
 
+  const popHeader = document.getElementById('popHeader');
+
   function openPopover(rowIdx, anchor) {
     openRow = rowIdx;
     popSingle = null;
     popFilter = '';
     openAnchor = anchor;
+    popHeader.textContent = 'Identified speakers';
     renderPopover();
     popover.classList.remove('hidden');
     document.querySelectorAll('.mm-select.open').forEach(s => s.classList.remove('open'));
@@ -5929,6 +5932,8 @@
     popSingle = target;
     popFilter = '';
     openAnchor = anchor;
+    // Pinning context (combo/placement slots) reads as "Pin speakers"
+    popHeader.textContent = target && target.activeOption ? 'Pin speakers' : 'Identified speakers';
     renderPopover();
     popover.classList.remove('hidden');
     document.querySelectorAll('.mm-select.open').forEach(s => s.classList.remove('open'));
