@@ -1578,59 +1578,6 @@
   }
   .mm-select.open .chev { transform: rotate(180deg); }
   .mm-select.assigned { color: var(--fg-primary); }
-
-  /* Pin speakers: a layout grid where each cell is a position */
-  .pin-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    width: 100%;
-  }
-  .pin-cell {
-    position: relative;
-    aspect-ratio: 16 / 9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border-medium);
-    border-radius: 6px;
-    background: rgba(63, 42, 50, 0.02);
-    cursor: pointer;
-    padding: 4px 6px;
-    font-size: 12px;
-    color: var(--grey-400);
-    transition: background 0.12s, border-color 0.12s, color 0.12s;
-  }
-  .pin-cell:hover { border-color: var(--fg-primary); color: var(--fg-primary); }
-  .pin-cell.open { border-color: var(--fg-primary); }
-  .pin-cell.filled {
-    background: var(--surface-elevated);
-    border-color: var(--fg-primary);
-    color: var(--fg-primary);
-    font-weight: 500;
-  }
-  .pin-cell .pin-name {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .pin-cell .pin-clear {
-    position: absolute;
-    top: 3px;
-    right: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    color: var(--fg-primary);
-    opacity: 0;
-    transition: opacity 0.12s;
-  }
-  .pin-cell:hover .pin-clear { opacity: 0.6; }
-  .pin-cell .pin-clear:hover { opacity: 1; background: rgba(63, 42, 50, 0.08); }
   .mm-footer {
     display: flex;
     align-items: center;
@@ -2304,7 +2251,7 @@
     padding-right: 4px;
   }
 
-  /* ===== Preview panel (speaker combinations) ===== */
+  /* ===== Preview panel (speaker arrangements) ===== */
   /* Sliding pages: header/description stay static, module stacks swipe */
   .amc-stage {
     flex: 1;
@@ -2333,7 +2280,7 @@
   }
   .amc-page::-webkit-scrollbar { display: none; }
 
-  /* Create speaker combination page */
+  /* Create speaker arrangement page */
   .cs-stage {
     height: 124px;
     width: 100%;
@@ -2551,6 +2498,22 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  /* Pinned slot: pin glyph in the id badge */
+  .cc-chip .id.pinned { color: var(--grey-400); display: flex; align-items: center; justify-content: center; }
+  /* Active-speaker slot: dashed/open treatment, muted */
+  .cc-chip-active { border-style: dashed; }
+  .cc-chip-active .id { color: var(--grey-400); display: flex; align-items: center; justify-content: center; }
+  .cc-chip-active .nm { color: var(--grey-400); font-weight: 475; }
+  .cc-cell-active {
+    background: transparent;
+    border: 1px dashed var(--border-medium);
+    color: var(--grey-400);
+  }
+  .cc-cell-active .cc-active-ico { display: flex; color: var(--grey-400); }
+  .gal-cell-active { color: var(--grey-400); display: flex; align-items: center; justify-content: center; }
+  /* "Active speaker" row in the speakers dropdown */
+  .pop-row-active { border-bottom: 1px solid var(--border-medium); }
+  .pop-row-active .pop-active-ico { margin-left: auto; display: flex; color: var(--grey-400); padding-right: 4px; }
   .pv-actions {
     display: flex;
     gap: 8px;
@@ -3879,15 +3842,17 @@
           <!-- Page 1 · Settings -->
           <div class="amc-page" id="settingsPage">
             <div class="amc-module">
-              <div class="amc-row"><span class="amc-row-header">Edit</span></div>
+              <div class="amc-row"><span class="amc-row-header">Edit style</span></div>
               <div class="amc-row">
                 <span class="amc-row-label grow">Show only active speakers</span>
-                <button class="switch" role="switch" aria-checked="false" aria-label="Show only active speakers"></button>
+                <button class="switch on" role="switch" aria-checked="true" aria-label="Show only active speakers"></button>
               </div>
-              <div class="amc-row" style="margin-top:8px;">
-                <span class="amc-row-label grow">Pin speakers to a position</span>
+              <div class="amc-row">
+                <span class="amc-row-label grow">Always on screen</span>
+                <button class="mm-select" id="alwaysOnSelect"><span class="mm-select-label" id="alwaysOnLabel">None</span>
+                  <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+                </button>
               </div>
-              <div class="pin-grid" id="pinGrid" role="group" aria-label="Pin speakers to layout positions"></div>
               <div class="amc-row">
                 <span class="amc-row-label grow">Scene count</span>
                 <div class="seg-tabs" role="tablist">
@@ -3946,8 +3911,8 @@
 
             <div class="amc-module" style="border-color: var(--border-medium); padding-bottom: 16px;">
               <div class="amc-row">
-                <span class="amc-row-header grow">Speaker combinations</span>
-                <button class="amc-toggle" id="pvAdd" aria-label="Add combination">
+                <span class="amc-row-header grow">Speaker arrangements</span>
+                <button class="amc-toggle" id="pvAdd" aria-label="Add arrangement">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
                 </button>
                 <button class="amc-toggle" id="pvViewToggle" aria-label="Toggle gallery view">
@@ -3963,10 +3928,10 @@
 
               <div class="pv-carousel" id="pvCarousel">
                 <div class="pv-track" id="pvTrack"></div>
-                <button class="im-nav prev hidden-nav" id="pvPrev" aria-label="Previous combination">
+                <button class="im-nav prev hidden-nav" id="pvPrev" aria-label="Previous arrangement">
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 3.5 2.5 8 7 12.5"/></svg>
                 </button>
-                <button class="im-nav next" id="pvNext" aria-label="Next combination">
+                <button class="im-nav next" id="pvNext" aria-label="Next arrangement">
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 3.5 13.5 8 9 12.5"/></svg>
                 </button>
               </div>
@@ -3999,10 +3964,10 @@
             </div>
           </div>
 
-          <!-- Page 3 · Create speaker combination -->
+          <!-- Page 3 · Create speaker arrangement -->
           <div class="amc-page" id="createPage">
             <div class="amc-module" style="background: var(--surface-elevated); border-color: var(--border-medium);">
-              <div class="amc-row"><span class="amc-row-header">Create speaker combination</span></div>
+              <div class="amc-row"><span class="amc-row-header">Create speaker arrangement</span></div>
               <div class="amc-row">
                 <span class="amc-row-header grow">Speaker slots</span>
                 <div class="cs-slots-field">
@@ -4727,7 +4692,7 @@
   document.querySelectorAll('#settingsPage .num-field input').forEach(inp =>
     inp.addEventListener('input', markDirty));
 
-  /* Preview page: speaker combinations */
+  /* Preview page: speaker arrangements */
   const pvCarousel = document.getElementById('pvCarousel');
   const pvGallery = document.getElementById('pvGallery');
   const galChips = document.getElementById('galChips');
@@ -4738,6 +4703,10 @@
   const pvConfirm = document.getElementById('pvConfirm');
   const pvConfirmText = document.getElementById('pvConfirmText');
   const speakerColors = ['#9c5de1', '#3e8b6a', '#c16335', '#0093d6', '#c14f82'];
+  // A combo slot is either a speaker index (pinned to that person) or ACTIVE
+  // (whoever is currently talking). A combo with an ACTIVE slot is "open" — it
+  // isn't an exhaustive list of fixed people.
+  const ACTIVE = 'active';
   let combos = [];
   let comboIdx = 0;
   let comboView = 'card';
@@ -4753,14 +4722,17 @@
 
   function seedCombos() {
     const all = assignedSpeakerIdxs().slice(0, 4);
+    const lead = alwaysOnSpeaker !== null ? alwaysOnSpeaker : all[0];
     combos = [all];
-    if (all.length >= 2) combos.push(all.slice(0, 2));
-    combos.push([all[all.length - 1]]);
+    // An "open" 2-up: the always-on speaker is pinned, the other slot follows
+    // whoever is talking. This is the non-exhaustive case.
+    combos.push([lead, ACTIVE]);
+    combos.push([ACTIVE]);
     comboIdx = 0;
   }
 
   function showComboDeleted(count) {
-    pvConfirmText.textContent = `${count} speaker${count === 1 ? '' : 's'} combo is deleted.`;
+    pvConfirmText.textContent = `Speaker arrangement deleted.`;
     pvConfirm.classList.add('visible');
     clearTimeout(pvConfirmTimer);
     pvConfirmTimer = setTimeout(() => pvConfirm.classList.remove('visible'), 2600);
@@ -4783,23 +4755,38 @@
     <path d="M2.5 4h11M5.5 4V2.8a.8.8 0 0 1 .8-.8h3.4a.8.8 0 0 1 .8.8V4M4 4l.7 9a1 1 0 0 0 1 .9h4.6a1 1 0 0 0 1-.9L12 4M6.5 7v4M9.5 7v4"/></svg>`;
   const pencilSVG = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M11.5 2.5l2 2L6 12l-3 1 1-3 7.5-7.5Z"/></svg>`;
+  const pinSVG = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 1.8h4M7 1.8v4.4L5 9h6L9 6.2V1.8M8 9v5.2"/></svg>`;
+  const waveSVG = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+    <path d="M1.5 7v2M4.5 5v6M7.5 2.5v11M10.5 5v6M14.5 7v2"/></svg>`;
 
   function comboCard(combo, idx) {
-    const cells = combo.map(s => {
-      const color = speakerColors[s % speakerColors.length];
-      const initial = (speakers[s] || '?').charAt(0).toUpperCase();
+    const cells = combo.map(slot => {
+      if (slot === ACTIVE) {
+        return `<div class="cc-cell cc-cell-active"><span class="cc-active-ico">${waveSVG}</span></div>`;
+      }
+      const color = speakerColors[slot % speakerColors.length];
+      const initial = (speakers[slot] || '?').charAt(0).toUpperCase();
       return `<div class="cc-cell"><span style="color:${color}">${escapeHtml(initial)}</span></div>`;
     }).join('');
-    const chips = combo.map(s => {
-      const color = speakerColors[s % speakerColors.length];
-      return `<div class="cc-chip" data-speaker="${s}" title="Click to rename"><span class="id">${s + 1}</span><span class="nm" style="color:${color}">${escapeHtml(speakers[s])}</span></div>`;
+    const chips = combo.map((slot, pos) => {
+      if (slot === ACTIVE) {
+        return `<div class="cc-chip cc-chip-active" data-pos="${pos}" title="Click to change"><span class="id">${waveSVG}</span><span class="nm">Active speaker</span></div>`;
+      }
+      const color = speakerColors[slot % speakerColors.length];
+      return `<div class="cc-chip" data-pos="${pos}" title="Click to change"><span class="id pinned" title="Pinned">${pinSVG}</span><span class="nm" style="color:${color}">${escapeHtml(speakers[slot])}</span></div>`;
     }).join('');
+    const fixed = combo.filter(s => s !== ACTIVE).length;
+    const hasActive = combo.some(s => s === ACTIVE);
+    const header = hasActive
+      ? (fixed ? `${fixed} pinned · active speaker` : 'Active speaker')
+      : `${combo.length} speaker${combo.length === 1 ? '' : 's'}`;
     return `
       <div class="pv-slide">
         <div class="combo-card">
           <div class="cc-header">
-            <span>${combo.length} speaker${combo.length === 1 ? '' : 's'}</span>
-            <button class="cc-trash" data-combo="${idx}" aria-label="Delete combination">${trashSVG}</button>
+            <span>${header}</span>
+            <button class="cc-trash" data-combo="${idx}" aria-label="Delete arrangement">${trashSVG}</button>
           </div>
           <div class="cc-stage"><div class="cc-strip">${cells}</div></div>
           <div class="cc-chips">${chips}</div>
@@ -4807,11 +4794,10 @@
       </div>`;
   }
 
-  // Clicking a chip opens the shared Identified speakers dropdown
-  // (single-select: picks the speaker for that position in the combo)
+  // Clicking a slot (cell or chip) opens the shared Identified speakers dropdown
+  // for that position. Picking a person pins the slot to them; picking
+  // "Active speaker" leaves it open to whoever is talking.
   function attachChipEditing(scope) {
-    // Each combo card: clicking a speaker block (cell) OR its chip opens the
-    // dropdown for that position, and lights up the matching speaker input.
     scope.querySelectorAll('.combo-card').forEach(card => {
       const chips = card.querySelectorAll('.cc-chip');
       const cells = card.querySelectorAll('.cc-cell');
@@ -4823,7 +4809,8 @@
           chip.classList.add('editing');
           openSinglePopover({
             get: () => combos[ci][pos],
-            set: idx => { combos[ci][pos] = idx; renderCombos(); markDirty(); },
+            set: val => { combos[ci][pos] = val; renderCombos(); markDirty(); },
+            activeOption: true,
           }, chip);
         };
         chip.addEventListener('click', e => { e.stopPropagation(); open(); });
@@ -4849,13 +4836,15 @@
         `<span class="gal-chip" style="color:${speakerColors[i % speakerColors.length]}">${escapeHtml(speakers[i])}</span>`).join('');
       galGrid.innerHTML = combos.map((combo, idx) => {
         const cells = combo.map(s =>
-          `<div class="gal-cell" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</div>`).join('');
+          s === ACTIVE
+            ? `<div class="gal-cell gal-cell-active">${waveSVG}</div>`
+            : `<div class="gal-cell" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</div>`).join('');
         return `
           <div class="gal-tile" data-idx="${idx}">
             ${cells}
             <div class="tile-actions">
-              <button class="ta-btn ta-edit" data-idx="${idx}" aria-label="Edit combination">${pencilSVG}</button>
-              <button class="ta-btn ta-del" data-idx="${idx}" aria-label="Delete combination">${trashSVG}</button>
+              <button class="ta-btn ta-edit" data-idx="${idx}" aria-label="Edit arrangement">${pencilSVG}</button>
+              <button class="ta-btn ta-del" data-idx="${idx}" aria-label="Delete arrangement">${trashSVG}</button>
             </div>
           </div>`;
       }).join('');
@@ -4900,7 +4889,7 @@
     <path d="M8 2a6 6 0 0 1 6 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`;
   let applyTimers = [];
 
-  // Timeline reflects the applied multicam: one scene per combination.
+  // Timeline reflects the applied multicam: one scene per arrangement.
   // Filmstrip cells cycle through the combo's solo cams, plus the webinar
   // frame when the combo has multiple speakers.
   const SCENE_WIDTHS = [212, 164, 100, 316];
@@ -4916,6 +4905,8 @@
   function camForSpeaker(s, sceneIdx, pos) {
     const key = `${sceneIdx}:${pos}`;
     if (layerCamOverride[key] !== undefined) return layerCamOverride[key];
+    // ACTIVE slots follow whoever is talking — the cam varies scene to scene
+    if (s === ACTIVE) return (sceneIdx + pos) % 3;
     if (speakerCamOverride[s] !== undefined) return speakerCamOverride[s];
     return s % 3;
   }
@@ -5022,7 +5013,9 @@
   function renderLpChips() {
     const combo = lpCombo();
     lpChips.innerHTML = combo.map((s, pos) =>
-      `<div class="cc-chip" data-pos="${pos}" title="Click to change speaker"><span class="id">${pos + 1}</span><span class="nm" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml(speakers[s])}</span></div>`).join('');
+      s === ACTIVE
+        ? `<div class="cc-chip cc-chip-active" data-pos="${pos}" title="Click to change speaker"><span class="id">${waveSVG}</span><span class="nm">Active speaker</span></div>`
+        : `<div class="cc-chip" data-pos="${pos}" title="Click to change speaker"><span class="id pinned" title="Pinned">${pinSVG}</span><span class="nm" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml(speakers[s])}</span></div>`).join('');
     lpChips.querySelectorAll('.cc-chip').forEach(chip => {
       const pos = Number(chip.dataset.pos);
       chip.addEventListener('click', e => {
@@ -5032,13 +5025,14 @@
         chip.classList.add('editing');
         openSinglePopover({
           get: () => combos[lpComboIdx][pos],
-          set: idx => {
-            combos[lpComboIdx][pos] = idx;
+          set: val => {
+            combos[lpComboIdx][pos] = val;
             renderLpChips();
             renderLayoutCarousel(true);
             renderCombos();
             lpUpdateApply(true);
           },
+          activeOption: true,
         }, chip);
       });
     });
@@ -5212,53 +5206,33 @@
     audioSpeakerSelect.classList.add('open');
   });
 
-  // Pin speaker: keep one speaker on screen regardless of who's talking.
-  // Single-select via the shared Identified speakers dropdown; clicking the
-  // already-pinned speaker unpins.
-  // Each grid cell is a layout position (0 TL, 1 TR, 2 BL, 3 BR). Tap a cell to
-  // assign a speaker to that position; fill several cells to pin several speakers.
-  let pinnedByCell = [null, null, null, null];
-  const PIN_CELL_LABELS = ['Top left', 'Top right', 'Bottom left', 'Bottom right'];
-  const pinGrid = document.getElementById('pinGrid');
-
-  function renderPinGrid() {
-    pinGrid.innerHTML = '';
-    pinnedByCell.forEach((sp, cell) => {
-      const btn = document.createElement('button');
-      btn.className = 'pin-cell' + (sp !== null ? ' filled' : '');
-      btn.dataset.cell = cell;
-      btn.setAttribute('aria-label', sp !== null
-        ? `${speakers[sp]} pinned ${PIN_CELL_LABELS[cell].toLowerCase()}`
-        : `Pin a speaker ${PIN_CELL_LABELS[cell].toLowerCase()}`);
-      btn.innerHTML = sp !== null
-        ? `<span class="pin-name">${escapeHtml(speakers[sp])}</span><span class="pin-clear" aria-label="Unpin">${xSVG}</span>`
-        : `<span class="pin-add">+ Pin</span>`;
-      pinGrid.appendChild(btn);
-    });
-  }
-  renderPinGrid();
-
-  pinGrid.addEventListener('click', e => {
-    const cellEl = e.target.closest('.pin-cell');
-    if (!cellEl) return;
-    e.stopPropagation();
-    const cell = Number(cellEl.dataset.cell);
-    if (e.target.closest('.pin-clear')) {
-      pinnedByCell[cell] = null;
-      renderPinGrid();
-      markDirty();
-      return;
+  // "Always on screen": one speaker kept on screen even when not talking.
+  // It's the exception to "Show only active speakers". Single-select via the
+  // shared Identified speakers dropdown; reselecting the same speaker clears it.
+  let alwaysOnSpeaker = 0; // default: Christina
+  const alwaysOnSelect = document.getElementById('alwaysOnSelect');
+  const alwaysOnLabel = document.getElementById('alwaysOnLabel');
+  function updateAlwaysOnLabel() {
+    if (alwaysOnSpeaker === null) {
+      alwaysOnLabel.textContent = 'None';
+      alwaysOnSelect.classList.remove('assigned');
+    } else {
+      alwaysOnLabel.textContent = speakers[alwaysOnSpeaker];
+      alwaysOnSelect.classList.add('assigned');
     }
-    if (openAnchor === cellEl) { closePopover(); return; }
+  }
+  alwaysOnSelect.addEventListener('click', e => {
+    e.stopPropagation();
+    if (openAnchor === alwaysOnSelect) { closePopover(); return; }
     openSinglePopover({
-      get: () => pinnedByCell[cell],
+      get: () => alwaysOnSpeaker,
       set: idx => {
-        pinnedByCell[cell] = (pinnedByCell[cell] === idx) ? null : idx;
-        renderPinGrid();
+        alwaysOnSpeaker = (alwaysOnSpeaker === idx) ? null : idx;
+        updateAlwaysOnLabel();
         markDirty();
       },
-    }, cellEl);
-    cellEl.classList.add('open');
+    }, alwaysOnSelect);
+    alwaysOnSelect.classList.add('open');
   });
 
   // click a speaker frame to select it; click elsewhere on the canvas to deselect
@@ -5546,7 +5520,7 @@
     renderCombos();
   });
 
-  /* Create speaker combination page */
+  /* Create speaker arrangement page */
   const csStrip = document.getElementById('csStrip');
   const csFields = document.getElementById('csFields');
   const csSlotCount = document.getElementById('csSlotCount');
@@ -5694,7 +5668,7 @@
   const popList = document.getElementById('popList');
   const selects = Array.from(multicamModal.querySelectorAll('.mm-select'));
 
-  let speakers = ['Speaker 1', 'Speaker 2', 'Speaker 3'];
+  let speakers = ['Christina', 'Marcus', 'Priya', 'Diego', 'Sara'];
   let assignments = selects.map(() => new Set());
   let openRow = null;
 
@@ -5720,6 +5694,17 @@
   function renderPopover() {
     popList.innerHTML = '';
     const q = popFilter.trim().toLowerCase();
+
+    // Combo slots can be set to the dynamic "Active speaker" instead of a person
+    if (popSingle && popSingle.activeOption) {
+      const checked = popSingle.get() === ACTIVE;
+      const arow = document.createElement('div');
+      arow.className = 'pop-row pop-row-active' + (checked ? ' checked' : '');
+      arow.innerHTML = `<span class="pop-check">${checkMark}</span><span class="pop-name">Active speaker</span><span class="pop-active-ico">${waveSVG}</span>`;
+      arow.addEventListener('click', e => { e.stopPropagation(); popSingle.set(ACTIVE); closePopover(); });
+      popList.appendChild(arow);
+    }
+
     const entries = speakers
       .map((name, i) => ({ name, i }))
       .filter(e => !q || e.name.toLowerCase().includes(q));
@@ -5752,7 +5737,7 @@
           renderPopover();
           selects.forEach((_, r) => updateSelectLabel(r));
           updateAllCamLabels();
-          renderPinGrid();
+          updateAlwaysOnLabel();
           renderCombos();
           renderCreate();
           markDirty();
@@ -5957,7 +5942,7 @@
   });
 
   function resetModalState() {
-    speakers = ['Speaker 1', 'Speaker 2', 'Speaker 3'];
+    speakers = ['Christina', 'Marcus', 'Priya', 'Diego', 'Sara'];
     assignments = selects.map(() => new Set());
     cameraNames.forEach((el, i) => { el.textContent = originalCameraNames[i]; });
     selects.forEach((_, r) => updateSelectLabel(r));
@@ -6224,6 +6209,8 @@
     identifyModal.classList.add('dismissed');
     multicamModal.classList.remove('away');
   };
+
+  updateAlwaysOnLabel();
 })();
 </script>
 
