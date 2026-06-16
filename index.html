@@ -1578,6 +1578,30 @@
   }
   .mm-select.open .chev { transform: rotate(180deg); }
   .mm-select.assigned { color: var(--fg-primary); }
+
+  /* Pinned-speaker grid-location picker */
+  .pin-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
+    width: 44px;
+    height: 30px;
+    flex-shrink: 0;
+  }
+  .pin-cell {
+    border: 1px solid var(--border-medium);
+    border-radius: 2px;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .pin-cell:hover { background: rgba(63, 42, 50, 0.08); }
+  .pin-cell.selected {
+    background: var(--fg-primary);
+    border-color: var(--fg-primary);
+  }
   .mm-footer {
     display: flex;
     align-items: center;
@@ -3837,6 +3861,15 @@
                   <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
                 </button>
               </div>
+              <div class="amc-row hidden" id="pinPositionRow">
+                <span class="amc-row-label grow">Position</span>
+                <div class="pin-grid" role="group" aria-label="Pinned speaker position">
+                  <button class="pin-cell selected" data-cell="0" aria-label="Top left"></button>
+                  <button class="pin-cell" data-cell="1" aria-label="Top right"></button>
+                  <button class="pin-cell" data-cell="2" aria-label="Bottom left"></button>
+                  <button class="pin-cell" data-cell="3" aria-label="Bottom right"></button>
+                </div>
+              </div>
               <div class="amc-row">
                 <span class="amc-row-label grow">Scene count</span>
                 <div class="seg-tabs" role="tablist">
@@ -5165,17 +5198,30 @@
   // Single-select via the shared Identified speakers dropdown; clicking the
   // already-pinned speaker unpins.
   let pinnedSpeaker = null;
+  let pinnedCell = 0; // grid location: 0 TL, 1 TR, 2 BL, 3 BR
   const pinSpeakerSelect = document.getElementById('pinSpeakerSelect');
   const pinSpeakerLabel = document.getElementById('pinSpeakerLabel');
+  const pinPositionRow = document.getElementById('pinPositionRow');
   function updatePinLabel() {
     if (pinnedSpeaker === null) {
       pinSpeakerLabel.textContent = 'Select speaker';
       pinSpeakerSelect.classList.remove('assigned');
+      pinPositionRow.classList.add('hidden');
     } else {
       pinSpeakerLabel.textContent = speakers[pinnedSpeaker];
       pinSpeakerSelect.classList.add('assigned');
+      pinPositionRow.classList.remove('hidden');
     }
   }
+  pinPositionRow.querySelectorAll('.pin-cell').forEach(cell => {
+    cell.addEventListener('click', e => {
+      e.stopPropagation();
+      pinnedCell = Number(cell.dataset.cell);
+      pinPositionRow.querySelectorAll('.pin-cell').forEach(c =>
+        c.classList.toggle('selected', c === cell));
+      markDirty();
+    });
+  });
   pinSpeakerSelect.addEventListener('click', e => {
     e.stopPropagation();
     if (openAnchor === pinSpeakerSelect) { closePopover(); return; }
