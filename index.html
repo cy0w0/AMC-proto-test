@@ -3845,9 +3845,9 @@
               <div class="amc-row"><span class="amc-row-header">Edit style</span></div>
               <div class="amc-row">
                 <span class="amc-row-label grow">Show only active speakers</span>
-                <button class="switch on" role="switch" aria-checked="true" aria-label="Show only active speakers"></button>
+                <button class="switch" id="activeOnlySwitch" role="switch" aria-checked="false" aria-label="Show only active speakers"></button>
               </div>
-              <div class="amc-row">
+              <div class="amc-row hidden" id="alwaysOnRow">
                 <span class="amc-row-label grow">Always on screen</span>
                 <button class="mm-select" id="alwaysOnSelect"><span class="mm-select-label" id="alwaysOnLabel">None</span>
                   <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
@@ -4672,6 +4672,11 @@
       sw.setAttribute('aria-checked', sw.classList.contains('on'));
       markDirty();
     });
+  });
+  // "Always on screen" is the exception to "show only active speakers" — it's
+  // only meaningful (and only shown) while that toggle is on.
+  document.getElementById('activeOnlySwitch').addEventListener('click', e => {
+    document.getElementById('alwaysOnRow').classList.toggle('hidden', !e.currentTarget.classList.contains('on'));
   });
   // Layout pack content shows only while the switch is on
   document.getElementById('layoutPackSwitch').addEventListener('click', e => {
