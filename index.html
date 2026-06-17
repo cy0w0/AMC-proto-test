@@ -3958,12 +3958,6 @@
                 <span class="amc-row-label grow">Show only active speakers</span>
                 <button class="switch" id="activeOnlySwitch" role="switch" aria-checked="false" aria-label="Show only active speakers"></button>
               </div>
-              <div class="amc-row hidden" id="alwaysOnRow">
-                <span class="amc-row-label grow">Always on screen</span>
-                <button class="mm-select" id="alwaysOnSelect"><span class="mm-select-label" id="alwaysOnLabel">None</span>
-                  <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
-                </button>
-              </div>
               <div class="amc-row">
                 <span class="amc-row-label grow">Scene count</span>
                 <div class="seg-tabs" role="tablist">
@@ -4797,11 +4791,6 @@
       markDirty();
     });
   });
-  // "Always on screen" is the exception to "show only active speakers" — it's
-  // only meaningful (and only shown) while that toggle is on.
-  document.getElementById('activeOnlySwitch').addEventListener('click', e => {
-    document.getElementById('alwaysOnRow').classList.toggle('hidden', !e.currentTarget.classList.contains('on'));
-  });
   // Layout pack content shows only while the switch is on
   document.getElementById('layoutPackSwitch').addEventListener('click', e => {
     document.getElementById('layoutPackModule').classList.toggle('collapsed', !e.currentTarget.classList.contains('on'));
@@ -4852,11 +4841,10 @@
 
   function seedCombos() {
     const all = assignedSpeakerIdxs().slice(0, 4);
-    const lead = alwaysOnSpeaker !== null ? alwaysOnSpeaker : all[0];
     combos = [all];
-    // An "open" 2-up: the always-on speaker is pinned, the other slot follows
+    // An "open" 2-up: the first speaker is pinned, the other slot follows
     // whoever is talking. This is the non-exhaustive case.
-    combos.push([lead, ACTIVE]);
+    combos.push([all[0], ACTIVE]);
     combos.push([ACTIVE]);
     comboIdx = 0;
   }
@@ -5384,35 +5372,6 @@
     audioSpeakerSelect.classList.add('open');
   });
 
-  // "Always on screen": one speaker kept on screen even when not talking.
-  // It's the exception to "Show only active speakers". Single-select via the
-  // shared Identified speakers dropdown; reselecting the same speaker clears it.
-  let alwaysOnSpeaker = 0; // default: Christina
-  const alwaysOnSelect = document.getElementById('alwaysOnSelect');
-  const alwaysOnLabel = document.getElementById('alwaysOnLabel');
-  function updateAlwaysOnLabel() {
-    if (alwaysOnSpeaker === null) {
-      alwaysOnLabel.textContent = 'None';
-      alwaysOnSelect.classList.remove('assigned');
-    } else {
-      alwaysOnLabel.textContent = speakers[alwaysOnSpeaker];
-      alwaysOnSelect.classList.add('assigned');
-    }
-  }
-  alwaysOnSelect.addEventListener('click', e => {
-    e.stopPropagation();
-    if (openAnchor === alwaysOnSelect) { closePopover(); return; }
-    openSinglePopover({
-      get: () => alwaysOnSpeaker,
-      set: idx => {
-        alwaysOnSpeaker = (alwaysOnSpeaker === idx) ? null : idx;
-        updateAlwaysOnLabel();
-        markDirty();
-      },
-    }, alwaysOnSelect);
-    alwaysOnSelect.classList.add('open');
-  });
-
   // click a speaker frame to select it; click elsewhere on the canvas to deselect
   document.querySelector('#screenEditor .canvas-pane').addEventListener('click', e => {
     const frame = e.target.closest('.cam-frame[data-speaker]');
@@ -5907,7 +5866,6 @@
           renderPopover();
           selects.forEach((_, r) => updateSelectLabel(r));
           updateAllCamLabels();
-          updateAlwaysOnLabel();
           renderCombos();
           renderCreate();
           markDirty();
@@ -6384,8 +6342,6 @@
     identifyModal.classList.add('dismissed');
     multicamModal.classList.remove('away');
   };
-
-  updateAlwaysOnLabel();
 })();
 </script>
 
