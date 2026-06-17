@@ -2590,6 +2590,17 @@
     color: var(--grey-400);
   }
   .gal-cell-empty svg { width: 14px; height: 14px; }
+  /* Pin badge on a pinned gallery cell */
+  .gal-cell-pinned { position: relative; }
+  .gal-pin {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    display: flex;
+    color: var(--fg-primary);
+    opacity: 0.6;
+  }
+  .gal-pin svg { width: 9px; height: 9px; }
   /* "Whoever's speaking" row in the speakers (Pin) dropdown */
   .pop-row-active { border-bottom: 1px solid var(--border-medium); }
   .pop-row-active .pop-name { display: flex; flex-direction: column; line-height: 1.25; }
@@ -2680,6 +2691,25 @@
     line-height: 16px;
     font-weight: 600;
   }
+  /* Legend explaining the gallery symbols */
+  .gal-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 2px 4px 4px;
+    width: 100%;
+  }
+  .gal-leg-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    line-height: 14px;
+    color: var(--grey-400);
+  }
+  .gal-leg-ico { display: inline-flex; }
+  .gal-leg-ico svg { width: 12px; height: 12px; }
+  .gal-leg-pin { color: var(--fg-primary); }
   .gal-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -4019,6 +4049,7 @@
 
               <div class="hidden" id="pvGallery" style="width:100%;">
                 <div class="gal-chips" id="galChips"></div>
+                <div class="gal-legend" id="galLegend"></div>
                 <div class="gal-grid" id="galGrid"></div>
               </div>
 
@@ -4794,6 +4825,7 @@
   const pvCarousel = document.getElementById('pvCarousel');
   const pvGallery = document.getElementById('pvGallery');
   const galChips = document.getElementById('galChips');
+  const galLegend = document.getElementById('galLegend');
   const galGrid = document.getElementById('galGrid');
   const pvTrack = document.getElementById('pvTrack');
   const pvPrev = document.getElementById('pvPrev');
@@ -4968,11 +5000,14 @@
     if (isGallery) {
       galChips.innerHTML = assignedSpeakerIdxs().map(i =>
         `<span class="gal-chip" style="color:${speakerColors[i % speakerColors.length]}">${escapeHtml(speakers[i])}</span>`).join('');
+      galLegend.innerHTML =
+        `<span class="gal-leg-item"><span class="gal-leg-ico gal-leg-pin">${pinFilledSVG}</span>Pinned</span>`
+        + `<span class="gal-leg-item"><span class="gal-leg-ico gal-leg-wave">${waveSVG}</span>Whoever's speaking</span>`;
       galGrid.innerHTML = combos.map((combo, idx) => {
         const cells = combo.map(s =>
           s === ACTIVE
             ? `<div class="gal-cell gal-cell-empty" title="Whoever's speaking">${waveSVG}</div>`
-            : `<div class="gal-cell" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</div>`).join('');
+            : `<div class="gal-cell gal-cell-pinned" style="color:${speakerColors[s % speakerColors.length]}" title="Pinned"><span class="gal-pin">${pinFilledSVG}</span>${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</div>`).join('');
         return `
           <div class="gal-tile" data-idx="${idx}">
             ${cells}
