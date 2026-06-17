@@ -4960,9 +4960,9 @@
   function unpinAt(ci, pos) {
     if (!combos[ci]) return;
     const name = speakers[combos[ci][pos]];
+    // Unpin in place — just free this one slot to "whoever's speaking".
+    // No reordering, so the other speakers keep their positions.
     combos[ci][pos] = ACTIVE;
-    applyGlobalOrder();
-    dedupeCombos();
     renderCombos();
     markDirty();
     showPvNote(`${name} unpinned — this block now follows whoever's talking.`);
