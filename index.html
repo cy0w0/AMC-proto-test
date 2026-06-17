@@ -2523,16 +2523,26 @@
   }
   .cc-chip-empty .id { color: var(--grey-400); display: flex; align-items: center; justify-content: center; }
   .cc-chip-empty .nm { color: var(--grey-400); font-weight: 475; }
-  /* Pinned block: pin badge sits in the corner of the block */
+  /* Pinned block: pin sits in the corner as a clickable toggle (click = unpin) */
   .cc-cell-pinned { position: relative; }
-  .cc-pin-badge {
+  .cc-pin-toggle {
     position: absolute;
-    top: 6px;
-    left: 6px;
+    top: 5px;
+    left: 5px;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.6);
     color: var(--fg-primary);
-    opacity: 0.65;
+    cursor: pointer;
+    transition: background 0.12s;
   }
+  .cc-pin-toggle svg { width: 15px; height: 15px; }
+  .cc-pin-toggle:hover { background: #fff; }
   /* Active block: a small tappable icon + subtitle that explains itself inline */
   .cc-cell-empty {
     background: transparent;
@@ -2551,8 +2561,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border: none;
     border-radius: 50%;
     background: rgba(139, 111, 122, 0.12);
@@ -2560,6 +2570,7 @@
     cursor: pointer;
     animation: wave-pulse 1.4s ease-in-out infinite;
   }
+  .cc-active-btn svg { width: 16px; height: 16px; }
   .cc-active-btn:hover { color: var(--fg-primary); background: rgba(139, 111, 122, 0.2); }
   @keyframes wave-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
   /* Inline explanation toggled by the active-speaker icon */
@@ -4830,6 +4841,14 @@
     pvConfirm.classList.remove('visible');
   }
 
+  // Inline message explaining the result of a pin/unpin action
+  function showPvNote(text) {
+    pvConfirmText.textContent = text;
+    pvConfirm.classList.add('visible');
+    clearTimeout(pvConfirmTimer);
+    pvConfirmTimer = setTimeout(() => pvConfirm.classList.remove('visible'), 3400);
+  }
+
   function deleteCombo(idx) {
     const count = (combos[idx] || []).length;
     combos.splice(idx, 1);
@@ -4860,7 +4879,7 @@
       }
       const color = speakerColors[slot % speakerColors.length];
       const initial = (speakers[slot] || '?').charAt(0).toUpperCase();
-      return `<div class="cc-cell cc-cell-pinned" title="Pinned to this position"><span class="cc-pin-badge">${pinFilledSVG}</span><span class="cc-initial" style="color:${color}">${escapeHtml(initial)}</span></div>`;
+      return `<div class="cc-cell cc-cell-pinned" title="Pinned to this position"><button class="cc-pin-toggle" data-pos="${pos}" aria-label="Unpin — fall back to whoever's talking">${pinFilledSVG}</button><span class="cc-initial" style="color:${color}">${escapeHtml(initial)}</span></div>`;
     }).join('');
     const chips = combo.map((slot, pos) => {
       if (slot === ACTIVE) {
@@ -4878,25 +4897,33 @@
             <button class="cc-trash" data-combo="${idx}" aria-label="Delete combination">${trashSVG}</button>
           </div>
           <div class="cc-stage"><div class="cc-strip">${cells}</div></div>
-          <div class="cc-hint hidden"></div>
           <div class="cc-chips">${chips}</div>
         </div>
       </div>`;
   }
 
-  // The block shows pin/active state. Tapping the active-speaker icon reveals an
-  // inline explanation. Tapping a chip (or a pinned block) opens the speaker
-  // dropdown: pick a person to pin, or "Whoever's speaking" to leave it open.
+  // The pin badge on a pinned block is a toggle: click it to unpin (the block
+  // falls back to whoever's speaking), with an inline note explaining the result.
+  // Tapping the active-speaker icon explains the open state. Tapping a chip opens
+  // the speaker dropdown to pin/change a person.
   function attachChipEditing(scope) {
     scope.querySelectorAll('.combo-card').forEach(card => {
-      const hint = card.querySelector('.cc-hint');
+      const ci = comboIdx;
+      card.querySelectorAll('.cc-pin-toggle').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const pos = Number(btn.dataset.pos);
+          const name = speakers[combos[ci][pos]];
+          combos[ci][pos] = ACTIVE;
+          renderCombos();
+          markDirty();
+          showPvNote(`${name} unpinned — this block now follows whoever's talking.`);
+        });
+      });
       card.querySelectorAll('.cc-active-btn').forEach(btn => {
         btn.addEventListener('click', e => {
           e.stopPropagation();
-          if (!hint) return;
-          const willShow = hint.classList.contains('hidden');
-          hint.textContent = 'No one is pinned here — this block follows whoever is speaking.';
-          hint.classList.toggle('hidden', !willShow);
+          showPvNote(`No one is pinned here — this block follows whoever is speaking. Use the field below to pin someone.`);
         });
       });
       const chips = card.querySelectorAll('.cc-chip');
@@ -4905,7 +4932,6 @@
         const open = () => {
           if (openAnchor === chip) { closePopover(); return; }
           closePopover();
-          const ci = comboIdx;
           chip.classList.add('editing');
           openSinglePopover({
             get: () => combos[ci][pos],
@@ -5111,12 +5137,16 @@
     });
   }
 
+  // The Edit multi-cam layout popover has no pin concept — just numbered speaker
+  // fields, each opening the shared "Identified speakers" dropdown.
   function renderLpChips() {
     const combo = lpCombo();
-    lpChips.innerHTML = combo.map((s, pos) =>
-      s === ACTIVE
-        ? `<div class="cc-chip cc-chip-empty" data-pos="${pos}" title="Unpinned — follows whoever is speaking. Click to pin a speaker."><span class="id">${pinSVG}</span><span class="nm">Click to pin</span></div>`
-        : `<div class="cc-chip" data-pos="${pos}" title="Pinned · click to change"><span class="id pinned" title="Pinned">${pinFilledSVG}</span><span class="nm" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml(speakers[s])}</span></div>`).join('');
+    lpChips.innerHTML = combo.map((s, pos) => {
+      const isActive = s === ACTIVE;
+      const color = isActive ? 'var(--grey-400)' : speakerColors[s % speakerColors.length];
+      const name = isActive ? 'Active speaker' : escapeHtml(speakers[s]);
+      return `<div class="cc-chip" data-pos="${pos}" title="Click to change speaker"><span class="id">${pos + 1}</span><span class="nm" style="color:${color}">${name}</span></div>`;
+    }).join('');
     lpChips.querySelectorAll('.cc-chip').forEach(chip => {
       const pos = Number(chip.dataset.pos);
       chip.addEventListener('click', e => {
@@ -5133,7 +5163,6 @@
             renderCombos();
             lpUpdateApply(true);
           },
-          activeOption: true,
         }, chip);
       });
     });
@@ -5801,22 +5830,8 @@
   function renderPopover() {
     popList.innerHTML = '';
     const q = popFilter.trim().toLowerCase();
-
-    // Combo slots can be set to the dynamic "Active speaker" instead of a person
-    if (popSingle && popSingle.activeOption) {
-      const cur = popSingle.get();
-      const checked = cur === ACTIVE;
-      // If someone is currently pinned, spell out that choosing this unpins them
-      const pinnedName = (!checked && cur != null) ? speakers[cur] : null;
-      const sub = pinnedName
-        ? `Unpin ${escapeHtml(pinnedName)} — falls to whoever's talking`
-        : 'Follows the active speaker';
-      const arow = document.createElement('div');
-      arow.className = 'pop-row pop-row-active' + (checked ? ' checked' : '');
-      arow.innerHTML = `<span class="pop-check">${checkMark}</span><span class="pop-name">Whoever's speaking<span class="pop-sub">${sub}</span></span><span class="pop-active-ico">${waveSVG}</span>`;
-      arow.addEventListener('click', e => { e.stopPropagation(); popSingle.set(ACTIVE); closePopover(); });
-      popList.appendChild(arow);
-    }
+    // (The pin dropdown only lists people now — unpinning is done by clicking the
+    // pin toggle on the block, which falls back to "whoever's speaking".)
 
     const entries = speakers
       .map((name, i) => ({ name, i }))
