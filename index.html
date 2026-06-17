@@ -1759,6 +1759,23 @@
     border-color: var(--fg-primary);
     color: #fff;
   }
+  /* A speaker already pinned in this layout: disabled, with a reason */
+  .pop-row.disabled {
+    cursor: default;
+    height: auto;
+    min-height: 28px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  .pop-row.disabled:hover { background: transparent; }
+  .pop-row.disabled .pop-check { opacity: 0.35; }
+  .pop-row.disabled .pop-name {
+    color: var(--grey-400);
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+  }
+  .pop-row.disabled .pop-sub { font-size: 11px; font-weight: 400; color: var(--grey-400); }
   .pop-name {
     flex: 1;
     min-width: 0;
@@ -2695,13 +2712,94 @@
   .gal-chip-active { color: var(--grey-400); gap: 5px; }
   .gal-chip-active .gal-chip-ico { display: inline-flex; }
   .gal-chip-active .gal-chip-ico svg { width: 12px; height: 12px; }
+  /* List view: vertical stack of layout cards */
   .gal-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
     padding: 8px;
     width: 100%;
   }
+  .lst-card {
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .lst-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+  }
+  .lst-trash {
+    border: none;
+    background: transparent;
+    color: var(--grey-400);
+    cursor: pointer;
+    display: flex;
+    padding: 2px;
+    border-radius: 4px;
+  }
+  .lst-trash:hover { color: var(--fg-primary); background: rgba(63, 42, 50, 0.06); }
+  .lst-cells { display: flex; gap: 6px; }
+  .lst-cell {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    height: 64px;
+    border-radius: 6px;
+    background: rgba(88, 63, 74, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 4px;
+    transition: background 0.12s;
+  }
+  .lst-cell:hover { background: rgba(88, 63, 74, 0.14); }
+  .lst-name {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    text-align: center;
+  }
+  .lst-cell-active {
+    background: transparent;
+    border: 1px dashed var(--border-medium);
+    flex-direction: column;
+    gap: 4px;
+    color: var(--grey-400);
+  }
+  .lst-cell-active:hover { background: rgba(139, 111, 122, 0.06); }
+  .lst-cell-active .lst-ico { display: flex; }
+  .lst-cell-active .lst-ico svg { width: 16px; height: 16px; }
+  .lst-cell-active .lst-name { color: var(--grey-400); font-weight: 475; }
+  .lst-pin {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--fg-primary);
+    cursor: pointer;
+  }
+  .lst-pin svg { width: 14px; height: 14px; }
+  .lst-pin:hover { background: #fff; }
   .gal-tile {
     height: 56px;
     padding: 4px;
@@ -4630,7 +4728,7 @@
     document.getElementById('dockAiTools').classList.add('active');
     dockHiddenPanel = null;
     combos = [];
-    comboView = 'card';
+    comboView = 'gallery';
     setAmcPage('settings', true);
     hideComboDeleted();
     resetApplyState();
@@ -4814,6 +4912,74 @@
   let comboView = 'gallery';
   let pvConfirmTimer = null;
 
+  // Global pinned position: a speaker keeps the same left-to-right spot in every
+  // layout. posOrder is the shared order; pinning a speaker at a column updates it.
+  let posOrder = [];
+  function posRank(s) {
+    const i = posOrder.indexOf(s);
+    return i === -1 ? 1000 + s : i;
+  }
+  function orderCombo(combo) {
+    const pinned = combo.filter(s => s !== ACTIVE).sort((a, b) => posRank(a) - posRank(b));
+    const active = combo.filter(s => s === ACTIVE);
+    return [...pinned, ...active];
+  }
+  function updatePosOrder(val, pos, len) {
+    if (!posOrder.length) posOrder = assignedSpeakerIdxs().slice();
+    const rel = len <= 1 ? 0 : pos / (len - 1);          // 0 = left, 1 = right
+    posOrder = posOrder.filter(s => s !== val);
+    const target = Math.min(posOrder.length, Math.round(rel * posOrder.length));
+    posOrder.splice(target, 0, val);
+  }
+  function applyGlobalOrder() { combos = combos.map(orderCombo); }
+  function dedupeCombos() {
+    const seen = new Set();
+    combos = combos.filter(c => {
+      const k = JSON.stringify(c);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }
+
+  // Shared pin/unpin actions (used by both the carousel card and the list view)
+  function pinSpeakerAt(ci, pos, val) {
+    if (!combos[ci]) return;
+    // a speaker already pinned elsewhere in this layout is disabled in the menu,
+    // so val is never a duplicate here.
+    combos[ci][pos] = val;
+    if (val !== ACTIVE) updatePosOrder(val, pos, combos[ci].length);
+    applyGlobalOrder();
+    dedupeCombos();
+    renderCombos();
+    markDirty();
+    if (val !== ACTIVE) {
+      showPvNote(`${speakers[val]} is pinned — they'll always appear in this position across your video.`);
+    }
+  }
+  function unpinAt(ci, pos) {
+    if (!combos[ci]) return;
+    const name = speakers[combos[ci][pos]];
+    combos[ci][pos] = ACTIVE;
+    applyGlobalOrder();
+    dedupeCombos();
+    renderCombos();
+    markDirty();
+    showPvNote(`${name} unpinned — this block now follows whoever's talking.`);
+  }
+  function openPinDropdown(ci, pos, anchor) {
+    if (openAnchor === anchor) { closePopover(); return; }
+    closePopover();
+    anchor.classList.add('editing');
+    openSinglePopover({
+      get: () => combos[ci][pos],
+      set: val => pinSpeakerAt(ci, pos, val),
+      activeOption: true,
+      // speakers already pinned in another slot of this layout are disabled
+      usedSpeakers: combos[ci].filter((s, i) => s !== ACTIVE && i !== pos),
+    }, anchor);
+  }
+
   // Combos are built from the speakers assigned in the sequence intercept
   function assignedSpeakerIdxs() {
     const set = new Set();
@@ -4823,12 +4989,16 @@
   }
 
   function seedCombos() {
-    const all = assignedSpeakerIdxs().slice(0, 4);
-    combos = [all];
-    // An "open" 2-up: the first speaker is pinned, the other slot follows
-    // whoever is talking. This is the non-exhaustive case.
-    combos.push([all[0], ACTIVE]);
+    const ids = assignedSpeakerIdxs();
+    posOrder = ids.slice();
+    combos = [];
+    if (ids.length >= 3) combos.push(ids.slice(0, 3)); // 3-speaker layout
+    if (ids.length >= 2) combos.push(ids.slice(0, 2)); // 2-speaker layout
+    // An "open" layout: first speaker pinned, the other slot follows whoever talks
+    combos.push([ids[0], ACTIVE]);
     combos.push([ACTIVE]);
+    applyGlobalOrder();
+    dedupeCombos();
     comboIdx = 0;
   }
 
@@ -4878,7 +5048,7 @@
     // for an inline explanation. The chip below is just the speaker name.
     const cells = combo.map((slot, pos) => {
       if (slot === ACTIVE) {
-        return `<div class="cc-cell cc-cell-empty"><button class="cc-active-btn" data-pos="${pos}" aria-label="Active speaker — what is this?">${waveSVG}</button><span class="cc-active-sub">Whoever's speaking</span></div>`;
+        return `<div class="cc-cell cc-cell-empty" data-pos="${pos}"><span class="cc-active-btn">${waveSVG}</span><span class="cc-active-sub">Whoever's speaking</span></div>`;
       }
       const color = speakerColors[slot % speakerColors.length];
       const initial = (speakers[slot] || '?').charAt(0).toUpperCase();
@@ -4905,56 +5075,25 @@
       </div>`;
   }
 
-  // The pin badge on a pinned block is a toggle: click it to unpin (the block
-  // falls back to whoever's speaking), with an inline note explaining the result.
-  // Tapping the active-speaker icon explains the open state. Tapping a chip opens
-  // the speaker dropdown to pin/change a person.
+  // Pin badge = unpin toggle. Every block/chip is clickable to open the pin
+  // dropdown (pick a person). Positions are kept consistent across all layouts.
   function attachChipEditing(scope) {
     scope.querySelectorAll('.combo-card').forEach(card => {
       const ci = comboIdx;
       card.querySelectorAll('.cc-pin-toggle').forEach(btn => {
         btn.addEventListener('click', e => {
           e.stopPropagation();
-          const pos = Number(btn.dataset.pos);
-          const name = speakers[combos[ci][pos]];
-          combos[ci][pos] = ACTIVE;
-          renderCombos();
-          markDirty();
-          showPvNote(`${name} unpinned — this block now follows whoever's talking.`);
-        });
-      });
-      card.querySelectorAll('.cc-active-btn').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          showPvNote(`No one is pinned here — this block follows whoever is speaking. Use the field below to pin someone.`);
+          unpinAt(ci, Number(btn.dataset.pos));
         });
       });
       const chips = card.querySelectorAll('.cc-chip');
       const cells = card.querySelectorAll('.cc-cell');
       chips.forEach((chip, pos) => {
-        const open = () => {
-          if (openAnchor === chip) { closePopover(); return; }
-          closePopover();
-          chip.classList.add('editing');
-          openSinglePopover({
-            get: () => combos[ci][pos],
-            set: val => {
-              combos[ci][pos] = val;
-              renderCombos();
-              markDirty();
-              if (val !== ACTIVE) {
-                showPvNote(`${speakers[val]} is pinned — they'll always appear in this position across your video.`);
-              }
-            },
-            activeOption: true,
-          }, chip);
-        };
-        chip.addEventListener('click', e => { e.stopPropagation(); open(); });
+        chip.addEventListener('click', e => { e.stopPropagation(); openPinDropdown(ci, pos, chip); });
         const cell = cells[pos];
-        // pinned blocks also open the dropdown; active blocks are handled above
-        if (cell && cell.classList.contains('cc-cell-pinned')) {
+        if (cell) {
           cell.style.cursor = 'pointer';
-          cell.addEventListener('click', e => { e.stopPropagation(); open(); });
+          cell.addEventListener('click', e => { e.stopPropagation(); openPinDropdown(ci, pos, chip); });
         }
       });
     });
@@ -4969,31 +5108,30 @@
     document.getElementById('pvSceneCount').textContent = Math.max(combos.length * 2, 0);
 
     if (isGallery) {
-      galChips.innerHTML = assignedSpeakerIdxs().map(i =>
-        `<span class="gal-chip" style="color:${speakerColors[i % speakerColors.length]}">${escapeHtml(speakers[i])}</span>`).join('')
-        + `<span class="gal-chip gal-chip-active"><span class="gal-chip-ico">${waveSVG}</span>Whoever's speaking</span>`;
+      // List view: a vertical stack of cards. Names live in the cells; each cell
+      // is clickable to open the pin menu; pinned cells carry an unpin toggle.
+      galChips.innerHTML = '';
       galGrid.innerHTML = combos.map((combo, idx) => {
-        const cells = combo.map(s =>
-          s === ACTIVE
-            ? `<div class="gal-cell gal-cell-empty" title="Whoever's speaking">${waveSVG}</div>`
-            : `<div class="gal-cell gal-cell-pinned" style="color:${speakerColors[s % speakerColors.length]}" title="Pinned"><span class="gal-pin">${pinFilledSVG}</span>${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</div>`).join('');
+        const cells = combo.map((slot, pos) => {
+          if (slot === ACTIVE) {
+            return `<div class="lst-cell lst-cell-active" data-idx="${idx}" data-pos="${pos}" title="Click to pin a speaker"><span class="lst-ico">${waveSVG}</span><span class="lst-name">Whoever's speaking</span></div>`;
+          }
+          const color = speakerColors[slot % speakerColors.length];
+          return `<div class="lst-cell lst-cell-pinned" data-idx="${idx}" data-pos="${pos}" title="Click to change · pin = unpin"><button class="lst-pin" data-idx="${idx}" data-pos="${pos}" aria-label="Unpin — fall back to whoever's talking">${pinFilledSVG}</button><span class="lst-name" style="color:${color}">${escapeHtml(speakers[slot])}</span></div>`;
+        }).join('');
+        const header = `${combo.length} speaker${combo.length === 1 ? '' : 's'}`;
         return `
-          <div class="gal-tile" data-idx="${idx}">
-            ${cells}
-            <div class="tile-actions">
-              <button class="ta-btn ta-edit" data-idx="${idx}" aria-label="Edit layout">${pencilSVG}</button>
-              <button class="ta-btn ta-del" data-idx="${idx}" aria-label="Delete layout">${trashSVG}</button>
-            </div>
+          <div class="lst-card" data-idx="${idx}">
+            <div class="lst-head"><span>${header}</span><button class="lst-trash" data-idx="${idx}" aria-label="Delete layout">${trashSVG}</button></div>
+            <div class="lst-cells">${cells}</div>
           </div>`;
       }).join('');
-      galGrid.querySelectorAll('.ta-del').forEach(btn =>
-        btn.addEventListener('click', () => deleteCombo(Number(btn.dataset.idx))));
-      galGrid.querySelectorAll('.ta-edit').forEach(btn =>
-        btn.addEventListener('click', () => {
-          comboView = 'card';
-          comboIdx = Number(btn.dataset.idx);
-          renderCombos();
-        }));
+      galGrid.querySelectorAll('.lst-trash').forEach(btn =>
+        btn.addEventListener('click', e => { e.stopPropagation(); deleteCombo(Number(btn.dataset.idx)); }));
+      galGrid.querySelectorAll('.lst-pin').forEach(btn =>
+        btn.addEventListener('click', e => { e.stopPropagation(); unpinAt(Number(btn.dataset.idx), Number(btn.dataset.pos)); }));
+      galGrid.querySelectorAll('.lst-cell').forEach(cell =>
+        cell.addEventListener('click', e => { e.stopPropagation(); openPinDropdown(Number(cell.dataset.idx), Number(cell.dataset.pos), cell); }));
       return;
     }
 
@@ -5728,8 +5866,9 @@
 
   csAdd.addEventListener('click', () => {
     combos.push(csSlots.filter(s => s !== null));
-    comboView = 'card';
-    comboIdx = combos.length - 1;
+    applyGlobalOrder();
+    dedupeCombos();
+    comboView = 'gallery';
     renderCombos();
     setAmcPage('preview');
     markDirty();
@@ -5863,6 +6002,16 @@
         input.addEventListener('blur', commit);
         setTimeout(() => { input.focus(); input.select(); }, 0);
 
+        popList.appendChild(row);
+        return;
+      }
+
+      // Already pinned elsewhere in this layout → disabled, with an explanation
+      if (popSingle && popSingle.usedSpeakers && popSingle.usedSpeakers.includes(i)) {
+        row.className = 'pop-row disabled';
+        row.innerHTML = `
+          <span class="pop-check"></span>
+          <span class="pop-name">${escapeHtml(name)}<span class="pop-sub">Already pinned in this layout</span></span>`;
         popList.appendChild(row);
         return;
       }
