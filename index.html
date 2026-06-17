@@ -2343,10 +2343,41 @@
     letter-spacing: 0.055px;
     color: var(--fg-secondary);
   }
+  .cs-cell { position: relative; }
   .cs-cell.filled {
     border-style: solid;
     border-color: transparent;
     font-weight: 600;
+  }
+  .cs-pin-btn {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--grey-400);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+  .cs-pin-btn svg { width: 14px; height: 14px; }
+  .cs-cell.filled:hover .cs-pin-btn { opacity: 1; }
+  .cs-pin-btn.is-pinned { opacity: 1; color: var(--fg-primary); }
+  .cs-pin-btn:hover { background: #fff; }
+  .cs-note {
+    font-size: 11px;
+    line-height: 15px;
+    color: var(--fg-primary);
+    background: rgba(139, 111, 122, 0.1);
+    border-radius: 6px;
+    padding: 6px 8px;
+    margin: 0 16px;
   }
   .cs-fields {
     display: grid;
@@ -4184,6 +4215,7 @@
               <div class="cs-stage">
                 <div class="cs-strip" id="csStrip"></div>
               </div>
+              <div class="cs-note hidden" id="csNote"></div>
               <div class="cs-fields" id="csFields"></div>
             </div>
 
@@ -5866,11 +5898,42 @@
     else csAdd.setAttribute('disabled', '');
   }
 
+  const csCat = () => csSlots.filter(s => s !== null).length;
+  function toggleCreatePin(slot) {
+    const s = csSlots[slot];
+    if (s === null) return;
+    const cat = csCat();
+    if (!pinnedByCat[cat]) pinnedByCat[cat] = new Set();
+    const label = `${cat}-speaker layout${cat === 1 ? '' : 's'}`;
+    if (pinnedByCat[cat].has(s)) {
+      pinnedByCat[cat].delete(s);
+      showCsNote(`${speakers[s]} unpinned for ${label}.`);
+    } else {
+      pinnedByCat[cat].add(s);
+      updateCatOrder(cat, s, slot, csSlots.length);
+      showCsNote(`${speakers[s]} pinned to this spot in all ${label}.`);
+    }
+    renderCreate();
+    markDirty();
+  }
+  function showCsNote(text) {
+    const note = document.getElementById('csNote');
+    if (!note) return;
+    note.textContent = text;
+    note.classList.remove('hidden');
+    clearTimeout(note._t);
+    note._t = setTimeout(() => note.classList.add('hidden'), 3600);
+  }
+
   function renderCreate() {
-    csStrip.innerHTML = csSlots.map((s, i) => s === null
-      ? `<div class="cs-cell">${i + 1}</div>`
-      : `<div class="cs-cell filled" style="color:${speakerColors[s % speakerColors.length]}">${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</div>`
-    ).join('');
+    const cat = csCat();
+    csStrip.innerHTML = csSlots.map((s, i) => {
+      if (s === null) return `<div class="cs-cell">${i + 1}</div>`;
+      const pinned = isPinned(s, cat);
+      return `<div class="cs-cell filled" style="color:${speakerColors[s % speakerColors.length]}"><button class="cs-pin-btn${pinned ? ' is-pinned' : ''}" data-slot="${i}" aria-label="${pinned ? 'Unpin' : 'Pin'} ${escapeHtml(speakers[s])}">${pinned ? pinFilledSVG : pinSVG}</button>${escapeHtml((speakers[s] || '?').charAt(0).toUpperCase())}</div>`;
+    }).join('');
+    csStrip.querySelectorAll('.cs-pin-btn').forEach(btn =>
+      btn.addEventListener('click', e => { e.stopPropagation(); toggleCreatePin(Number(btn.dataset.slot)); }));
 
     csFields.innerHTML = csSlots.map((s, i) => `
       <div class="cs-field" data-slot="${i}">
