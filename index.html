@@ -2540,20 +2540,30 @@
   }
   .cc-chip-empty .id { color: var(--grey-400); display: flex; align-items: center; justify-content: center; }
   .cc-chip-empty .nm { color: var(--grey-400); font-weight: 475; }
-  /* Pin icon in the block corner — a hover-revealed indicator (not a button) */
-  .cc-cell-pinned, .cc-cell-empty { position: relative; }
-  .cc-pin-ico {
+  /* Pin button in the block corner — revealed on cell hover; once pinned it
+     stays visible and filled. Unpinned default = outline, muted. */
+  .cc-cell-named, .cc-cell-empty { position: relative; }
+  .cc-pin-btn {
     position: absolute;
-    top: 6px;
-    left: 6px;
+    top: 5px;
+    left: 5px;
     display: flex;
-    color: var(--fg-primary);
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--grey-400);
+    cursor: pointer;
     opacity: 0;
     transition: opacity 0.12s;
   }
-  .cc-pin-ico svg { width: 14px; height: 14px; }
-  .cc-pin-out { color: var(--grey-400); }
-  .pv-slide:hover .cc-pin-ico { opacity: 0.7; }
+  .cc-pin-btn svg { width: 14px; height: 14px; }
+  .cc-cell-named:hover .cc-pin-btn { opacity: 1; }
+  .cc-pin-btn.is-pinned { opacity: 1; color: var(--fg-primary); }
+  .cc-pin-btn:hover { background: #fff; }
   /* Active block: a small tappable icon + subtitle that explains itself inline */
   .cc-cell-empty {
     background: transparent;
@@ -2777,19 +2787,28 @@
   .lst-cell-active .lst-ico { display: flex; }
   .lst-cell-active .lst-ico svg { width: 16px; height: 16px; }
   .lst-cell-active .lst-name { color: var(--grey-400); font-weight: 475; }
-  /* Pin icon — hover-revealed indicator (filled = pinned, outline = active) */
-  .lst-pin-ico {
+  /* Pin button — revealed on cell hover; once pinned, stays visible + filled */
+  .lst-pin-btn {
     position: absolute;
-    top: 6px;
-    left: 6px;
+    top: 5px;
+    left: 5px;
     display: flex;
-    color: var(--fg-primary);
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--grey-400);
+    cursor: pointer;
     opacity: 0;
     transition: opacity 0.12s;
   }
-  .lst-pin-ico svg { width: 13px; height: 13px; }
-  .lst-pin-out { color: var(--grey-400); }
-  .lst-card:hover .lst-pin-ico { opacity: 0.7; }
+  .lst-pin-btn svg { width: 13px; height: 13px; }
+  .lst-cell-named:hover .lst-pin-btn { opacity: 1; }
+  .lst-pin-btn.is-pinned { opacity: 1; color: var(--fg-primary); }
+  .lst-pin-btn:hover { background: #fff; }
   .gal-tile {
     height: 56px;
     padding: 4px;
@@ -4932,28 +4951,38 @@
     });
   }
 
-  // Both pin and unpin happen through the Identified speakers menu:
-  //  - pick a person  → pin them (position propagates across all layouts)
-  //  - "Whoever's speaking" → unpin IN PLACE (no reorder of the others)
-  function pinSpeakerAt(ci, pos, val) {
+  // Speakers shown in a layout are UNPINNED by default. Pinning is a separate,
+  // per-speaker action (the pin icon): a pinned speaker keeps a consistent
+  // position across every layout. pinnedSpeakers holds the globally-pinned set.
+  let pinnedSpeakers = new Set();
+
+  // The Identified speakers menu just sets WHO is in a slot (placed unpinned),
+  // or "Whoever's speaking" to make it dynamic. It does not pin.
+  function setSlotSpeaker(ci, pos, val) {
     if (!combos[ci]) return;
-    if (val === ACTIVE) {
-      const prev = combos[ci][pos];
-      combos[ci][pos] = ACTIVE;
-      renderCombos();
-      markDirty();
-      if (prev !== ACTIVE) {
-        showPvNote(`${speakers[prev]} unpinned — this block now follows whoever's talking.`);
-      }
-      return;
-    }
     combos[ci][pos] = val;
-    updatePosOrder(val, pos, combos[ci].length);
-    applyGlobalOrder();
-    dedupeCombos();
     renderCombos();
     markDirty();
-    showPvNote(`${speakers[val]} is pinned — they'll always appear in this position across your video.`);
+  }
+  // The pin icon toggles whether that speaker's position is locked.
+  function togglePin(ci, pos) {
+    if (!combos[ci]) return;
+    const s = combos[ci][pos];
+    if (s === ACTIVE) return;
+    if (pinnedSpeakers.has(s)) {
+      pinnedSpeakers.delete(s);            // unpin in place — no reorder
+      renderCombos();
+      markDirty();
+      showPvNote(`${speakers[s]} unpinned.`);
+    } else {
+      pinnedSpeakers.add(s);
+      updatePosOrder(s, pos, combos[ci].length);
+      applyGlobalOrder();
+      dedupeCombos();
+      renderCombos();
+      markDirty();
+      showPvNote(`${speakers[s]} pinned — they'll always appear in this position across your video.`);
+    }
   }
   function openPinDropdown(ci, pos, anchor) {
     if (openAnchor === anchor) { closePopover(); return; }
@@ -4961,9 +4990,9 @@
     anchor.classList.add('editing');
     openSinglePopover({
       get: () => combos[ci][pos],
-      set: val => pinSpeakerAt(ci, pos, val),
+      set: val => setSlotSpeaker(ci, pos, val),
       activeOption: true,
-      // speakers already pinned in another slot of this layout are disabled
+      // a speaker already in this layout is disabled (no duplicates)
       usedSpeakers: combos[ci].filter((s, i) => s !== ACTIVE && i !== pos),
     }, anchor);
   }
@@ -5036,11 +5065,12 @@
     // for an inline explanation. The chip below is just the speaker name.
     const cells = combo.map((slot, pos) => {
       if (slot === ACTIVE) {
-        return `<div class="cc-cell cc-cell-empty" data-pos="${pos}"><span class="cc-pin-ico cc-pin-out">${pinSVG}</span><span class="cc-active-btn">${waveSVG}</span><span class="cc-active-sub">Whoever's speaking</span></div>`;
+        return `<div class="cc-cell cc-cell-empty" data-pos="${pos}"><span class="cc-active-btn">${waveSVG}</span><span class="cc-active-sub">Whoever's speaking</span></div>`;
       }
       const color = speakerColors[slot % speakerColors.length];
       const initial = (speakers[slot] || '?').charAt(0).toUpperCase();
-      return `<div class="cc-cell cc-cell-pinned" title="Click to change or unpin"><span class="cc-pin-ico">${pinFilledSVG}</span><span class="cc-initial" style="color:${color}">${escapeHtml(initial)}</span></div>`;
+      const isPinned = pinnedSpeakers.has(slot);
+      return `<div class="cc-cell cc-cell-named" data-pos="${pos}" title="Click to change speaker"><button class="cc-pin-btn${isPinned ? ' is-pinned' : ''}" data-act="pin" data-pos="${pos}" aria-label="${isPinned ? 'Unpin' : 'Pin'} ${escapeHtml(speakers[slot])}">${isPinned ? pinFilledSVG : pinSVG}</button><span class="cc-initial" style="color:${color}">${escapeHtml(initial)}</span></div>`;
     }).join('');
     const chips = combo.map((slot, pos) => {
       if (slot === ACTIVE) {
@@ -5063,12 +5093,14 @@
       </div>`;
   }
 
-  // Every block/chip is clickable to open the Identified speakers menu (pick a
-  // person to pin, or "Whoever's speaking" to unpin in place). The pin icon is a
-  // hover-revealed indicator only. Positions stay consistent across all layouts.
+  // Click a block/chip to open the Identified speakers menu (set who's in the
+  // slot). The pin icon (per-cell, hover-revealed; always shown once pinned)
+  // toggles whether that speaker's position is locked across layouts.
   function attachChipEditing(scope) {
     scope.querySelectorAll('.combo-card').forEach(card => {
       const ci = comboIdx;
+      card.querySelectorAll('.cc-pin-btn').forEach(btn =>
+        btn.addEventListener('click', e => { e.stopPropagation(); togglePin(ci, Number(btn.dataset.pos)); }));
       const chips = card.querySelectorAll('.cc-chip');
       const cells = card.querySelectorAll('.cc-cell');
       chips.forEach((chip, pos) => {
@@ -5098,10 +5130,11 @@
       galGrid.innerHTML = combos.map((combo, idx) => {
         const cells = combo.map((slot, pos) => {
           if (slot === ACTIVE) {
-            return `<div class="lst-cell lst-cell-active" data-idx="${idx}" data-pos="${pos}" title="Click to pin a speaker"><span class="lst-pin-ico lst-pin-out">${pinSVG}</span><span class="lst-ico">${waveSVG}</span><span class="lst-name">Whoever's speaking</span></div>`;
+            return `<div class="lst-cell lst-cell-active" data-idx="${idx}" data-pos="${pos}" title="Click to choose a speaker"><span class="lst-ico">${waveSVG}</span><span class="lst-name">Whoever's speaking</span></div>`;
           }
           const color = speakerColors[slot % speakerColors.length];
-          return `<div class="lst-cell lst-cell-pinned" data-idx="${idx}" data-pos="${pos}" title="Click to change or unpin"><span class="lst-pin-ico">${pinFilledSVG}</span><span class="lst-name" style="color:${color}">${escapeHtml(speakers[slot])}</span></div>`;
+          const isPinned = pinnedSpeakers.has(slot);
+          return `<div class="lst-cell lst-cell-named" data-idx="${idx}" data-pos="${pos}" title="Click to change speaker"><button class="lst-pin-btn${isPinned ? ' is-pinned' : ''}" data-act="pin" data-idx="${idx}" data-pos="${pos}" aria-label="${isPinned ? 'Unpin' : 'Pin'} ${escapeHtml(speakers[slot])}">${isPinned ? pinFilledSVG : pinSVG}</button><span class="lst-name" style="color:${color}">${escapeHtml(speakers[slot])}</span></div>`;
         }).join('');
         const header = `${combo.length} speaker${combo.length === 1 ? '' : 's'}`;
         return `
@@ -5112,6 +5145,8 @@
       }).join('');
       galGrid.querySelectorAll('.lst-trash').forEach(btn =>
         btn.addEventListener('click', e => { e.stopPropagation(); deleteCombo(Number(btn.dataset.idx)); }));
+      galGrid.querySelectorAll('.lst-pin-btn').forEach(btn =>
+        btn.addEventListener('click', e => { e.stopPropagation(); togglePin(Number(btn.dataset.idx), Number(btn.dataset.pos)); }));
       galGrid.querySelectorAll('.lst-cell').forEach(cell =>
         cell.addEventListener('click', e => { e.stopPropagation(); openPinDropdown(Number(cell.dataset.idx), Number(cell.dataset.pos), cell); }));
       return;
@@ -6020,7 +6055,7 @@
         row.className = 'pop-row disabled';
         row.innerHTML = `
           <span class="pop-check"></span>
-          <span class="pop-name">${escapeHtml(name)}<span class="pop-sub">Already pinned in this layout</span></span>`;
+          <span class="pop-name">${escapeHtml(name)}<span class="pop-sub">Already in this layout</span></span>`;
         popList.appendChild(row);
         return;
       }
