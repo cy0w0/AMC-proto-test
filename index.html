@@ -4965,7 +4965,7 @@
   // Pinning is scoped PER CATEGORY — the number of NAMED speakers in a layout
   // (its "3 speakers" module). Pinning in a 3-speaker layout keeps that speaker's
   // spot across 3-speaker layouts only; it doesn't touch 2-speaker layouts.
-  const catKey = combo => combo.filter(s => s !== ACTIVE).length;
+  const catKey = combo => combo.length;
   let orderByCat = {};   // category -> [speakerIdx, left→right]
   let pinnedByCat = {};  // category -> Set(speakerIdx pinned in that category)
   function catOrder(cat) { return orderByCat[cat] || (orderByCat[cat] = assignedSpeakerIdxs().slice()); }
@@ -5116,11 +5116,11 @@
   const waveSVG = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
     <path d="M1.5 7v2M4.5 5v6M7.5 2.5v11M10.5 5v6M14.5 7v2"/></svg>`;
 
-  // Title counts named speakers (a "whoever's speaking" slot isn't a speaker),
-  // so e.g. [Christina, whoever's-speaking] reads "1 speaker", not "2 speakers".
+  // Title counts speaker slots/frames, so [Christina, whoever's-speaking] reads
+  // "2 speakers" (two frames on screen).
   function layoutHeader(combo) {
-    const named = combo.filter(s => s !== ACTIVE).length;
-    return named === 0 ? `Whoever's speaking` : `${named} speaker${named === 1 ? '' : 's'}`;
+    const n = combo.length;
+    return `${n} speaker${n === 1 ? '' : 's'}`;
   }
 
   function comboCard(combo, idx) {
