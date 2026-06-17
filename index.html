@@ -2265,7 +2265,7 @@
     padding-right: 4px;
   }
 
-  /* ===== Preview panel (speaker combinations) ===== */
+  /* ===== Preview panel (speaker layouts) ===== */
   /* Sliding pages: header/description stay static, module stacks swipe */
   .amc-stage {
     flex: 1;
@@ -2294,7 +2294,7 @@
   }
   .amc-page::-webkit-scrollbar { display: none; }
 
-  /* Create speaker combination page */
+  /* Create speaker layout page */
   .cs-stage {
     height: 124px;
     width: 100%;
@@ -3992,8 +3992,8 @@
 
             <div class="amc-module" style="border-color: var(--border-medium); padding-bottom: 16px;">
               <div class="amc-row">
-                <span class="amc-row-header grow">Speaker combinations</span>
-                <button class="amc-toggle" id="pvAdd" aria-label="Add combination">
+                <span class="amc-row-header grow">Speaker layouts</span>
+                <button class="amc-toggle" id="pvAdd" aria-label="Add layout">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
                 </button>
                 <button class="amc-toggle" id="pvViewToggle" aria-label="Toggle gallery view">
@@ -4009,10 +4009,10 @@
 
               <div class="pv-carousel" id="pvCarousel">
                 <div class="pv-track" id="pvTrack"></div>
-                <button class="im-nav prev hidden-nav" id="pvPrev" aria-label="Previous combination">
+                <button class="im-nav prev hidden-nav" id="pvPrev" aria-label="Previous layout">
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 3.5 2.5 8 7 12.5"/></svg>
                 </button>
-                <button class="im-nav next" id="pvNext" aria-label="Next combination">
+                <button class="im-nav next" id="pvNext" aria-label="Next layout">
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 3.5 13.5 8 9 12.5"/></svg>
                 </button>
               </div>
@@ -4045,10 +4045,10 @@
             </div>
           </div>
 
-          <!-- Page 3 · Create speaker combination -->
+          <!-- Page 3 · Create speaker layout -->
           <div class="amc-page" id="createPage">
             <div class="amc-module" style="background: var(--surface-elevated); border-color: var(--border-medium);">
-              <div class="amc-row"><span class="amc-row-header">Create speaker combination</span></div>
+              <div class="amc-row"><span class="amc-row-header">Create speaker layout</span></div>
               <div class="amc-row">
                 <span class="amc-row-header grow">Speaker slots</span>
                 <div class="cs-slots-field">
@@ -4790,7 +4790,7 @@
   document.querySelectorAll('#settingsPage .num-field input').forEach(inp =>
     inp.addEventListener('input', markDirty));
 
-  /* Preview page: speaker combinations */
+  /* Preview page: speaker layouts */
   const pvCarousel = document.getElementById('pvCarousel');
   const pvGallery = document.getElementById('pvGallery');
   const galChips = document.getElementById('galChips');
@@ -4830,7 +4830,7 @@
   }
 
   function showComboDeleted(count) {
-    pvConfirmText.textContent = `Speaker combination deleted.`;
+    pvConfirmText.textContent = `Speaker layout deleted.`;
     pvConfirm.classList.add('visible');
     clearTimeout(pvConfirmTimer);
     pvConfirmTimer = setTimeout(() => pvConfirm.classList.remove('visible'), 2600);
@@ -4894,7 +4894,7 @@
         <div class="combo-card">
           <div class="cc-header">
             <span>${header}</span>
-            <button class="cc-trash" data-combo="${idx}" aria-label="Delete combination">${trashSVG}</button>
+            <button class="cc-trash" data-combo="${idx}" aria-label="Delete layout">${trashSVG}</button>
           </div>
           <div class="cc-stage"><div class="cc-strip">${cells}</div></div>
           <div class="cc-chips">${chips}</div>
@@ -4970,8 +4970,8 @@
           <div class="gal-tile" data-idx="${idx}">
             ${cells}
             <div class="tile-actions">
-              <button class="ta-btn ta-edit" data-idx="${idx}" aria-label="Edit combination">${pencilSVG}</button>
-              <button class="ta-btn ta-del" data-idx="${idx}" aria-label="Delete combination">${trashSVG}</button>
+              <button class="ta-btn ta-edit" data-idx="${idx}" aria-label="Edit layout">${pencilSVG}</button>
+              <button class="ta-btn ta-del" data-idx="${idx}" aria-label="Delete layout">${trashSVG}</button>
             </div>
           </div>`;
       }).join('');
@@ -5656,7 +5656,7 @@
     renderCombos();
   });
 
-  /* Create speaker combination page */
+  /* Create speaker layout page */
   const csStrip = document.getElementById('csStrip');
   const csFields = document.getElementById('csFields');
   const csSlotCount = document.getElementById('csSlotCount');
