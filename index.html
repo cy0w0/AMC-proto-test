@@ -5025,7 +5025,8 @@
   // or "Whoever's speaking" to make it dynamic. It does not pin.
   function setSlotSpeaker(ci, pos, val) {
     if (!combos[ci]) return;
-    combos[ci][pos] = val;
+    // unchecking the current speaker falls back to "whoever's speaking"
+    combos[ci][pos] = (combos[ci][pos] === val) ? ACTIVE : val;
     renderCombos();
     markDirty();
   }
@@ -6008,7 +6009,8 @@
         field.classList.add('focused');
         openSinglePopover({
           get: () => csSlots[slot],
-          set: val => { csSlots[slot] = (csSlots[slot] === val ? null : val); renderCreate(); },
+          // unchecking the current speaker falls back to "whoever's speaking"
+          set: val => { csSlots[slot] = (csSlots[slot] === val ? ACTIVE : val); renderCreate(); },
           activeOption: true,   // offer "Whoever's speaking"
           usedSpeakers: csSlots.filter((x, i) => x !== null && x !== ACTIVE && i !== slot),
         }, field);
