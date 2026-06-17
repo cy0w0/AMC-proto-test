@@ -2809,6 +2809,15 @@
   .lst-cell-named:hover .lst-pin-btn { opacity: 1; }
   .lst-pin-btn.is-pinned { opacity: 1; color: var(--fg-primary); }
   .lst-pin-btn:hover { background: #fff; }
+  /* Inline pin note inside a layout card/module */
+  .lst-note, .cc-note {
+    font-size: 11px;
+    line-height: 15px;
+    color: var(--fg-primary);
+    background: rgba(139, 111, 122, 0.1);
+    border-radius: 6px;
+    padding: 6px 8px;
+  }
   .gal-tile {
     height: 56px;
     padding: 4px;
@@ -4921,24 +4930,30 @@
   let comboView = 'gallery';
   let pvConfirmTimer = null;
 
-  // Global pinned position: a speaker keeps the same left-to-right spot in every
-  // layout. posOrder is the shared order; pinning a speaker at a column updates it.
-  let posOrder = [];
-  function posRank(s) {
-    const i = posOrder.indexOf(s);
+  // Pinning is scoped PER CATEGORY — the number of NAMED speakers in a layout
+  // (its "3 speakers" module). Pinning in a 3-speaker layout keeps that speaker's
+  // spot across 3-speaker layouts only; it doesn't touch 2-speaker layouts.
+  const catKey = combo => combo.filter(s => s !== ACTIVE).length;
+  let orderByCat = {};   // category -> [speakerIdx, left→right]
+  let pinnedByCat = {};  // category -> Set(speakerIdx pinned in that category)
+  function catOrder(cat) { return orderByCat[cat] || (orderByCat[cat] = assignedSpeakerIdxs().slice()); }
+  function isPinned(s, cat) { return !!(pinnedByCat[cat] && pinnedByCat[cat].has(s)); }
+  function posRank(s, cat) {
+    const i = catOrder(cat).indexOf(s);
     return i === -1 ? 1000 + s : i;
   }
   function orderCombo(combo) {
-    const pinned = combo.filter(s => s !== ACTIVE).sort((a, b) => posRank(a) - posRank(b));
+    const cat = catKey(combo);
+    const pinned = combo.filter(s => s !== ACTIVE).sort((a, b) => posRank(a, cat) - posRank(b, cat));
     const active = combo.filter(s => s === ACTIVE);
     return [...pinned, ...active];
   }
-  function updatePosOrder(val, pos, len) {
-    if (!posOrder.length) posOrder = assignedSpeakerIdxs().slice();
+  function updateCatOrder(cat, val, pos, len) {
+    const order = catOrder(cat).filter(s => s !== val);
     const rel = len <= 1 ? 0 : pos / (len - 1);          // 0 = left, 1 = right
-    posOrder = posOrder.filter(s => s !== val);
-    const target = Math.min(posOrder.length, Math.round(rel * posOrder.length));
-    posOrder.splice(target, 0, val);
+    const target = Math.min(order.length, Math.round(rel * order.length));
+    order.splice(target, 0, val);
+    orderByCat[cat] = order;
   }
   function applyGlobalOrder() { combos = combos.map(orderCombo); }
   function dedupeCombos() {
@@ -4951,11 +4966,6 @@
     });
   }
 
-  // Speakers shown in a layout are UNPINNED by default. Pinning is a separate,
-  // per-speaker action (the pin icon): a pinned speaker keeps a consistent
-  // position across every layout. pinnedSpeakers holds the globally-pinned set.
-  let pinnedSpeakers = new Set();
-
   // The Identified speakers menu just sets WHO is in a slot (placed unpinned),
   // or "Whoever's speaking" to make it dynamic. It does not pin.
   function setSlotSpeaker(ci, pos, val) {
@@ -4964,25 +4974,39 @@
     renderCombos();
     markDirty();
   }
-  // The pin icon toggles whether that speaker's position is locked.
+  // The pin icon toggles whether that speaker's position is locked — scoped to
+  // this layout's category. The result note shows inline in that card.
   function togglePin(ci, pos) {
     if (!combos[ci]) return;
     const s = combos[ci][pos];
     if (s === ACTIVE) return;
-    if (pinnedSpeakers.has(s)) {
-      pinnedSpeakers.delete(s);            // unpin in place — no reorder
+    const cat = catKey(combos[ci]);
+    if (!pinnedByCat[cat]) pinnedByCat[cat] = new Set();
+    const label = `${cat}-speaker layout${cat === 1 ? '' : 's'}`;
+    if (pinnedByCat[cat].has(s)) {
+      pinnedByCat[cat].delete(s);          // unpin in place — no reorder
       renderCombos();
       markDirty();
-      showPvNote(`${speakers[s]} unpinned.`);
+      showCardNote(ci, `${speakers[s]} unpinned for ${label}.`);
     } else {
-      pinnedSpeakers.add(s);
-      updatePosOrder(s, pos, combos[ci].length);
+      pinnedByCat[cat].add(s);
+      updateCatOrder(cat, s, pos, combos[ci].length);
       applyGlobalOrder();
       dedupeCombos();
       renderCombos();
       markDirty();
-      showPvNote(`${speakers[s]} pinned — they'll always appear in this position across your video.`);
+      showCardNote(ci, `${speakers[s]} pinned to this spot in all ${label}.`);
     }
+  }
+  // Show a transient note inside the relevant layout card (list or carousel)
+  function showCardNote(idx, text) {
+    let note = galGrid.querySelector(`.lst-card[data-idx="${idx}"] .lst-note`);
+    if (!note && pvTrack.children[idx]) note = pvTrack.children[idx].querySelector('.cc-note');
+    if (!note) return;
+    note.textContent = text;
+    note.classList.remove('hidden');
+    clearTimeout(note._t);
+    note._t = setTimeout(() => note.classList.add('hidden'), 3600);
   }
   function openPinDropdown(ci, pos, anchor) {
     if (openAnchor === anchor) { closePopover(); return; }
@@ -5007,11 +5031,12 @@
 
   function seedCombos() {
     const ids = assignedSpeakerIdxs();
-    posOrder = ids.slice();
+    orderByCat = {};
+    pinnedByCat = {};
     combos = [];
     if (ids.length >= 3) combos.push(ids.slice(0, 3)); // 3-speaker layout
     if (ids.length >= 2) combos.push(ids.slice(0, 2)); // 2-speaker layout
-    // An "open" layout: first speaker pinned, the other slot follows whoever talks
+    // An "open" layout: one named speaker + a slot that follows whoever talks
     combos.push([ids[0], ACTIVE]);
     combos.push([ACTIVE]);
     applyGlobalOrder();
@@ -5076,8 +5101,8 @@
       }
       const color = speakerColors[slot % speakerColors.length];
       const initial = (speakers[slot] || '?').charAt(0).toUpperCase();
-      const isPinned = pinnedSpeakers.has(slot);
-      return `<div class="cc-cell cc-cell-named" data-pos="${pos}" title="Click to change speaker"><button class="cc-pin-btn${isPinned ? ' is-pinned' : ''}" data-act="pin" data-pos="${pos}" aria-label="${isPinned ? 'Unpin' : 'Pin'} ${escapeHtml(speakers[slot])}">${isPinned ? pinFilledSVG : pinSVG}</button><span class="cc-initial" style="color:${color}">${escapeHtml(initial)}</span></div>`;
+      const pinned = isPinned(slot, catKey(combo));
+      return `<div class="cc-cell cc-cell-named" data-pos="${pos}" title="Click to change speaker"><button class="cc-pin-btn${pinned ? ' is-pinned' : ''}" data-act="pin" data-pos="${pos}" aria-label="${pinned ? 'Unpin' : 'Pin'} ${escapeHtml(speakers[slot])}">${pinned ? pinFilledSVG : pinSVG}</button><span class="cc-initial" style="color:${color}">${escapeHtml(initial)}</span></div>`;
     }).join('');
     const chips = combo.map((slot, pos) => {
       if (slot === ACTIVE) {
@@ -5096,6 +5121,7 @@
           </div>
           <div class="cc-stage"><div class="cc-strip">${cells}</div></div>
           <div class="cc-chips">${chips}</div>
+          <div class="cc-note hidden"></div>
         </div>
       </div>`;
   }
@@ -5135,19 +5161,21 @@
       // The pin icon only appears on card hover; pinned cells show a filled pin.
       galChips.innerHTML = '';
       galGrid.innerHTML = combos.map((combo, idx) => {
+        const cat = catKey(combo);
         const cells = combo.map((slot, pos) => {
           if (slot === ACTIVE) {
             return `<div class="lst-cell lst-cell-active" data-idx="${idx}" data-pos="${pos}" title="Click to assign a speaker"><span class="lst-ico">${waveSVG}</span><span class="lst-name">Whoever's speaking</span></div>`;
           }
           const color = speakerColors[slot % speakerColors.length];
-          const isPinned = pinnedSpeakers.has(slot);
-          return `<div class="lst-cell lst-cell-named" data-idx="${idx}" data-pos="${pos}" title="Click to change speaker"><button class="lst-pin-btn${isPinned ? ' is-pinned' : ''}" data-act="pin" data-idx="${idx}" data-pos="${pos}" aria-label="${isPinned ? 'Unpin' : 'Pin'} ${escapeHtml(speakers[slot])}">${isPinned ? pinFilledSVG : pinSVG}</button><span class="lst-name" style="color:${color}">${escapeHtml(speakers[slot])}</span></div>`;
+          const pinned = isPinned(slot, cat);
+          return `<div class="lst-cell lst-cell-named" data-idx="${idx}" data-pos="${pos}" title="Click to change speaker"><button class="lst-pin-btn${pinned ? ' is-pinned' : ''}" data-act="pin" data-idx="${idx}" data-pos="${pos}" aria-label="${pinned ? 'Unpin' : 'Pin'} ${escapeHtml(speakers[slot])}">${pinned ? pinFilledSVG : pinSVG}</button><span class="lst-name" style="color:${color}">${escapeHtml(speakers[slot])}</span></div>`;
         }).join('');
         const header = layoutHeader(combo);
         return `
           <div class="lst-card" data-idx="${idx}">
             <div class="lst-head"><span>${header}</span><button class="lst-trash" data-idx="${idx}" aria-label="Delete layout">${trashSVG}</button></div>
             <div class="lst-cells">${cells}</div>
+            <div class="lst-note hidden"></div>
           </div>`;
       }).join('');
       galGrid.querySelectorAll('.lst-trash').forEach(btn =>
