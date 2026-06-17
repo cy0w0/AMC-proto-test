@@ -4935,7 +4935,14 @@
           chip.classList.add('editing');
           openSinglePopover({
             get: () => combos[ci][pos],
-            set: val => { combos[ci][pos] = val; renderCombos(); markDirty(); },
+            set: val => {
+              combos[ci][pos] = val;
+              renderCombos();
+              markDirty();
+              if (val !== ACTIVE) {
+                showPvNote(`${speakers[val]} is pinned — they'll always appear in this position across your video.`);
+              }
+            },
             activeOption: true,
           }, chip);
         };
