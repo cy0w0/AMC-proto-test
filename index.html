@@ -2691,25 +2691,10 @@
     line-height: 16px;
     font-weight: 600;
   }
-  /* Legend explaining the gallery symbols */
-  .gal-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 2px 4px 4px;
-    width: 100%;
-  }
-  .gal-leg-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    line-height: 14px;
-    color: var(--grey-400);
-  }
-  .gal-leg-ico { display: inline-flex; }
-  .gal-leg-ico svg { width: 12px; height: 12px; }
-  .gal-leg-pin { color: var(--fg-primary); }
+  /* "Whoever's speaking" appears as a chip matching the speaker name chips */
+  .gal-chip-active { color: var(--grey-400); gap: 5px; }
+  .gal-chip-active .gal-chip-ico { display: inline-flex; }
+  .gal-chip-active .gal-chip-ico svg { width: 12px; height: 12px; }
   .gal-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -4043,7 +4028,6 @@
 
               <div class="hidden" id="pvGallery" style="width:100%;">
                 <div class="gal-chips" id="galChips"></div>
-                <div class="gal-legend" id="galLegend"></div>
                 <div class="gal-grid" id="galGrid"></div>
               </div>
 
@@ -4814,7 +4798,6 @@
   const pvCarousel = document.getElementById('pvCarousel');
   const pvGallery = document.getElementById('pvGallery');
   const galChips = document.getElementById('galChips');
-  const galLegend = document.getElementById('galLegend');
   const galGrid = document.getElementById('galGrid');
   const pvTrack = document.getElementById('pvTrack');
   const pvPrev = document.getElementById('pvPrev');
@@ -4987,10 +4970,8 @@
 
     if (isGallery) {
       galChips.innerHTML = assignedSpeakerIdxs().map(i =>
-        `<span class="gal-chip" style="color:${speakerColors[i % speakerColors.length]}">${escapeHtml(speakers[i])}</span>`).join('');
-      galLegend.innerHTML =
-        `<span class="gal-leg-item"><span class="gal-leg-ico gal-leg-pin">${pinFilledSVG}</span>Pinned</span>`
-        + `<span class="gal-leg-item"><span class="gal-leg-ico gal-leg-wave">${waveSVG}</span>Whoever's speaking</span>`;
+        `<span class="gal-chip" style="color:${speakerColors[i % speakerColors.length]}">${escapeHtml(speakers[i])}</span>`).join('')
+        + `<span class="gal-chip gal-chip-active"><span class="gal-chip-ico">${waveSVG}</span>Whoever's speaking</span>`;
       galGrid.innerHTML = combos.map((combo, idx) => {
         const cells = combo.map(s =>
           s === ACTIVE
