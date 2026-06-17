@@ -2374,6 +2374,8 @@
   .cs-field:hover .cs-pin-btn { opacity: 1; }
   .cs-pin-btn.is-pinned { opacity: 1; color: var(--fg-primary); }
   .cs-pin-btn:hover { background: rgba(63, 42, 50, 0.08); }
+  /* Pinning UI hidden for now (logic kept) */
+  .lst-pin-btn, .cc-pin-btn, .cs-pin-btn { display: none !important; }
   .cs-note {
     font-size: 11px;
     line-height: 15px;
@@ -5070,10 +5072,10 @@
     orderByCat = {};
     pinnedByCat = {};
     combos = [];
-    if (ids.length >= 3) combos.push(ids.slice(0, 3)); // 3-speaker layout
-    if (ids.length >= 2) combos.push(ids.slice(0, 2)); // 2-speaker layout
-    // An "open" solo: a single slot that follows whoever's talking
-    combos.push([ACTIVE]);
+    // Each speaker category has at least one "whoever's speaking" slot.
+    if (ids.length >= 2) combos.push([ids[0], ids[1], ACTIVE]); // 3 speakers
+    if (ids.length >= 1) combos.push([ids[0], ACTIVE]);         // 2 speakers
+    combos.push([ACTIVE]);                                      // 1 speaker
     applyGlobalOrder();
     dedupeCombos();
     comboIdx = 0;
