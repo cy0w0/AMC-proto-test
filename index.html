@@ -1731,6 +1731,15 @@
     font-weight: 600;
     padding: 4px 8px 8px;
   }
+  /* Section label inside the list (e.g. "Pin a speaker here") */
+  .pop-subhead {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    padding: 8px 8px 4px;
+    border-top: 1px solid var(--border-medium);
+    margin-top: 4px;
+  }
   .pop-row {
     display: flex;
     align-items: center;
@@ -6123,7 +6132,8 @@
     popList.innerHTML = '';
     const q = popFilter.trim().toLowerCase();
 
-    // Layout slots can choose "Whoever's speaking" (= unpin / dynamic) at the top
+    // Layout slots can choose "Whoever's speaking" (= unpin / dynamic) at the top,
+    // followed by a "Pin a speaker here" section header above the people list.
     if (popSingle && popSingle.activeOption) {
       const checked = popSingle.get() === ACTIVE;
       const arow = document.createElement('div');
@@ -6131,6 +6141,10 @@
       arow.innerHTML = `<span class="pop-check">${checkMark}</span><span class="pop-name">Whoever's speaking<span class="pop-sub">follows the active speaker</span></span><span class="pop-active-ico">${waveSVG}</span>`;
       arow.addEventListener('click', e => { e.stopPropagation(); popSingle.set(ACTIVE); closePopover(); });
       popList.appendChild(arow);
+      const sub = document.createElement('div');
+      sub.className = 'pop-subhead';
+      sub.textContent = 'Pin a speaker here';
+      popList.appendChild(sub);
     }
 
     const entries = speakers
@@ -6317,6 +6331,7 @@
     popFilter = '';
     openAnchor = anchor;
     popHeader.textContent = 'Identified speakers';
+    popHeader.classList.remove('hidden');
     renderPopover();
     popover.classList.remove('hidden');
     document.querySelectorAll('.mm-select.open').forEach(s => s.classList.remove('open'));
@@ -6330,7 +6345,11 @@
     popSingle = target;
     popFilter = '';
     openAnchor = anchor;
+    // In the pin context the title moves below "Whoever's speaking" ("Pin a
+    // speaker here"), so hide the top header there.
+    const pinCtx = !!(target && target.activeOption);
     popHeader.textContent = 'Identified speakers';
+    popHeader.classList.toggle('hidden', pinCtx);
     renderPopover();
     popover.classList.remove('hidden');
     document.querySelectorAll('.mm-select.open').forEach(s => s.classList.remove('open'));
