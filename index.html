@@ -5072,8 +5072,7 @@
     combos = [];
     if (ids.length >= 3) combos.push(ids.slice(0, 3)); // 3-speaker layout
     if (ids.length >= 2) combos.push(ids.slice(0, 2)); // 2-speaker layout
-    // An "open" layout: one named speaker + a slot that follows whoever talks
-    combos.push([ids[0], ACTIVE]);
+    // An "open" solo: a single slot that follows whoever's talking
     combos.push([ACTIVE]);
     applyGlobalOrder();
     dedupeCombos();
