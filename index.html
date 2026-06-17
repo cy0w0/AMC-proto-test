@@ -4336,6 +4336,14 @@
         <input type="text" id="lpSlotCount" value="3" inputmode="numeric" aria-label="Speaker slots">
       </div>
     </div>
+    <div class="lp-row">
+      <span class="grow">Speaker placement</span>
+      <button class="icon-btn dense" id="lpSwap" aria-label="Swap speaker positions" title="Swap speaker positions">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2.5 5h9M9 2.5 11.5 5 9 7.5M13.5 11h-9M7 8.5 4.5 11 7 13.5"/>
+        </svg>
+      </button>
+    </div>
     <div class="lp-carousel">
       <div class="lp-track" id="lpTrack"></div>
     </div>
@@ -5747,6 +5755,17 @@
   });
   lpSlotCount.addEventListener('blur', () => {
     lpSlotCount.value = String(lpCombo().length);
+  });
+  // Swap speaker positions on the canvas for this scene (reverse left↔right)
+  document.getElementById('lpSwap').addEventListener('click', () => {
+    const combo = lpCombo();
+    if (!combo || combo.length < 2) return;
+    combo.reverse();
+    renderLpChips();
+    renderLayoutCarousel(true);
+    renderCanvasLayout();
+    renderTimelineScenes();
+    lpUpdateApply(true);
   });
   lpApply.addEventListener('click', () => {
     lpSavedLayout = lpLayoutIdx;
