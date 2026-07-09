@@ -704,6 +704,41 @@
     color: var(--fg-primary);
   }
 
+  /* Script pane: transcribing skeleton, shown until the transcript "finishes" */
+  .script-body,
+  .script-skeleton {
+    transition: opacity 0.3s ease;
+  }
+  .script-skeleton {
+    flex: 1;
+    overflow: hidden;
+    padding: 0 40px 24px;
+    min-height: 0;
+    display: none;
+    flex-direction: column;
+  }
+  .script-skeleton.visible { display: flex; }
+  .script-skeleton.fading { opacity: 0; }
+  .sk-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-secondary);
+  }
+  .sk-status svg { animation: btn-spin 0.9s linear infinite; flex-shrink: 0; }
+  .skel-line {
+    border-radius: 4px;
+    background: var(--skeleton);
+    animation: wave-pulse 1.4s ease-in-out infinite;
+  }
+  .skel-line.sk-title { height: 28px; width: 42%; margin-bottom: 12px; }
+  .skel-line.sk-speaker { height: 12px; width: 64px; margin: 12px 0 10px; }
+  .skel-line.sk-text { height: 14px; margin-bottom: 10px; }
+
   /* Canvas pane */
   .canvas-pane {
     flex: 1;
@@ -760,24 +795,69 @@
 
   /* Layer selection: toolbar, scope tabs, camera picker */
   .canvas-pane { position: relative; }
-  .sel-toolbar {
+  #selToolbar.sel-toolbar {
     position: absolute;
     top: 48px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 30;
+    height: 34px;
     border-radius: 8px;
     padding: 0;
+    gap: 0;
+    overflow: hidden;
   }
-  .sel-toolbar .tb-item {
+  #selToolbar.sel-toolbar .tb-item {
     height: 32px;
     border-radius: 0;
     padding: 0 8px;
     gap: 6px;
     white-space: nowrap;
+    line-height: 16px;
   }
-  .sel-toolbar .tb-divider { height: 32px; margin: 0; }
-  .sel-toolbar #selMulticamBtn.active { background: rgba(88, 63, 74, 0.1); }
+  #selToolbar.sel-toolbar .tb-item:first-child { border-radius: 7px 0 0 7px; }
+  #selToolbar.sel-toolbar .tb-item:last-child { border-radius: 0 7px 7px 0; }
+  #selToolbar.sel-toolbar .tb-divider {
+    width: 1px;
+    height: 32px;
+    margin: 0;
+    flex-shrink: 0;
+  }
+  #selToolbar.sel-toolbar #selMulticamBtn.active { background: rgba(88, 63, 74, 0.1); }
+  #selToolbar.sel-toolbar .sel-cam-chip {
+    position: relative;
+    gap: 8px;
+    padding: 0 8px 0 4px;
+    background: rgba(88, 63, 74, 0.1);
+  }
+  #selToolbar.sel-toolbar .sel-cam-avatar {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #241d20;
+  }
+  #selToolbar.sel-toolbar .sel-cam-avatar svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  #selToolbar.sel-toolbar .sel-transcribed {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background: #f0d36f;
+    border: 1px solid rgba(63, 42, 50, 0.12);
+    box-shadow: 0 1px 2px rgba(38, 23, 29, 0.16);
+    color: #3f2a32;
+  }
+  #selToolbar.sel-toolbar .tb-icon-only { width: 32px; padding: 0; }
+  #selToolbar.sel-toolbar .tb-icon-active { background: rgba(88, 63, 74, 0.1); }
   .cam-frame.layer-selected {
     outline: 2px solid #3f2a32;
     outline-offset: 1px;
@@ -1030,6 +1110,211 @@
     font-weight: 600;
     flex-shrink: 0;
   }
+  .properties-panel {
+    width: 300px;
+    padding: 8px;
+    gap: 8px;
+    background: transparent;
+  }
+  .prop-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 32px;
+    width: 100%;
+    flex-shrink: 0;
+  }
+  .prop-header-left {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+  .prop-title {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+  .prop-icon-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--fg-primary);
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .prop-icon-btn:hover { background: rgba(63, 42, 50, 0.06); }
+  .prop-module {
+    width: 100%;
+    flex-shrink: 0;
+    background: var(--surface-default);
+    border: 1px solid var(--grey-50-a);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+  }
+  .prop-module.tight { gap: 4px; }
+  .prop-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    width: 100%;
+  }
+  .prop-row.no-gap { gap: 2px; }
+  .prop-label {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    color: var(--fg-primary);
+    flex: 1;
+    min-width: 0;
+  }
+  .prop-label.secondary { color: var(--fg-secondary); }
+  .prop-text {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+    white-space: nowrap;
+  }
+  .prop-field,
+  .prop-select {
+    height: 32px;
+    min-width: 32px;
+    border: 1px solid var(--grey-50-a);
+    border-radius: 8px;
+    background: rgba(139, 111, 122, 0.09);
+    display: flex;
+    align-items: center;
+    gap: 0;
+    color: var(--fg-primary);
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    overflow: hidden;
+  }
+  .prop-select {
+    flex: 1;
+    justify-content: space-between;
+    padding: 0 8px;
+    background: var(--chrome-0-elevated);
+    cursor: pointer;
+  }
+  .prop-field {
+    flex: 1;
+    padding-right: 8px;
+  }
+  .prop-field.short {
+    flex: 0 0 auto;
+    min-width: 72px;
+    padding: 0 8px;
+  }
+  .prop-field.id-field {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .prop-field .field-icon,
+  .prop-field .field-id {
+    width: 32px;
+    height: 100%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--fg-secondary);
+  }
+  .prop-field .field-id {
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .prop-slider {
+    position: relative;
+    height: 32px;
+    flex: 1;
+    min-width: 64px;
+    display: flex;
+    align-items: center;
+  }
+  .prop-slider::before {
+    content: "";
+    width: 100%;
+    height: 2px;
+    border-radius: 1px;
+    background: linear-gradient(90deg, #86254a var(--value, 50%), rgba(88, 63, 74, 0.18) var(--value, 50%));
+  }
+  .prop-slider::after {
+    content: "";
+    position: absolute;
+    left: var(--value, 50%);
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #86254a;
+    transform: translate(-50%, -50%);
+  }
+  .prop-action {
+    width: 100%;
+    height: 32px;
+    border: 1px solid var(--border-medium);
+    border-radius: 6px;
+    background: var(--chrome-0-elevated);
+    color: var(--fg-primary);
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .prop-action:hover { background: #faf8f8; }
+  .prop-cam-select {
+    flex: 0 0 auto;
+    max-width: 104px;
+    gap: 6px;
+  }
+  .prop-cam-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #241d20;
+  }
+  .prop-cam-thumb svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .prop-link-toggle {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(185, 106, 150, 0.2);
+    color: #86254a;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .prop-spacer {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
   .sb-card {
     background: var(--chrome-0-elevated);
     border: 1px solid var(--grey-50-a);
@@ -1055,8 +1340,158 @@
     color: var(--fg-primary);
     cursor: pointer;
   }
+  .sb-row.amc-activated-pulse {
+    animation: amc-module-respond 1.15s ease-out;
+  }
   .sb-row:hover { background: rgba(63, 42, 50, 0.06); }
   .sb-row svg { flex-shrink: 0; color: var(--fg-primary); }
+  .sb-row.rich {
+    height: auto;
+    min-height: 44px;
+    align-items: flex-start;
+    padding: 6px 8px;
+  }
+  .sb-row-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .sb-row-title {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+  }
+  .sb-row-subtitle {
+    font-size: 11px;
+    line-height: 14px;
+    color: var(--fg-secondary);
+  }
+
+  /* Add chapters panel */
+  .chapters-panel {
+    width: 300px;
+    padding: 8px;
+    gap: 8px;
+    background: transparent;
+  }
+  .chapters-default {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    flex-shrink: 0;
+  }
+  .chapters-desc {
+    margin: 0 8px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-secondary);
+    flex-shrink: 0;
+  }
+  .chapters-module {
+    width: 100%;
+    flex-shrink: 0;
+    background: var(--surface-default);
+    border: 1px solid var(--grey-50-a);
+    border-radius: 8px;
+    padding: 8px;
+  }
+  .chapters-input {
+    height: 32px;
+    min-width: 44px;
+    padding: 0 8px;
+    border: 1px solid var(--grey-50-a);
+    border-radius: 8px;
+    background: rgba(139, 111, 122, 0.09);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+  }
+  .chapters-submit {
+    width: 100%;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: var(--fg-primary);
+    color: #fff8f4;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .chapters-submit:hover { background: #322129; }
+  .chapters-result {
+    display: none;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+    width: 100%;
+  }
+  .chapters-panel.submitted .chapters-default { display: none; }
+  .chapters-panel.submitted .chapters-result { display: flex; }
+  .chapters-doc {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 8px 12px;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--border-medium);
+  }
+  .chapters-doc::-webkit-scrollbar { display: none; }
+  .chapter-preview {
+    padding: 0 22px 12px 20px;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--fg-secondary);
+  }
+  .chapter-preview p {
+    margin: 0 0 14px;
+  }
+  .chapter-preview h4 {
+    margin: 16px 0 6px;
+    color: var(--fg-primary);
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+  }
+  .chapters-actions {
+    flex-shrink: 0;
+    padding: 12px 0 0;
+  }
+  .chapters-actions .sb-row {
+    height: auto;
+    min-height: 36px;
+    padding: 8px;
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .chapters-divider {
+    height: 1px;
+    background: var(--border-medium);
+    margin: 4px 0 8px;
+  }
+  .chapters-helpful {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px;
+    height: 32px;
+    color: var(--fg-secondary);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .chapters-helpful .grow { flex: 1; }
+  .chapters-asked {
+    padding: 0 8px;
+    color: var(--fg-secondary);
+    font-size: 11px;
+    line-height: 16px;
+  }
 
   /* AMC timeline (skeleton state) */
   .amc-timeline {
@@ -1120,6 +1555,84 @@
     background: var(--skeleton);
     border: 1px solid var(--grey-50-a);
     flex-shrink: 0;
+  }
+
+  /* First scene thumbnail: a real preview (not a skeleton), so hovering it can
+     surface a second entry point into automatic multicam alongside the callout. */
+  .tl-scene-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tl-scene-thumb {
+    position: relative;
+    width: 92px;
+    height: 56px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--grey-50-a);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
+  }
+  .tl-scene-thumb svg { width: 100%; height: 100%; display: block; }
+  .tl-scene-thumb:hover,
+  body.guide-mode.start-chapter-trigger.scene-rail-entry-preview .tl-scene-thumb {
+    border-color: #7f4bd8;
+    box-shadow: 0 0 0 2px rgba(127, 75, 216, 0.18), 0 4px 10px rgba(38, 23, 29, 0.14);
+    transform: translateY(-1px);
+  }
+  .tl-scene-idx,
+  .tl-scene-dur {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 10px;
+    line-height: 14px;
+    padding: 0 4px;
+    border-radius: 3px;
+  }
+  .tl-scene-idx { top: 4px; left: 4px; }
+  .tl-scene-dur { bottom: 4px; right: 4px; }
+
+  .tl-autocut-btn {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--border-medium);
+    border-radius: 100px;
+    background: var(--chrome-0-elevated);
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .tl-autocut-btn:hover { background: #faf8f8; }
+  body.start-chapter-trigger .tl-scene-group:has(.tl-scene-thumb:hover) .tl-autocut-btn { display: inline-flex; }
+  /* Zoom-single track has no automatic multicam at all — never surface this */
+  body.amc-disabled .tl-autocut-btn { display: none !important; }
+  body.guide-mode.start-chapter-trigger.scene-rail-entry-eligible #amcTimeline:not(.applied) .tl-pre-storyboard { display: block; }
+  body.guide-mode.start-chapter-trigger.scene-rail-entry-eligible #amcTimeline:not(.applied) .tl-pre-timeline { display: none; }
+  body.guide-mode.start-chapter-trigger.scene-rail-entry-preview .tl-autocut-btn { display: inline-flex !important; }
+
+  /* Pre-AMC default view: "solo-scene" flows (Room / Manually upload /
+     Zoom-multi track) default to the single-scene storyboard state; everyone
+     else (Zoom-single track) gets the plain processing skeleton. Both live
+     inside .tl-pre, so they already disappear together once AMC is applied —
+     "the storyboard entrypoint only exists pre-run." */
+  .tl-pre-storyboard { display: none; }
+  .amc-timeline.solo-scene .tl-pre-storyboard { display: block; }
+  .amc-timeline.solo-scene .tl-pre-timeline { display: none; }
+  /* Reflect the default in the (otherwise inert, pre-apply) view toggle */
+  .amc-timeline.solo-scene:not(.applied) .playback-bar .toggle-group button:last-child {
+    background: #583f4a;
+    border-radius: 4px;
+    color: #fff8f4;
   }
 
   .amc-timeline .wordbar {
@@ -1463,11 +1976,11 @@
   }
   .scrim.dismissed { opacity: 0; pointer-events: none; }
 
-  .multicam-modal {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(1);
+	  .multicam-modal {
+	    position: absolute;
+	    left: 50%;
+	    top: var(--modal-top, 50%);
+	    transform: translate(-50%, var(--modal-y, -50%)) scale(1);
     width: 452px;
     max-width: calc(100% - 48px);
     background: var(--chrome-0-elevated);
@@ -1480,15 +1993,19 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    z-index: 50;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-  }
-  .multicam-modal.dismissed,
-  .multicam-modal.away {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.97);
-    pointer-events: none;
-  }
+	    z-index: 50;
+	    transition: opacity 0.2s ease, transform 0.2s ease;
+	  }
+	  .multicam-modal.viewport-placed {
+	    position: fixed;
+	    left: var(--modal-left, 50%);
+	  }
+	  .multicam-modal.dismissed,
+	  .multicam-modal.away {
+	    opacity: 0;
+	    transform: translate(-50%, var(--modal-y, -50%)) scale(0.97);
+	    pointer-events: none;
+	  }
   .mm-header {
     height: 32px;
     display: flex;
@@ -1559,6 +2076,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  #audioModal.single-track-upload #audioThumb {
+    width: 36px;
+    height: 32px;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 2px #0093d6;
+  }
+  #audioModal.single-track-upload #audioName {
+    font-weight: 600;
   }
   .mm-select {
     display: inline-flex;
@@ -2039,6 +2565,7 @@
     overflow: hidden;
   }
   .amc-row {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -2120,6 +2647,136 @@
     background: #3f2a32;
     color: #fff8f4;
   }
+  .seg-tabs.full { width: 100%; }
+  .seg-tabs.full .seg-tab { flex: 1; text-align: center; }
+
+  .amc-row-sublabel {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-secondary);
+    margin-left: 4px;
+  }
+  .amc-hint {
+    width: 100%;
+    padding: 0 4px;
+    font-size: 11px;
+    line-height: 16px;
+    color: var(--fg-secondary);
+  }
+
+  /* Cut triggers dropdown */
+  .ct-select {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+    cursor: pointer;
+  }
+  .ct-select:hover { background: #faf8f8; }
+  .ct-select .chev { color: var(--fg-secondary); flex-shrink: 0; }
+  .ct-menu {
+    position: absolute;
+    z-index: 60;
+    top: 36px;
+    right: 0;
+    min-width: 160px;
+    background: var(--chrome-0-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    box-shadow: 0 8px 16px 0 var(--drop-shadow-medium), 0 8px 8px 0 var(--drop-shadow-soft);
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ct-menu.hidden { display: none; }
+  .ct-menu-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    padding: 6px 8px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ct-menu-item:hover { background: rgba(63, 42, 50, 0.06); }
+  .ct-menu-item .ct-check {
+    display: inline-flex;
+    width: 16px;
+    flex-shrink: 0;
+    color: var(--fg-primary);
+    visibility: hidden;
+  }
+  .ct-menu-item.selected .ct-check { visibility: visible; }
+
+  /* Cutaways info icon + tooltip */
+  .amc-info-wrap {
+    position: relative;
+    display: inline-flex;
+    color: var(--fg-secondary);
+    cursor: default;
+    outline: none;
+  }
+  .amc-tooltip {
+    position: absolute;
+    z-index: 70;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 200px;
+    padding: 6px 10px;
+    background: #3f2a32;
+    color: #fff8f4;
+    font-size: 11px;
+    line-height: 15px;
+    text-align: center;
+    border-radius: 6px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease;
+  }
+  .amc-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #3f2a32;
+  }
+  .amc-info-wrap:hover .amc-tooltip,
+  .amc-info-wrap:focus-visible .amc-tooltip { opacity: 1; }
+
+  /* Overwrite-warning row */
+  .amc-warning {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 0 4px;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.055px;
+    color: var(--fg-primary);
+  }
+  .amc-warning svg { color: #c17a2e; flex-shrink: 0; }
 
   /* Labeled number fields (Min / Max) */
   .num-field {
@@ -3321,9 +3978,492 @@
     cursor: pointer;
   }
   .pop-add:hover { background: rgba(63, 42, 50, 0.06); }
+  /* ===== Prototype source switcher (tester chrome, lives outside the app window) ===== */
+  body { flex-direction: column; gap: 14px; }
+  .app-screen { flex: 1 1 auto; min-height: 0; }
+
+  .proto-bar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #2b2624;
+    color: #d9d4d2;
+    border-radius: 100px;
+    padding: 5px 6px 5px 16px;
+    box-shadow: 0 4px 12px rgba(38, 23, 29, 0.22);
+    font-size: 12px;
+    user-select: none;
+  }
+  .proto-bar .proto-label {
+    letter-spacing: 0.02em;
+    opacity: 0.7;
+  }
+	  .proto-tabs {
+	    display: flex;
+	    gap: 2px;
+	    background: rgba(255, 255, 255, 0.08);
+	    border-radius: 100px;
+	    padding: 2px;
+	  }
+	  .proto-groups {
+	    background: rgba(255, 255, 255, 0.12);
+	  }
+  .proto-divider {
+    width: 1px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.18);
+    flex-shrink: 0;
+  }
+  .proto-mode-tabs {
+    background: rgba(255, 255, 255, 0.12);
+  }
+	  .proto-tab {
+	    border: 0;
+	    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: 16px;
+    padding: 5px 14px;
+    border-radius: 100px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.12s ease;
+  }
+  .proto-tab:hover { opacity: 1; }
+	  .proto-tab.active {
+	    background: #f4f1ef;
+	    color: #2b2624;
+	    opacity: 1;
+	    font-weight: 500;
+	  }
+	  .proto-group-tab {
+	    font-weight: 500;
+	  }
+  .proto-flow-tabs .proto-tab {
+    padding-inline: 12px;
+  }
+  body.test-mode .proto-group-tab[data-proto-group="canvas"],
+  body.test-mode .proto-group-tab[data-proto-group="more"] {
+    display: none;
+  }
+
+  /* Guide mode annotations */
+  .guide-highlight {
+    box-shadow:
+      0 0 0 2px #7f4bd8,
+      0 0 0 6px rgba(127, 75, 216, 0.18) !important;
+    border-radius: 8px;
+  }
+		  .guide-layer {
+		    position: fixed;
+		    inset: 0;
+		    z-index: 120;
+		    pointer-events: none;
+		  }
+		  .guide-note {
+		    position: absolute;
+		    z-index: 2;
+		    width: 236px;
+		    padding: 8px 10px;
+		    border-radius: 8px;
+		    background: rgba(247, 240, 255, 0.94);
+		    border: 1px dashed rgba(127, 75, 216, 0.72);
+		    color: #3f245f;
+		    box-shadow: none;
+		    font-size: 12px;
+		    line-height: 15px;
+		    backdrop-filter: none;
+		    pointer-events: auto;
+		  }
+	  .guide-connector {
+	    position: absolute;
+	    inset: 0;
+	    width: 100%;
+	    height: 100%;
+	    overflow: visible;
+	    pointer-events: none;
+	    z-index: 1;
+	  }
+  .guide-note-title {
+    font-weight: 600;
+    margin-bottom: 0;
+  }
+		  .guide-note-body {
+		    margin-top: 2px;
+		    color: rgba(63, 36, 95, 0.78);
+		  }
+	  .guide-before {
+	    margin-bottom: 8px;
+	    border-radius: 7px;
+	    border: 1px solid rgba(127, 75, 216, 0.2);
+	    background: rgba(255, 255, 255, 0.58);
+	    color: rgba(63, 36, 95, 0.82);
+	  }
+	  .guide-before summary {
+	    min-height: 24px;
+	    padding: 4px 8px;
+	    cursor: pointer;
+	    font-weight: 600;
+	    list-style-position: inside;
+	  }
+	  .guide-before-copy {
+	    padding: 0 8px 8px;
+	    color: rgba(63, 36, 95, 0.72);
+	  }
+	  .guide-note-actions {
+	    display: flex;
+	    justify-content: flex-end;
+	    gap: 6px;
+	    margin-top: 8px;
+	  }
+	  .guide-step-btn {
+	    height: 24px;
+	    border-radius: 6px;
+	    border: 1px solid rgba(127, 75, 216, 0.28);
+	    background: rgba(255, 255, 255, 0.72);
+	    color: #3f245f;
+	    font: inherit;
+	    font-size: 11px;
+	    line-height: 14px;
+	    padding: 0 8px;
+	    cursor: pointer;
+	  }
+	  .guide-step-btn.primary {
+	    background: #7f4bd8;
+	    border-color: #7f4bd8;
+	    color: #fff;
+	  }
+	  .guide-step-btn:disabled {
+	    opacity: 0.45;
+	    cursor: default;
+	  }
+
+  /* Per-source entry buttons on the empty screen */
+  .source-cta {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 32px;
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    letter-spacing: -0.1px;
+    color: inherit;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .source-cta:hover { background: rgba(63, 42, 50, 0.03); }
+  body.start-room #roomPicker { display: inline-flex; }
+  body.start-zoom #zoomPicker,
+  body.start-zoom-multi #zoomPicker { display: inline-flex; }
+  body.start-room #uploadZone,
+  body.start-zoom #uploadZone,
+  body.start-zoom-multi #uploadZone,
+  body.start-room .empty-screen .actions,
+  body.start-zoom .empty-screen .actions,
+  body.start-zoom-multi .empty-screen .actions,
+  body.start-room .empty-screen .hint,
+  body.start-zoom .empty-screen .hint,
+  body.start-zoom-multi .empty-screen .hint { display: none; }
+
+  .cam-picker.single-track-picker {
+    width: 224px;
+    padding: 8px;
+    gap: 8px;
+    box-shadow:
+      0 8px 16px 0 var(--drop-shadow-medium),
+      0 8px 8px 0 var(--drop-shadow-soft);
+  }
+  .cam-picker.single-track-picker .mt-header {
+    height: 24px;
+    padding: 0 8px;
+  }
+  .cam-picker.single-track-picker .mt-header .icon-btn { display: none; }
+  .cam-picker.single-track-picker .mt-title {
+    font-weight: 600;
+    padding-left: 0;
+  }
+  .cam-picker.single-track-picker .mt-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .cam-picker.single-track-picker .mt-tile,
+  .cam-picker.single-track-picker .mt-new-camera {
+    height: 118px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .cam-picker.single-track-picker .mt-img {
+    height: 92px;
+    border-radius: 6px 6px 0 0;
+    border: 2px solid transparent;
+    outline: none;
+  }
+  .cam-picker.single-track-picker .mt-tile.selected .mt-img {
+    border-color: #0093d6;
+    outline: none;
+  }
+  .cam-picker.single-track-picker .mt-name {
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--chrome-0-elevated);
+  }
+  .cam-picker.single-track-picker .mt-new-camera {
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(139, 111, 122, 0.09);
+    color: var(--fg-secondary);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .cam-picker.single-track-picker .mt-new-camera svg { color: var(--fg-primary); }
+  .cam-picker.single-track-picker #mtApplyAll { display: none; }
+
+  .audio-warning {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 16px 8px;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0.055px;
+    color: var(--fg-primary);
+  }
+  .audio-warning svg {
+    color: #c17a2e;
+    flex-shrink: 0;
+  }
+
+  .single-track-toast {
+    position: absolute;
+    z-index: 65;
+    left: 50%;
+    bottom: 22px;
+    transform: translate(-50%, 12px);
+    width: min(520px, calc(100% - 48px));
+    min-height: 58px;
+    background: var(--chrome-0-elevated);
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    box-shadow:
+      0 8px 16px 0 var(--drop-shadow-medium),
+      0 8px 8px 0 var(--drop-shadow-soft);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px 10px 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .single-track-toast.visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    pointer-events: auto;
+  }
+  .single-track-toast .stt-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #2e9e44;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .single-track-toast .stt-copy {
+    flex: 1;
+    min-width: 0;
+  }
+  .single-track-toast .stt-title {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+  .single-track-toast .stt-desc {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-secondary);
+  }
+  .single-track-toast .stt-cta {
+    height: 32px;
+    border: 1px solid var(--border-medium);
+    border-radius: 6px;
+    background: var(--chrome-0-elevated);
+    color: var(--fg-primary);
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    padding: 0 10px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+	  .single-track-toast .stt-cta:hover { background: #faf8f8; }
+	  .single-track-toast .stt-close {
+	    width: 28px;
+	    height: 28px;
+	  }
+	  .single-track-toast:not(.amc-suggested) .stt-desc,
+	  .single-track-toast:not(.amc-suggested) .stt-cta {
+	    display: none;
+	  }
+
+  /* Zoom-single track: AMC is deactivated in the AI tools sidebar */
+  body.amc-disabled #rowAutoMulticam {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  @keyframes amc-module-respond {
+    0% {
+      background: rgba(127, 75, 216, 0);
+      box-shadow: 0 0 0 0 rgba(127, 75, 216, 0);
+      transform: scale(1);
+    }
+    18% {
+      background: rgba(127, 75, 216, 0.12);
+      box-shadow: 0 0 0 2px rgba(127, 75, 216, 0.22);
+      transform: scale(1.015);
+    }
+    100% {
+      background: rgba(127, 75, 216, 0);
+      box-shadow: 0 0 0 8px rgba(127, 75, 216, 0);
+      transform: scale(1);
+    }
+  }
+
+  /* Track-type tag on intercept rows (Gallery / Active speakers) */
+  .mm-row .mm-tag {
+    flex-shrink: 0;
+    margin-left: 6px;
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 500;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(63, 42, 50, 0.08);
+    color: var(--grey-400);
+    white-space: nowrap;
+  }
+
+  .sp-badge {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .sp-badge.room { background: #583f4a; }
+  .sp-badge.zoom { background: #4087fc; }
+
+  /* Import dialog (empty screen): staged progress rows */
+  .mm-desc strong { font-weight: 600; }
+  .ri-link {
+    display: block;
+    padding: 0 16px 4px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    color: #86254a;
+    text-decoration: none;
+  }
+  .ri-link:hover { text-decoration: underline; }
+  .ri-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 16px 12px;
+  }
+  .ri-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 24px;
+  }
+  .ri-step .ri-progress {
+    width: 20px; height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .ri-step .ri-label {
+    flex: 1;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+  }
+  .ri-step .ri-pct {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--grey-400);
+  }
+
+  /* Room-style intercept: X close, "Edit by myself" + "Run automatic multi-cam" footer */
+  .multicam-modal .mm-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    display: none;
+  }
+  .multicam-modal.room-style .mm-close { display: inline-flex; }
+  .multicam-modal .mm-footer .room-alt { display: none; }
+  .multicam-modal.room-style #mmKeep,
+  .multicam-modal.room-style #mmCreateSplit { display: none; }
+  .multicam-modal.room-style .mm-footer button.room-alt { display: inline-flex; }
+
+  /* Manual-style intercept: X close, plain "combine" button without icon or caret */
+  .multicam-modal.manual-style .mm-close { display: inline-flex; }
+  .multicam-modal.manual-style #mmCreateCaret { display: none; }
+  .multicam-modal.manual-style #mmCreate svg { display: none; }
+  .multicam-modal.manual-style .mm-split .mm-create { border-radius: 6px; }
 </style>
 </head>
-<body>
+<body class="test-mode">
+
+<!-- ════════════════ Prototype chrome · start-point switcher (not part of the product UI) ════════════════ -->
+<nav class="proto-bar" aria-label="Prototype start point">
+  <span class="proto-label">Mode</span>
+  <div class="proto-tabs proto-mode-tabs" role="tablist" aria-label="Prototype mode">
+    <button class="proto-tab proto-mode-tab active" role="tab" data-proto-mode="test" aria-selected="true">Test</button>
+    <button class="proto-tab proto-mode-tab" role="tab" data-proto-mode="guide" aria-selected="false">With guide</button>
+  </div>
+  <span class="proto-divider" aria-hidden="true"></span>
+  <span class="proto-label">Start from</span>
+  <div class="proto-tabs proto-groups" role="tablist" aria-label="Prototype group">
+    <button class="proto-tab proto-group-tab active" role="tab" data-proto-group="amc" aria-selected="true">AMC proto</button>
+    <button class="proto-tab proto-group-tab" role="tab" data-proto-group="canvas" aria-selected="false">Canvas toolbar</button>
+    <button class="proto-tab proto-group-tab" role="tab" data-proto-group="more" aria-selected="false">More proposals</button>
+  </div>
+  <span class="proto-divider proto-flow-divider" aria-hidden="true"></span>
+  <div class="proto-tabs proto-flow-tabs" role="tablist" aria-label="Prototype flow">
+    <button class="proto-tab" role="tab" data-proto-group="amc" data-source="room" aria-selected="false">Import from Room</button>
+    <button class="proto-tab active" role="tab" data-proto-group="amc" data-source="manual" aria-selected="true">Manually upload</button>
+    <button class="proto-tab" role="tab" data-proto-group="amc" data-source="zoom" aria-selected="false">Import from Zoom-single track</button>
+    <button class="proto-tab" role="tab" data-proto-group="amc" data-source="zoomMulti" aria-selected="false">Import from Zoom-multi track</button>
+    <button class="proto-tab hidden" role="tab" data-proto-group="canvas" data-source="singleTrack" aria-selected="false">Single track</button>
+    <button class="proto-tab hidden" role="tab" data-proto-group="more" data-source="chapterTrigger" aria-selected="false">Contextual entrypoints</button>
+  </div>
+</nav>
 
 <!-- ════════════════ SCREEN 1 · Empty project ════════════════ -->
 <div class="app-screen" id="screenEmpty">
@@ -3417,6 +4557,28 @@
             </div>
           </div>
 
+          <!-- Room entry (shown when the prototype starts from "Import from Room") -->
+          <button class="source-cta" id="roomPicker">
+            <span class="sp-badge room" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1.5" y="3.5" width="9" height="9" rx="1.5"/>
+                <path d="M10.5 7l4-2.5v7L10.5 9V7Z"/>
+              </svg>
+            </span>
+            Import from Room
+          </button>
+
+          <!-- Zoom entry (shown when the prototype starts from "Import from Zoom") -->
+          <button class="source-cta" id="zoomPicker">
+            <span class="sp-badge zoom" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M2 5.5A1.5 1.5 0 0 1 3.5 4H9a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 9 12H3.5A1.5 1.5 0 0 1 2 10.5v-5Z"/>
+                <path d="M11.5 7l2.5-1.8v5.6L11.5 9V7Z"/>
+              </svg>
+            </span>
+            Import from Zoom
+          </button>
+
           <div class="actions">
             <button class="btn-secondary">
               <span class="facepile" aria-hidden="true"><span class="f1"></span><span class="f2"></span><span class="f3"></span></span>
@@ -3488,7 +4650,17 @@
         </div>
       </div>
 
-      <!-- Playback bar -->
+      <!-- Import dialog (per-source start: Import from Room / Zoom) -->
+      <div class="scrim dismissed" id="roomScrim"></div>
+	      <div class="multicam-modal dismissed" id="roomImportModal" role="dialog" aria-modal="true" aria-labelledby="riTitle">
+	        <div class="mm-header" id="riTitle">Importing your files from Room</div>
+	        <p class="mm-desc" id="riDesc">A <strong>sequence</strong> will be created to <strong>allow</strong> you to <strong>switch camera angles</strong> while editing, which is helpful for <strong>multiple speakers recording</strong>.</p>
+	        <a class="ri-link hidden" id="riLink" href="#">Update Zoom recording settings to get multiple camera angles&nbsp;&#8599;</a>
+	        <div class="ri-steps" id="riSteps"></div>
+	      </div>
+	      <div class="guide-layer" id="emptyGuideLayer" aria-hidden="true"></div>
+
+	      <!-- Playback bar -->
       <div class="timeline">
         <div class="playback-bar">
           <div class="pb-left">
@@ -3714,7 +4886,24 @@
               Write
             </button>
           </div>
-          <div class="script-body">
+          <div class="script-skeleton" id="scriptSkeleton">
+            <div class="sk-status">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6" stroke="var(--border-medium)" stroke-width="2"/>
+                <path d="M8 2a6 6 0 0 1 6 6" stroke="var(--fg-secondary)" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Transcribing…
+            </div>
+            <div class="skel-line sk-title"></div>
+            <div class="skel-line sk-speaker"></div>
+            <div class="skel-line sk-text" style="width:96%"></div>
+            <div class="skel-line sk-text" style="width:88%"></div>
+            <div class="skel-line sk-text" style="width:70%"></div>
+            <div class="skel-line sk-speaker"></div>
+            <div class="skel-line sk-text" style="width:92%"></div>
+            <div class="skel-line sk-text" style="width:60%"></div>
+          </div>
+          <div class="script-body" id="scriptBody" style="display:none;">
             <h1 class="script-title">Untitled</h1>
             <div class="speaker-label s1">Christina</div>
             <p class="script-paragraph">Let's say I'm a biology student working on a research paper for school. As I work, I incorporate research from websites like ScienceDirect, Frontiers, and PLOS ONE to support my ideas. It's crucial that I cite these resources to maintain the integrity of my work.</p>
@@ -3736,35 +4925,40 @@
           </div>
           <!-- Layer selection toolbar -->
           <div class="canvas-toolbar sel-toolbar hidden" id="selToolbar">
+            <button class="tb-item sel-cam-chip" id="selMulticamBtn" aria-label="Switch cameras" aria-haspopup="menu" aria-expanded="false">
+              <span class="sel-cam-avatar" id="selCamAvatar" aria-hidden="true"></span>
+              <span id="selCamLabel">Cam 1</span>
+              <svg class="sel-transcribed" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M3.2 3.2h2.1v2.2c0 1.7-.8 2.8-2.4 3.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 3.2h2.1v2.2c0 1.7-.8 2.8-2.4 3.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <span class="tb-divider"></span>
             <button class="tb-item">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2.5 11 6l3.5 1.5L11 9l-1.5 3.5L8 9 4.5 7.5 8 6l1.5-3.5Z"/><path d="M3.5 10.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"/></svg>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2.5 11 6l3.5 1.5L11 9l-1.5 3.5L8 9 4.5 7.5 8 6l1.5-3.5Z"/><path d="M3.5 10.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"/></svg>
               Edit with AI
             </button>
             <span class="tb-divider"></span>
             <button class="tb-item">Transform</button>
             <span class="tb-divider"></span>
-            <button class="tb-item" aria-label="Shapes">
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><circle cx="5.5" cy="5.5" r="3.5"/><rect x="7" y="7" width="7" height="7" rx="1"/></svg>
+            <button class="tb-item tb-icon-only" aria-label="Shapes">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><circle cx="5.5" cy="5.5" r="3.5"/><rect x="7" y="7" width="7" height="7" rx="1"/></svg>
             </button>
             <span class="tb-divider"></span>
-            <button class="tb-item" aria-label="Swap">
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 5.5a5 5 0 0 0-9-1.5"/><path d="M3.5 2.5v2.5H6"/><path d="M3.5 10.5a5 5 0 0 0 9 1.5"/><path d="M12.5 13.5V11H10"/></svg>
+            <button class="tb-item tb-icon-only" aria-label="Swap">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 5.5a5 5 0 0 0-9-1.5"/><path d="M3.5 2.5v2.5H6"/><path d="M3.5 10.5a5 5 0 0 0 9 1.5"/><path d="M12.5 13.5V11H10"/></svg>
             </button>
             <span class="tb-divider"></span>
-            <button class="tb-item" aria-label="Crop">
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 1.5v10h10"/><path d="M1.5 4.5h10v10"/></svg>
+            <button class="tb-item tb-icon-only" aria-label="Crop">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 1.5v10h10"/><path d="M1.5 4.5h10v10"/></svg>
             </button>
             <span class="tb-divider"></span>
             <button class="tb-item">Effects</button>
             <span class="tb-divider"></span>
             <button class="tb-item">Animation</button>
             <span class="tb-divider"></span>
-            <button class="tb-item" id="selMulticamBtn" aria-label="Switch cameras">
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><rect x="1.5" y="2.5" width="6" height="5" rx="1"/><rect x="8.5" y="2.5" width="6" height="5" rx="1"/><rect x="1.5" y="8.5" width="6" height="5" rx="1"/><rect x="8.5" y="8.5" width="6" height="5" rx="1"/></svg>
-            </button>
-            <span class="tb-divider"></span>
-            <button class="tb-item" aria-label="Sidebar">
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M10 2.5v11"/></svg>
+            <button class="tb-item tb-icon-only tb-icon-active" aria-label="Sidebar">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M10 2.5v11"/></svg>
             </button>
           </div>
           <div class="cam-picker hidden" id="camPicker">
@@ -3898,30 +5092,63 @@
 
         <!-- Pre-AMC: processing skeleton -->
         <div class="tl-pre">
-          <div class="timestamps">
-            <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
-            <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
-            <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
-            <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
-            <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+
+          <!-- One scene, multi-speaker track (Room / Manually upload / Zoom-multi
+               track): storyboard view by default, one real scene, hover reveals
+               the second "Autocut scenes" entry point. Gone the moment AMC runs,
+               same as tl-pre-timeline below (both live inside .tl-pre). -->
+          <div class="tl-pre-storyboard">
+            <div class="scenes">
+              <button class="add-scene" aria-label="Add scene">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+                  <path d="M8 3v10M3 8h10"/>
+                </svg>
+              </button>
+              <div class="tl-scene-group">
+                <div class="tl-scene-thumb" data-cam="0">
+                  <span class="tl-scene-idx">1</span>
+                  <span class="tl-scene-dur">30s</span>
+                </div>
+                <!-- Second contextual entry point for the AMC panel: in case the
+                     sidebar callout gets missed, hovering the scene surfaces this too. -->
+                <button class="tl-autocut-btn" id="tlAutocutBtn">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <path d="M8 1.8 9.6 6.4 14.2 8 9.6 9.6 8 14.2 6.4 9.6 1.8 8 6.4 6.4 8 1.8Z"/>
+                    <path d="M12.8 1.6l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5.5-1.4Z"/>
+                  </svg>
+                  Autocut scenes
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="scenes">
-            <button class="add-scene" aria-label="Add scene">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
-                <path d="M8 3v10M3 8h10"/>
-              </svg>
-            </button>
-            <span class="scene-thumb"></span>
-            <span class="scene-thumb"></span>
-          </div>
-          <div class="wordbar">
-            <span class="skel" style="width:190px;height:10px;"></span>
-            <span class="skel" style="width:82px;height:10px;"></span>
-            <span class="skel" style="width:134px;height:10px;"></span>
-            <span class="skel" style="width:134px;height:10px;"></span>
-            <span class="skel" style="width:134px;height:10px;"></span>
-            <span class="skel" style="width:134px;height:10px;"></span>
-            <span class="skel" style="width:134px;height:10px;"></span>
+
+          <!-- Zoom-single track (no automatic multicam): plain processing skeleton -->
+          <div class="tl-pre-timeline">
+            <div class="timestamps">
+              <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+              <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+              <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+              <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+              <div class="timestamp"><span class="tick"></span><span class="skel soft" style="width:140px;height:8px;"></span></div>
+            </div>
+            <div class="scenes">
+              <button class="add-scene" aria-label="Add scene">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+                  <path d="M8 3v10M3 8h10"/>
+                </svg>
+              </button>
+              <span class="scene-thumb"></span>
+              <span class="scene-thumb"></span>
+            </div>
+            <div class="wordbar">
+              <span class="skel" style="width:190px;height:10px;"></span>
+              <span class="skel" style="width:82px;height:10px;"></span>
+              <span class="skel" style="width:134px;height:10px;"></span>
+              <span class="skel" style="width:134px;height:10px;"></span>
+              <span class="skel" style="width:134px;height:10px;"></span>
+              <span class="skel" style="width:134px;height:10px;"></span>
+              <span class="skel" style="width:134px;height:10px;"></span>
+            </div>
           </div>
         </div>
 
@@ -4019,7 +5246,7 @@
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h4M10 8h4M6 5.5 3.5 8 6 10.5M10 5.5 12.5 8 10 10.5"/></svg>
           Shorten word gaps
         </div>
-        <div class="sb-row">
+        <div class="sb-row" id="rowAddChapters">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2.5h8v11l-4-2.7-4 2.7v-11Z"/></svg>
           Add chapters
         </div>
@@ -4082,6 +5309,72 @@
       </div>
     </aside>
 
+    <!-- Add chapters panel -->
+    <aside class="ai-sidebar chapters-panel hidden" id="addChaptersPanel">
+      <div class="sb-header">
+        <button class="icon-btn" id="chaptersBack" aria-label="Back">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 8H3M7 3.5 2.5 8 7 12.5"/>
+          </svg>
+        </button>
+        Add chapters
+      </div>
+
+      <div class="chapters-default">
+        <p class="chapters-desc">Divide into chapters &amp; add markers</p>
+        <div class="chapters-module">
+          <div class="prop-row no-gap">
+            <span class="prop-label">Number</span>
+            <span class="chapters-input">Auto</span>
+          </div>
+        </div>
+        <button class="chapters-submit" id="chaptersSubmit">Submit</button>
+      </div>
+
+      <div class="chapters-result">
+        <div class="chapters-doc">
+          <div class="chapter-preview">
+            <p>the current stuff from my work to see whether it's working on that tool. I wouldn't just, you know, build a project by myself. Because right now, like building software is really cheap, you know?...</p>
+            <h4>AI Infused Design Workflow</h4>
+            <p>Mm, in terms of my own working, like workflow, I would say it's quite AI-infused....</p>
+            <h4>Parallel Agents for Variations</h4>
+            <p>And sometimes Cursor is getting really slow. Like, I use Orchest 4.6, like the smartest one, and it's getting really slow....</p>
+            <h4>Design Systems and Reviews</h4>
+            <p>So, so we have a whole, uh, fully developed design system which is, um, integrated in, uh, the cursor environment that I am vibe coding at. And also in Figma, it's, you know, each component is kind of connected with code directly. So, uh, I will work from there and just prompt it, like prompting, like strictly following described design system, stuff like that....</p>
+            <h4>Figma vs Prompting Final Mile</h4>
+            <p>So, um, this stage is more divergent and after the divergent space is like converge, right?...</p>
+          </div>
+        </div>
+        <div class="chapters-actions">
+          <div class="sb-row">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 2.8C8 3 5.3 5.7 4.8 10.5"/><path d="M3.5 13.2c1.4-1.4 3.4-2 6-1.7"/><path d="M3.5 13.2c.6-3 2.4-5.2 5.4-6.7"/></svg>
+            Add to script
+          </div>
+          <div class="sb-row">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="9" r="4.5"/><path d="M8 4.5V2.5M6.5 2.5h3M8 9V6.8"/></svg>
+            Add timestamps
+          </div>
+          <div class="sb-row rich" id="rowChaptersToAmc">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M8 1.8 9.6 6.4 14.2 8 9.6 9.6 8 14.2 6.4 9.6 1.8 8 6.4 6.4 8 1.8Z"/>
+              <path d="M12.8 1.6l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5.5-1.4Z"/>
+            </svg>
+            <span class="sb-row-copy">
+              <span class="sb-row-title">Cut to active speakers at chapters</span>
+            </span>
+          </div>
+          <div class="chapters-divider"></div>
+          <div class="chapters-helpful">
+            <span class="grow">Was Underlord helpful?</span>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 7.2 7.5 2.5c.3-.6 1.3-.4 1.3.3v3h3.5c.8 0 1.4.7 1.2 1.5l-.9 4.5c-.1.7-.7 1.2-1.4 1.2H5.5V7.2Z"/><path d="M2.5 7.5h3v5.5h-3z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 8.8 8.5 13.5c-.3.6-1.3.4-1.3-.3v-3H3.7c-.8 0-1.4-.7-1.2-1.5l.9-4.5C3.5 3.5 4.1 3 4.8 3h5.7v5.8Z"/><path d="M13.5 8.5h-3V3h3z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+          </div>
+          <div class="chapters-asked">You asked for <em>Add chapters</em></div>
+        </div>
+      </div>
+    </aside>
+
     <!-- Automatic multicam panel (settings + preview pages) -->
     <aside class="ai-sidebar hidden" id="amcPanel">
       <div class="amc-header">
@@ -4100,21 +5393,61 @@
           <!-- Page 1 · Settings -->
           <div class="amc-page" id="settingsPage">
             <div class="amc-module">
-              <div class="amc-row"><span class="amc-row-header">Edit style</span></div>
-              <div class="amc-row">
-                <span class="amc-row-label grow">Show only active speakers</span>
-                <button class="switch" id="activeOnlySwitch" role="switch" aria-checked="false" aria-label="Show only active speakers"></button>
+              <div class="amc-row"><span class="amc-row-header">Cut frequency</span></div>
+              <div class="seg-tabs full" role="tablist" id="cutFreqTabs">
+                <button class="seg-tab selected" role="tab" data-preset="chill">Chill</button>
+                <button class="seg-tab" role="tab" data-preset="casual">Casual</button>
+                <button class="seg-tab" role="tab" data-preset="hype">Hype</button>
+                <button class="seg-tab hidden" role="tab" id="cutFreqCustomTab" data-preset="custom">Custom</button>
               </div>
               <div class="amc-row">
-                <span class="amc-row-label grow">Scene count</span>
-                <div class="seg-tabs" role="tablist">
-                  <button class="seg-tab" role="tab">Total</button>
-                  <button class="seg-tab selected" role="tab">Per min</button>
+                <span class="amc-row-label">Scene count</span>
+                <span class="amc-row-sublabel">(for your video)</span>
+              </div>
+              <div class="amc-row">
+                <div class="num-field"><span class="nf-label">Min</span><input type="text" value="5" aria-label="Minimum scenes" id="cutFreqMin"></div>
+                <div class="num-field"><span class="nf-label">Max</span><input type="text" value="10" aria-label="Maximum scenes" id="cutFreqMax"></div>
+              </div>
+              <p class="amc-hint">≈ 2–4 scenes per minute</p>
+            </div>
+
+            <div class="amc-module">
+              <div class="amc-row"><span class="amc-row-header">Cut style</span></div>
+              <div class="amc-row">
+                <span class="amc-row-header grow">Cut triggers</span>
+                <button class="ct-select" id="cutTriggersSelect" aria-haspopup="listbox" aria-expanded="false">
+                  <span id="cutTriggersLabel">Active speakers change</span>
+                  <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+                </button>
+                <div class="ct-menu hidden" id="cutTriggersMenu" role="listbox">
+                  <button class="ct-menu-item selected" role="option"><span class="ct-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2 5 8.7 9.5 3.5"/></svg></span>Active speakers change</button>
+                  <button class="ct-menu-item" role="option"><span class="ct-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2 5 8.7 9.5 3.5"/></svg></span>At jump cut</button>
+                  <button class="ct-menu-item" role="option"><span class="ct-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2 5 8.7 9.5 3.5"/></svg></span>Topics change</button>
+                  <button class="ct-menu-item" role="option"><span class="ct-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2 5 8.7 9.5 3.5"/></svg></span>At chapters</button>
+                  <button class="ct-menu-item" role="option"><span class="ct-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2 5 8.7 9.5 3.5"/></svg></span>At markers</button>
                 </div>
               </div>
               <div class="amc-row">
-                <div class="num-field"><span class="nf-label">Min</span><input type="text" value="2" aria-label="Minimum scenes"></div>
-                <div class="num-field"><span class="nf-label">Max</span><input type="text" value="10" aria-label="Maximum scenes"></div>
+                <span class="amc-row-label grow">Show only active speakers</span>
+                <button class="switch on" id="activeOnlySwitch" role="switch" aria-checked="true" aria-label="Show only active speakers"></button>
+              </div>
+              <div class="amc-row hidden" id="cutawaysRow">
+                <span class="amc-row-header grow" style="display:flex;align-items:center;gap:6px;">
+                  Cutaways
+                  <span class="amc-info-wrap" tabindex="0">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.2v4M8 5.3v.05"/></svg>
+                    <span class="amc-tooltip">Cut to non-active speakers to show their reactions</span>
+                  </span>
+                </span>
+                <button class="ct-select" id="cutawaysSelect" aria-haspopup="listbox" aria-expanded="false">
+                  <span id="cutawaysLabel">Sparse</span>
+                  <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+                </button>
+                <div class="ct-menu hidden" id="cutawaysMenu" role="listbox">
+                  <button class="ct-menu-item selected" role="option"><span class="ct-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2 5 8.7 9.5 3.5"/></svg></span>Sparse</button>
+                  <button class="ct-menu-item" role="option"><span class="ct-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2 5 8.7 9.5 3.5"/></svg></span>Occasional</button>
+                  <button class="ct-menu-item" role="option"><span class="ct-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2 5 8.7 9.5 3.5"/></svg></span>Frequent</button>
+                </div>
               </div>
             </div>
 
@@ -4127,6 +5460,7 @@
               </div>
               <div class="amc-collapsible">
                 <div id="camSetupRows" style="display:flex;flex-direction:column;gap:8px;width:100%;"></div>
+                <p class="amc-hint hidden" id="camSetupHint">Camera tracks match the Zoom intercept; speakers are prefilled for review.</p>
                 <button class="amc-btn">Edit cameras in sequence editor</button>
               </div>
             </div>
@@ -4149,7 +5483,11 @@
               </div>
             </div>
 
-            <button class="amc-btn-primary" id="checkPreviewBtn">Check preview</button>
+            <button class="amc-btn-primary" id="checkPreviewBtn">Run</button>
+            <div class="amc-warning">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.8 14.8 13.5H1.2L8 1.8Z"/><path d="M8 6.5v3.2"/><circle cx="8" cy="11.5" r="0.6" fill="currentColor" stroke="none"/></svg>
+              Existing scenes will be overwritten.
+            </div>
           </div>
 
           <!-- Page 2 · Preview -->
@@ -4244,6 +5582,206 @@
       </div>
     </aside>
 
+    <!-- Layer properties panel (shown when a canvas layer is selected) -->
+    <aside class="ai-sidebar properties-panel hidden" id="layerPropertiesPanel">
+      <div class="prop-header">
+        <div class="prop-header-left">
+          <button class="prop-icon-btn" aria-label="Back">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 8H3M7 3.5 2.5 8 7 12.5"/>
+            </svg>
+          </button>
+          <span class="prop-title">Script</span>
+        </div>
+        <button class="prop-icon-btn" aria-label="Volume">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2.5 9.5V6.5h2.4L8 3.8v8.4L4.9 9.5H2.5Z"/>
+            <path d="M10.5 5.5a3.5 3.5 0 0 1 0 5"/>
+            <path d="M12.5 3.8a6 6 0 0 1 0 8.4"/>
+          </svg>
+        </button>
+        <button class="prop-icon-btn" aria-label="Script style">S</button>
+        <button class="prop-icon-btn" aria-label="Lock">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3.5" y="7" width="9" height="7" rx="1.5"/>
+            <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/>
+          </svg>
+        </button>
+        <button class="prop-icon-btn" aria-label="More">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <circle cx="3.5" cy="8" r="1"/><circle cx="8" cy="8" r="1"/><circle cx="12.5" cy="8" r="1"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="prop-module">
+        <div class="prop-row">
+          <span class="prop-label">Visual role</span>
+          <button class="prop-select" aria-label="Visual role">
+            <span class="prop-text">Screen recording</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="prop-module tight">
+        <div class="prop-row"><span class="prop-label">Duration</span></div>
+        <div class="prop-row">
+          <div class="prop-field">
+            <span class="field-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9.5a5 5 0 1 1 10 0"/><path d="M8 9.5l2.8-2.8"/><path d="M5 12.5h6"/>
+              </svg>
+            </span>
+            <span class="prop-text">1x</span>
+          </div>
+          <div class="prop-field">
+            <span class="field-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="8" cy="8.5" r="5.5"/><path d="M8 5.5v3.2l2 1.2"/><path d="M6.5 2h3"/>
+              </svg>
+            </span>
+            <span class="prop-text">0:32.2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="prop-module tight">
+        <div class="prop-row">
+          <span class="prop-label">Audio</span>
+          <button class="prop-icon-btn" aria-label="More audio options">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <circle cx="3.5" cy="8" r="1"/><circle cx="8" cy="8" r="1"/><circle cx="12.5" cy="8" r="1"/>
+            </svg>
+          </button>
+        </div>
+        <div class="prop-row">
+          <div class="prop-field short"><span class="prop-text">-22.8dB</span></div>
+          <span class="prop-slider" style="--value:50%;" aria-hidden="true"></span>
+          <button class="prop-icon-btn" aria-label="Audio volume">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2.5 9.5V6.5h2.4L8 3.8v8.4L4.9 9.5H2.5Z"/><path d="M10.5 5.5a3.5 3.5 0 0 1 0 5"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="prop-module tight">
+        <div class="prop-row no-gap">
+          <span class="prop-label">Audio effects</span>
+          <button class="prop-icon-btn" aria-label="Add audio effect">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+          </button>
+        </div>
+        <div class="prop-row">
+          <span class="prop-text" style="flex:1;">Studio Sound</span>
+          <button class="prop-icon-btn" aria-label="Studio Sound settings">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+              <path d="M3 5.5h6M11 5.5h2M3 10.5h2M7 10.5h6"/>
+              <circle cx="10" cy="5.5" r="1.2"/><circle cx="6" cy="10.5" r="1.2"/>
+            </svg>
+          </button>
+          <button class="switch on" role="switch" aria-checked="true" aria-label="Studio Sound"></button>
+        </div>
+      </div>
+
+      <div class="prop-module tight">
+        <div class="prop-row"><span class="prop-label">Opacity</span></div>
+        <div class="prop-row">
+          <div class="prop-field short" style="min-width:48px;"><span class="prop-text">100%</span></div>
+          <span class="prop-slider" style="--value:100%;" aria-hidden="true"></span>
+          <button class="prop-icon-btn" aria-label="Visibility">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z"/>
+              <circle cx="8" cy="8" r="2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="prop-module tight">
+        <div class="prop-row"><span class="prop-label">Size &amp; position</span></div>
+        <div class="prop-row">
+          <div class="prop-field id-field"><span class="field-id">X</span><span class="prop-text">0</span></div>
+          <div class="prop-field id-field"><span class="field-id">Y</span><span class="prop-text">0</span></div>
+          <span class="prop-spacer"></span>
+        </div>
+        <div class="prop-row">
+          <div class="prop-field id-field"><span class="field-id">W</span><span class="prop-text">1920</span></div>
+          <div class="prop-field id-field"><span class="field-id">H</span><span class="prop-text">1080</span></div>
+          <button class="prop-link-toggle" aria-label="Lock aspect ratio">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6.5 5.5H5a2.5 2.5 0 0 0 0 5h1.5M9.5 5.5H11a2.5 2.5 0 0 1 0 5H9.5M6.5 8h3"/>
+            </svg>
+          </button>
+        </div>
+        <div class="prop-row">
+          <div class="prop-field id-field">
+            <span class="field-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8l3-3"/><path d="M5 11a4.2 4.2 0 0 1 0-6"/></svg>
+            </span>
+            <span class="prop-text">0</span>
+          </div>
+          <div class="prop-field id-field">
+            <span class="field-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H7a3 3 0 0 0-3 3v5"/><path d="M9 4h3v3"/></svg>
+            </span>
+            <span class="prop-text">0</span>
+          </div>
+          <button class="prop-icon-btn" aria-label="Fit">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 2.5H3.5a1 1 0 0 0-1 1V5M11 2.5h1.5a1 1 0 0 1 1 1V5M5 13.5H3.5a1 1 0 0 1-1-1V11M11 13.5h1.5a1 1 0 0 0 1-1V11"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="prop-module tight">
+        <div class="prop-row no-gap">
+          <span class="prop-label secondary">Border</span>
+          <button class="prop-icon-btn" aria-label="Add border">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="prop-module">
+        <div class="prop-row">
+          <span class="prop-label">Multicam</span>
+          <button class="prop-select prop-cam-select" aria-label="Selected camera">
+            <span class="prop-cam-thumb" id="propCamThumb" aria-hidden="true"></span>
+            <span class="prop-text" id="propCamLabel">Cam 1</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+          </button>
+        </div>
+        <button class="prop-action">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9.5 2.5 11 6l3.5 1.5L11 9l-1.5 3.5L8 9 4.5 7.5 8 6l1.5-3.5Z"/>
+            <path d="M3.5 10.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"/>
+          </svg>
+          Run automatic multicam
+        </button>
+      </div>
+
+      <div class="prop-module tight">
+        <div class="prop-row no-gap">
+          <span class="prop-label secondary">Effects</span>
+          <button class="prop-icon-btn" aria-label="Add effect">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="prop-module tight">
+        <div class="prop-row no-gap">
+          <span class="prop-label secondary">Animation</span>
+          <button class="prop-icon-btn" aria-label="Add animation">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
     <!-- Dock -->
     <nav class="dock">
       <button class="dock-tile">
@@ -4261,7 +5799,7 @@
         </svg>
         AI Tools
       </button>
-      <button class="dock-tile">
+      <button class="dock-tile" id="dockProperties">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
           <path d="M5 2v3M5 8v6M11 2v6M11 11v3"/>
           <circle cx="5" cy="6.5" r="1.5"/>
@@ -4407,8 +5945,8 @@
     </div>
   </div>
 
-  <!-- Automatic multicam callout -->
-  <div class="callout hidden" id="amcCallout" role="note">
+	  <!-- Automatic multicam callout -->
+	  <div class="callout hidden" id="amcCallout" role="note">
     <div class="co-image" aria-hidden="true">
       <div class="co-card">
         <span class="co-avatar"></span>
@@ -4417,20 +5955,26 @@
       <span class="co-delete">Delete</span>
     </div>
     <div class="co-title">Use Automatic multicam</div>
-    <div class="co-subtitle">Automatically cut between camera angles based on who's speaking.</div>
-  </div>
+	    <div class="co-subtitle">Automatically cut between camera angles based on who's speaking.</div>
+	  </div>
 
-  <!-- Multicam modal + scrim -->
+	  <div class="guide-layer" id="guideLayer" aria-hidden="true"></div>
+
+	  <!-- Multicam modal + scrim -->
   <div class="scrim" id="modalScrim"></div>
   <div class="multicam-modal" id="multicamModal" role="dialog" aria-modal="true" aria-labelledby="mmTitle">
     <div class="mm-header" id="mmTitle">Multi-cam of the same recording?</div>
+    <button class="icon-btn dense mm-close" id="mmClose" aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+    </button>
     <p class="mm-desc">A multi-cam sequence combines multiple camera angles of the same event, so you can cut between them while editing.</p>
 
     <div class="mm-rows" id="mmRows">
       <div class="mm-row">
         <div class="mm-filename">
           <span class="mm-thumb" data-cam="0"></span>
-          <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+          <span class="mm-name" id="audioName">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+          <span class="mm-tag hidden"></span>
         </div>
         <button class="mm-select" data-row="0" aria-haspopup="menu">
           <span class="mm-select-label">Assign speakers</span>
@@ -4441,6 +5985,7 @@
         <div class="mm-filename">
           <span class="mm-thumb" data-cam="1"></span>
           <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+          <span class="mm-tag hidden"></span>
         </div>
         <button class="mm-select" data-row="1" aria-haspopup="menu">
           <span class="mm-select-label">Assign speakers</span>
@@ -4451,6 +5996,7 @@
         <div class="mm-filename">
           <span class="mm-thumb" data-cam="2"></span>
           <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+          <span class="mm-tag hidden"></span>
         </div>
         <button class="mm-select" data-row="2" aria-haspopup="menu">
           <span class="mm-select-label">Assign speakers</span>
@@ -4461,6 +6007,7 @@
         <div class="mm-filename">
           <span class="mm-thumb" data-cam="3"></span>
           <span class="mm-name">Screen Recording…-51.39.48&nbsp;AM.mp4</span>
+          <span class="mm-tag hidden"></span>
         </div>
         <button class="mm-select" data-row="3" aria-haspopup="menu">
           <span class="mm-select-label">Assign speakers</span>
@@ -4477,7 +6024,7 @@
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round">
             <rect x="1.5" y="2.5" width="6" height="5" rx="1"/><rect x="8.5" y="2.5" width="6" height="5" rx="1"/><rect x="1.5" y="8.5" width="6" height="5" rx="1"/><rect x="8.5" y="8.5" width="6" height="5" rx="1"/>
           </svg>
-          Yes, create multi-cam sequence
+          <span id="mmCreateLabel">Yes, create multi-cam sequence</span>
         </button>
         <button class="mm-create-caret" id="mmCreateCaret" disabled aria-haspopup="menu" aria-expanded="false" aria-label="More create options">
           <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
@@ -4502,6 +6049,14 @@
           </button>
         </div>
       </div>
+      <button class="mm-keep room-alt" id="mmEditMyself">Edit by myself</button>
+      <button class="mm-create room-alt" id="mmRunAmc">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 1.8 9.6 6.4 14.2 8 9.6 9.6 8 14.2 6.4 9.6 1.8 8 6.4 6.4 8 1.8Z"/>
+          <path d="M12.8 1.6l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5.5-1.4Z"/>
+        </svg>
+        Run automatic multi-cam
+      </button>
     </div>
 
   </div>
@@ -4523,7 +6078,7 @@
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
       </button>
     </div>
-    <p class="mm-desc">If so, you need to sync it with other recordings in the Sequence Editor first.</p>
+    <p class="mm-desc">A <strong>sequence</strong> will be created to <strong>allow</strong> you to <strong>switch camera angles</strong> while editing.</p>
     <div class="mm-rows">
       <div class="mm-row">
         <div class="mm-filename">
@@ -4537,9 +6092,27 @@
       </div>
     </div>
     <div class="mm-footer">
-      <button class="mm-keep" id="audioEdit">Yes, edit in sequence editor</button>
-      <button class="mm-create" id="audioVisualOnly">No, use visual only</button>
+      <button class="mm-keep" id="audioEdit">Yes, transcribe it</button>
+      <button class="mm-create" id="audioVisualOnly">No, keep my current audio</button>
     </div>
+    <div class="audio-warning">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.8 14.8 13.5H1.2L8 1.8Z"/><path d="M8 6.5v3.2"/><circle cx="8" cy="11.5" r="0.6" fill="currentColor" stroke="none"/></svg>
+      If new audio is transcribed, your current script will be modified.
+    </div>
+  </div>
+
+  <div class="single-track-toast" id="singleTrackToast" role="status">
+    <span class="stt-icon" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 8.3 7 10.8 11.8 5.5"/></svg>
+    </span>
+    <span class="stt-copy">
+      <span class="stt-title" id="singleTrackToastTitle">Camera added</span>
+      <span class="stt-desc">Use Automatic multicam to create scenes that cut between camera angles.</span>
+    </span>
+    <button class="stt-cta" id="singleTrackToastCta">Use Automatic multicam</button>
+    <button class="prop-icon-btn stt-close" id="singleTrackToastClose" aria-label="Dismiss">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+    </button>
   </div>
 
   <!-- Identify speakers dialog (add new speaker flow) -->
@@ -4781,27 +6354,79 @@
     });
   }
 
-  function showEditor() {
-    screenEmpty.classList.add('hidden');
-    screenEditor.classList.remove('hidden');
+  const scriptSkeleton = document.getElementById('scriptSkeleton');
+  const scriptBody = document.getElementById('scriptBody');
+  let scriptRevealToken = 0;
+
+  // Mimics real transcription: show the skeleton immediately, then swap in the
+  // actual transcript after a delay. Runs for every flow that reaches the editor.
+  function startScriptTranscribing() {
+    const token = ++scriptRevealToken;
+    scriptBody.style.display = 'none';
+    scriptSkeleton.classList.remove('fading');
+    scriptSkeleton.classList.add('visible');
+    setTimeout(() => {
+      if (token !== scriptRevealToken) return;
+      scriptSkeleton.classList.add('fading');
+      setTimeout(() => {
+        if (token !== scriptRevealToken) return;
+        scriptSkeleton.classList.remove('visible');
+        scriptBody.style.display = '';
+        requestAnimationFrame(() => scriptBody.style.opacity = '1');
+      }, 300);
+    }, 3200);
   }
+
+	function showEditor() {
+	  screenEmpty.classList.add('hidden');
+	  screenEditor.classList.remove('hidden');
+	  updateLayoutTagVisibility();
+	  if (typeof renderCanvasLayout === 'function') renderCanvasLayout();
+	  if (typeof placeVisibleModals === 'function') requestAnimationFrame(placeVisibleModals);
+	  scriptBody.style.opacity = '0';
+	  startScriptTranscribing();
+	}
 
   function resetToEmpty() {
     running = false;
     screenEditor.classList.add('hidden');
     screenEmpty.classList.remove('hidden');
+    scriptRevealToken++;   // cancel any in-flight transcribing reveal
+    scriptSkeleton.classList.remove('visible', 'fading');
+    scriptBody.style.display = 'none';
     supertoast.classList.remove('visible');
     modalScrim.classList.remove('dismissed');
     multicamModal.classList.remove('dismissed');
     const callout = document.getElementById('amcCallout');
     callout.classList.remove('visible');
     callout.classList.add('hidden');
-    document.getElementById('amcPanel').classList.add('hidden');
+	    document.getElementById('amcPanel').classList.add('hidden');
+	    document.getElementById('addChaptersPanel').classList.add('hidden');
+	    document.getElementById('addChaptersPanel').classList.remove('submitted');
+	    document.getElementById('layerPropertiesPanel').classList.add('hidden');
+	    clearGuideAnnotations();
     document.getElementById('aiToolsSidebar').classList.remove('hidden');
     document.getElementById('dockAiTools').classList.add('active');
+    document.getElementById('dockProperties').classList.remove('active');
     dockHiddenPanel = null;
     combos = [];
     comboView = 'gallery';
+	    zoomMultiAssign = { gallery: 0, active: 1 };
+	    if (typeof singleTrackCam !== 'undefined') singleTrackCam = 0;
+	    if (typeof singleTrackHasNewCamera !== 'undefined') singleTrackHasNewCamera = false;
+	    if (typeof singleTrackAmcActivated !== 'undefined') singleTrackAmcActivated = false;
+	    if (typeof singleTrackGuideStage !== 'undefined') singleTrackGuideStage = 'camButton';
+	    document.getElementById('cutFreqCustomTab').classList.add('hidden');
+    document.querySelectorAll('#cutFreqTabs .seg-tab').forEach(t => t.classList.remove('selected'));
+    document.querySelector('#cutFreqTabs .seg-tab[data-preset="chill"]').classList.add('selected');
+    document.getElementById('cutFreqMin').value = '5';
+    document.getElementById('cutFreqMax').value = '10';
+    const activeOnlySwitch = document.getElementById('activeOnlySwitch');
+    activeOnlySwitch.classList.add('on');
+    activeOnlySwitch.setAttribute('aria-checked', 'true');
+    document.getElementById('cutawaysRow').classList.add('hidden');
+    resetCtDropdown('cutTriggersMenu', 'cutTriggersLabel', 'Active speakers change');
+    resetCtDropdown('cutawaysMenu', 'cutawaysLabel', 'Sparse');
     setAmcPage('settings', true);
     hideComboDeleted();
     resetApplyState();
@@ -4850,25 +6475,1003 @@
     if (!e.target.closest('#amcCallout')) hideCallout();
   });
 
-  /* Automatic multicam panel */
-  const aiToolsSidebar = document.getElementById('aiToolsSidebar');
-  const amcPanel = document.getElementById('amcPanel');
+	  /* Automatic multicam panel */
+	  const aiToolsSidebar = document.getElementById('aiToolsSidebar');
+	  const addChaptersPanel = document.getElementById('addChaptersPanel');
+	  const amcPanel = document.getElementById('amcPanel');
+	  const layerPropertiesPanel = document.getElementById('layerPropertiesPanel');
+	  const dockAiTools = document.getElementById('dockAiTools');
+	  const dockProperties = document.getElementById('dockProperties');
+		  const guideLayer = document.getElementById('guideLayer');
+		  const emptyGuideLayer = document.getElementById('emptyGuideLayer');
+			  let prototypeMode = 'test';
+				  let guideBeforeExpanded = false;
+				  let roomGuideCutawaysStep = false;
+				  let roomGuideCanvasToolbarStep = false;
+				  let roomGuideCamAnnotationDismissed = false;
+				  let manualGuideStage = 'sequence';
+				  let chapterGuideStage = 'sceneButton';
+				  let singleTrackGuideStage = 'camButton';
+				  let zoomMultiGuideStage = 'speakers';
+				  const guideHighlighted = new Set();
 
-  function swapPanel(hide, show) {
-    hide.classList.add('hidden');
-    show.classList.remove('hidden');
-    show.classList.remove('panel-anim');
-    void show.offsetWidth;
-    show.classList.add('panel-anim');
+			  function clearGuideAnnotations() {
+			    guideHighlighted.forEach(el => el.classList.remove('guide-highlight'));
+			    guideHighlighted.clear();
+			    [guideLayer, emptyGuideLayer].forEach(layer => {
+			      if (layer) layer.innerHTML = '';
+			    });
+			  }
+
+		  function addGuideAnnotation(target, title, body, options = {}) {
+		    if (!target) return;
+		    const targetStyle = getComputedStyle(target);
+		    if (targetStyle.display === 'none' || targetStyle.visibility === 'hidden' || !target.getClientRects().length) return;
+		    target.classList.add('guide-highlight');
+			    guideHighlighted.add(target);
+			    const hostScreen = target.closest('.app-screen') || screenEditor;
+			    const layer = hostScreen.querySelector('.guide-layer') || guideLayer;
+				    const note = document.createElement('div');
+				    note.className = 'guide-note';
+					    const beforeHTML = options.before ? `
+					      <details class="guide-before" ${guideBeforeExpanded ? 'open' : ''}>
+				        <summary>Before</summary>
+				        <div class="guide-before-copy">${escapeHtml(options.before)}</div>
+				      </details>` : '';
+				    const actionHTML = options.actions === false ? '' : `
+				      <div class="guide-note-actions">
+				        <button class="guide-step-btn" data-guide-action="prev" ${options.prev === false ? 'disabled' : ''}>Last step</button>
+				        <button class="guide-step-btn primary" data-guide-action="next" ${options.next === false ? 'disabled' : ''}>Next step</button>
+				      </div>`;
+				    note.innerHTML = `${beforeHTML}<div class="guide-note-title">${escapeHtml(title)}</div>${body ? `<div class="guide-note-body">${escapeHtml(body)}</div>` : ''}${actionHTML}`;
+			    layer.appendChild(note);
+
+				    const screenRect = hostScreen.getBoundingClientRect();
+				    const layerRect = layer.getBoundingClientRect();
+				    const targetRect = target.getBoundingClientRect();
+				    const noteRect = note.getBoundingClientRect();
+			    const gap = options.gap ?? 8;
+			    const targetPanel = target.closest('.ai-sidebar');
+			    const panelRect = targetPanel ? targetPanel.getBoundingClientRect() : null;
+			    const visibleTop = Math.max(screenRect.top, 0);
+			    const visibleBottom = Math.min(screenRect.bottom, window.innerHeight);
+			    const minTop = Math.max(12, visibleTop - layerRect.top + 12);
+			    const maxTop = Math.max(minTop, visibleBottom - layerRect.top - noteRect.height - 12);
+			    const targetDialog = target.closest('[role="dialog"], .multicam-modal, .identify-modal, .layout-popover');
+			    const dialogRect = targetDialog && targetDialog !== hostScreen ? targetDialog.getBoundingClientRect() : null;
+			    const targetCenterLayerX = targetRect.left - layerRect.left + targetRect.width / 2;
+			    const targetCenterLayerY = targetRect.top - layerRect.top + targetRect.height / 2;
+			    let left;
+			    let top;
+			    if (dialogRect) {
+			      const dialogLeft = dialogRect.left - layerRect.left;
+			      const dialogRight = dialogRect.right - layerRect.left;
+			      const dialogTop = dialogRect.top - layerRect.top;
+			      const dialogBottom = dialogRect.bottom - layerRect.top;
+			      const sideGap = Math.max(12, gap);
+			      const spaceLeft = dialogLeft - sideGap - 12;
+			      const spaceRight = layerRect.width - dialogRight - sideGap - 12;
+			      const preferRight = targetCenterLayerX >= (dialogLeft + dialogRight) / 2;
+			      const canRight = spaceRight >= noteRect.width;
+			      const canLeft = spaceLeft >= noteRect.width;
+			      if ((preferRight && canRight) || (!canLeft && canRight)) {
+			        left = dialogRight + sideGap;
+			        top = targetCenterLayerY - noteRect.height / 2;
+			      } else if (canLeft) {
+			        left = dialogLeft - noteRect.width - sideGap;
+			        top = targetCenterLayerY - noteRect.height / 2;
+			      } else {
+			        left = targetCenterLayerX - noteRect.width / 2;
+			        const canBelow = dialogBottom + sideGap + noteRect.height <= maxTop + noteRect.height;
+			        top = canBelow ? dialogBottom + sideGap : dialogTop - noteRect.height - sideGap;
+			      }
+			    } else {
+			      left = (panelRect ? panelRect.left : targetRect.left) - layerRect.left - noteRect.width - gap;
+			      if (left < 12) left = targetRect.right - layerRect.left + gap;
+			      top = targetCenterLayerY - noteRect.height / 2;
+			    }
+			    if (options.offsetX) left += options.offsetX;
+			    if (options.offsetY) top += options.offsetY;
+			    left = Math.max(12, Math.min(left, layerRect.width - noteRect.width - 12));
+			    top = Math.max(minTop, Math.min(top, maxTop));
+			    if (!Number.isFinite(left)) left = 12;
+			    if (!Number.isFinite(top)) top = minTop;
+		    note.style.left = `${left}px`;
+		    note.style.top = `${top}px`;
+
+		    const noteCenterX = left + noteRect.width / 2;
+		    const noteCenterY = top + noteRect.height / 2;
+		    const targetCenterX = targetRect.left - layerRect.left + targetRect.width / 2;
+		    const targetCenterY = targetRect.top - layerRect.top + targetRect.height / 2;
+		    const noteEdgeX = noteCenterX < targetCenterX ? left + noteRect.width : left;
+		    const targetEdgeX = noteCenterX < targetCenterX
+		      ? targetRect.left - layerRect.left
+		      : targetRect.right - layerRect.left;
+
+			    const connector = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+			    connector.classList.add('guide-connector');
+			    connector.innerHTML = `<path d="M ${noteEdgeX} ${noteCenterY} C ${(noteEdgeX + targetEdgeX) / 2} ${noteCenterY}, ${(noteEdgeX + targetEdgeX) / 2} ${targetCenterY}, ${targetEdgeX} ${targetCenterY}" fill="none" stroke="#7f4bd8" stroke-width="1.5" stroke-dasharray="4 4" stroke-linecap="round"/>`;
+			    layer.insertBefore(connector, note);
+			  }
+
+			  function isSceneRailEntrypointEligible() {
+			    if (prototypeMode !== 'guide' || entrySource !== 'chapterTrigger') return false;
+			    if (screenEditor.classList.contains('hidden')) return false;
+			    if (!addChaptersPanel.classList.contains('hidden') || !amcPanel.classList.contains('hidden')) return false;
+			    const timeline = document.getElementById('amcTimeline');
+			    if (!timeline || timeline.classList.contains('applied')) return false;
+			    const sceneGroups = timeline.querySelectorAll('.tl-pre-storyboard .tl-scene-group');
+			    const frames = Array.from(document.querySelectorAll('#screenEditor .cam-frame[data-speaker]'));
+			    const speakerCount = new Set(frames.map(frame => frame.dataset.speaker)).size;
+			    return sceneGroups.length === 1 && frames.length > 1 && speakerCount > 1;
+			  }
+
+			  function updateSceneRailEntrypointEligibility() {
+			    const eligible = isSceneRailEntrypointEligible();
+			    document.body.classList.toggle('scene-rail-entry-eligible', eligible);
+			    document.body.classList.toggle('scene-rail-entry-preview', eligible && chapterGuideStage === 'sceneButton');
+			  }
+
+		  function renderGuideAnnotations() {
+		    clearGuideAnnotations();
+		    updateSceneRailEntrypointEligibility();
+		    if (prototypeMode !== 'guide') return;
+
+			    if (entrySource === 'manual') {
+			      if (!screenEmpty.classList.contains('hidden')) {
+			        addGuideAnnotation(
+			          uploadZone,
+			          'Manual upload starts unsequenced',
+			          'At this point the app only has separate files. It does not know yet whether they are camera angles from the same recording or independent media.',
+			          { prev: false },
+			        );
+			        return;
+			      }
+			      if (!screenEditor.classList.contains('hidden') && !multicamModal.classList.contains('dismissed')) {
+			        if (manualGuideStage === 'cta') {
+			          addGuideAnnotation(
+			            document.getElementById('mmCreate'),
+			            'Combine into a sequence',
+			            'This CTA makes the user’s camera-switching intention explicit. Choosing it groups the uploaded tracks into one sequence so the editor can support switching camera angles.',
+			          );
+			          return;
+			        }
+			        if (manualGuideStage === 'speakers') {
+			          addGuideAnnotation(
+			            document.getElementById('mmRows'),
+			            'Set speakers before combining',
+			            'This upfront configuration sets users up for clearer editing later: the script editor can separate speakers correctly, and AMC can map cameras with less cleanup. It adds intentional friction here so the next steps feel easier and more predictable.',
+			          );
+			          return;
+			        }
+			        addGuideAnnotation(
+			          multicamModal.querySelector('.mm-desc'),
+			          'Sequence education moment',
+			          'Before asking for a decision, use this line to explain why a sequence matters: it is the container that lets separate uploaded tracks become switchable camera angles.',
+			        );
+			        return;
+			      }
+			      if (manualGuideStage === 'contextual' && !amcCallout.classList.contains('hidden')) {
+			        addGuideAnnotation(
+			          amcCallout,
+			          'Surface AMC in context',
+			          'After the user confirms camera-switching intent, this pop-out introduces AMC as the next useful action from the editor, instead of asking users to discover it later.',
+			        );
+			        return;
+			      }
+			      if (manualGuideStage === 'amc' && !amcPanel.classList.contains('hidden')) {
+			        addGuideAnnotation(
+			          document.getElementById('camSetupModule'),
+			          'Keep camera setup open',
+			          'Because the user may open AMC later from the contextual pop-out, keep this module open for review. The intercept made a best effort to collect speaker intent upfront, but this gives users one clear place to confirm the camera-to-speaker mapping before running AMC.',
+			          { next: false },
+			        );
+			        return;
+			      }
+			      return;
+			    }
+
+			    if (entrySource === 'zoom') {
+			      if (!screenEmpty.classList.contains('hidden') && roomImportModal.classList.contains('dismissed')) {
+			        addGuideAnnotation(
+			          document.getElementById('zoomPicker'),
+			          'Clarify Zoom single-track import',
+			          'This Zoom import will produce one combined audio track and one video track. Set that expectation before import so users understand why there will not be camera angles to switch between.',
+			          { prev: false },
+			        );
+			        return;
+			      }
+			      if (!roomImportModal.classList.contains('dismissed')) {
+			        addGuideAnnotation(
+			          document.getElementById('riDesc'),
+			          'One audio track, one video track',
+			          'Zoom single-track recordings arrive as a combined recording, not separate camera feeds. Use the support link here to help users adjust Zoom recording settings when they need multiple camera angles next time.',
+			        );
+			        return;
+			      }
+			      if (!screenEditor.classList.contains('hidden')) {
+			        addGuideAnnotation(
+			          rowAutoMulticam,
+			          'AMC is not applied here',
+			          'Automatic multicam needs separate camera tracks. With one combined Zoom audio/video track, there is nothing to cut between, so the feature stays unavailable for this flow.',
+			          { next: false },
+			        );
+			        return;
+			      }
+			      return;
+			    }
+
+			    if (entrySource === 'zoomMulti') {
+			      if (!screenEmpty.classList.contains('hidden') && roomImportModal.classList.contains('dismissed')) {
+			        addGuideAnnotation(
+			          document.getElementById('zoomPicker'),
+			          'Zoom multi-track is sequenced',
+			          'This works when Zoom-side settings are on: record separate audio tracks and record gallery view or other participant video tracks. Those files can arrive as a sequence that supports camera switching.',
+			          { prev: false },
+			        );
+			        return;
+			      }
+			      if (!roomImportModal.classList.contains('dismissed')) {
+			        addGuideAnnotation(
+			          document.getElementById('riDesc'),
+			          'Use waiting time for clarity',
+			          'Design intention: turn import waiting into an educational status moment. We clarify that separate Zoom tracks are being grouped into a sequence, so users understand camera switching will be possible before they land in the editor.',
+			        );
+			        return;
+			      }
+			      if (!screenEditor.classList.contains('hidden') && !multicamModal.classList.contains('dismissed')) {
+			        if (zoomMultiGuideStage === 'labels') {
+			          addGuideAnnotation(
+			            document.querySelector('#mmRows .mm-row:nth-child(2) .mm-tag'),
+			            'Track labels prevent confusion',
+			            'The Active speakers track can contain multiple speakers even if the thumbnail shows one person. Labels make the track role explicit so the cover image does not mislead users.',
+			            { offsetY: 12 },
+			          );
+			          return;
+			        }
+			        addGuideAnnotation(
+			          multicamModal,
+			          'Why add this intercept',
+			          'Design intention: use this confirmation step to show imported Zoom tracks and speaker context at one glance, then surface AMC as an opt-in action from the right context.',
+			          { before: 'Current flow: this intercept does not exist. After import, the editor can default to Gallery view, but users do not get a clear confirmation of the imported tracks or why AMC applies.' },
+			        );
+			        return;
+			      }
+			      if (!screenEditor.classList.contains('hidden') && !amcPanel.classList.contains('hidden')) {
+			        addGuideAnnotation(
+			          document.getElementById('camSetupModule'),
+			          'Camera setup is ready to review',
+			          'This module stays open with the same Gallery and Active speakers tracks from the intercept, then preassigns each track to a speaker for review.',
+			          { next: false },
+			        );
+			        return;
+			      }
+			      return;
+			    }
+
+		    if (entrySource === 'room') {
+		      if (!screenEmpty.classList.contains('hidden') && roomImportModal.classList.contains('dismissed')) {
+			        addGuideAnnotation(
+			          document.getElementById('roomPicker'),
+			          'Import from Room starts here',
+			          'Room import already has a sequence: separate video tracks and audio tracks arrive grouped together, so users are confirming and refining an existing structure rather than deciding whether to create one.',
+			          { prev: false },
+			        );
+		        return;
+		      }
+
+		      if (!roomImportModal.classList.contains('dismissed')) {
+			        addGuideAnnotation(
+			          document.getElementById('riDesc'),
+			          'Turn waiting into learning',
+			          'Use import time to explain that Room creates a sequence so camera angles stay grouped for editing.',
+			          { before: 'The current import state is mostly a progress wait. It tells users files are importing, but not why a sequence is being created.' },
+			        );
+		        return;
+		      }
+
+		      if (!screenEditor.classList.contains('hidden') && !multicamModal.classList.contains('dismissed')) {
+			        addGuideAnnotation(
+			        document.getElementById('multicamModal'),
+			          'Confirm first, then offer AMC',
+			          'This proposed intercept lets users review Room-filled speakers and cameras at a glance, then surfaces AMC as an optional next step.',
+			          { before: 'This confirmation intercept does not exist in the current Room flow. Users do not get a compact review of imported speakers and cameras before editing.' },
+			        );
+		        return;
+		      }
+
+			      if (roomGuideCanvasToolbarStep && !roomGuideCamAnnotationDismissed && !selToolbar.classList.contains('hidden')) {
+			        addGuideAnnotation(
+			          document.getElementById('selMulticamBtn'),
+			          'Switch cameras from the canvas',
+			          'After AMC runs, the cam button becomes the direct place to switch camera angles. Today this action is buried in the layer menu or right-click path.',
+			          { next: false },
+			        );
+			        return;
+			      }
+
+			      if (!amcPanel.classList.contains('hidden')) {
+			        const camSetupCollapsed = document.getElementById('camSetupModule').classList.contains('collapsed');
+			        if (roomGuideCutawaysStep && !cutawaysRow.classList.contains('hidden')) {
+				          addGuideAnnotation(
+				            document.getElementById('cutawaysRow'),
+				            'Cutaways appears here',
+				            'Cutaways means reaction shots, so it only makes sense once “Show only active speakers” is off and AMC can show people who are not currently speaking.',
+				          );
+			          return;
+			        }
+			        addGuideAnnotation(
+			          document.getElementById('camSetupModule'),
+			          camSetupCollapsed ? 'Collapsed after intercept' : 'Open when launched manually',
+			          camSetupCollapsed
+			            ? 'The camera setup state is contextual: when AMC opens from the intercept, this stays collapsed because speakers and cameras were just confirmed.'
+			            : 'The camera setup state is contextual: when AMC is opened manually from AI Tools, this stays open so users can review the mapping.',
+			          { before: camSetupCollapsed
+			            ? 'Without the proposed intercept, AMC has less context for why camera setup is already handled.'
+			            : 'Manual launch skips the confirmation intercept, so setup should remain visible.' },
+			        );
+			      }
+		      return;
+		    }
+
+			    if (entrySource === 'singleTrack') {
+			      if (screenEditor.classList.contains('hidden')) return;
+			      if (!audioModal.classList.contains('dismissed')) {
+			        if (singleTrackGuideStage === 'dialogCta') {
+			          addGuideAnnotation(
+			            audioModal.querySelector('.mm-footer'),
+			            'Avoid today’s workaround',
+			            'Today, users either drag the file in as a media layer and manually mute it, or leave the canvas to build a sequence. This keeps them in the layer flow: add the track to a sequence, choose audio/transcription, and support camera switching.',
+			          );
+			          return;
+			        }
+			        addGuideAnnotation(
+			          audioModal,
+			          'Create the sequence in context',
+			          'Switching camera angles still needs a sequence, but users should not have to create one up front. This dialog creates that context only when they add another camera.',
+			        );
+			        addGuideAnnotation(
+			          audioModal.querySelector('.mm-footer'),
+			          'Avoid today’s workaround',
+			          'Today, users either drag the file in as a media layer and manually mute it, or leave the canvas to build a sequence. This keeps them in the layer flow: add the track to a sequence, choose audio/transcription, and support camera switching.',
+			          { actions: false, offsetY: 116 },
+			        );
+			        return;
+			      }
+			      if (singleTrackToast.classList.contains('visible')) {
+			        addGuideAnnotation(
+			          singleTrackToast,
+			          'Camera added to the selected layer',
+			          'The user stays in the canvas-layer workflow while the app handles the sequence, audio choice, and camera-angle setup behind the scenes.',
+			          { next: false },
+			        );
+			        return;
+			      }
+			      if (!camPicker.classList.contains('hidden')) {
+			        addGuideAnnotation(
+			          document.getElementById('singleTrackNewCamera'),
+			          'Add tracks into a sequence',
+			          'Add the uploaded track into a sequence so the same layer can support camera switching.',
+			          { offsetX: -96, offsetY: 28 },
+			        );
+			        return;
+			      }
+			      if (selectedLayer && !selToolbar.classList.contains('hidden')) {
+			        addGuideAnnotation(
+			          document.getElementById('selMulticamBtn'),
+			          'Switch cameras from one track',
+			          'The same canvas toolbar proposal works for single-track projects: select the layer, then switch or add camera angles from the cam button instead of sending users into setup work.',
+			        );
+			        return;
+			      }
+			      const frame = document.querySelector('#screenEditor .cam-frame[data-speaker]');
+			      if (frame) selectLayer(frame);
+			      requestAnimationFrame(renderGuideAnnotations);
+			      return;
+			    }
+
+			    if (entrySource !== 'chapterTrigger' || screenEditor.classList.contains('hidden')) return;
+
+			    if (chapterGuideStage === 'addChaptersStart' && addChaptersPanel.classList.contains('hidden') && amcPanel.classList.contains('hidden')) {
+			      addGuideAnnotation(
+			        document.getElementById('rowAddChapters'),
+			        'Add chapters creates another entrypoint',
+			        'Start from Add chapters, then offer AMC only after chapters exist and can become the cut trigger.',
+			      );
+			      return;
+			    }
+
+			    if (isSceneRailEntrypointEligible() && chapterGuideStage === 'sceneButton') {
+			      addGuideAnnotation(
+			        document.getElementById('tlAutocutBtn'),
+			        'Autocut scenes appears on hover',
+			        'Show this entrypoint only when there are multiple speakers, multiple tracks, and exactly one uncut scene.',
+			        { prev: false },
+			      );
+			      return;
+			    }
+
+			    if (!addChaptersPanel.classList.contains('hidden') && !addChaptersPanel.classList.contains('submitted')) {
+			      addGuideAnnotation(
+			        document.getElementById('chaptersSubmit'),
+			        'Create chapter context first',
+			        'Submitting chapters creates the moment where AMC can offer to cut at chapter boundaries.',
+			      );
+			      return;
+			    }
+
+			    if (!addChaptersPanel.classList.contains('hidden') && addChaptersPanel.classList.contains('submitted')) {
+			      addGuideAnnotation(
+		        document.getElementById('rowChaptersToAmc'),
+		        'AMC entrypoint appears after chapters',
+		        'This entrypoint is contextual: chapters now exist, so AMC can load with “At chapters” as the cut trigger.',
+		        { prev: false },
+		      );
+		      return;
+		    }
+
+	    if (!amcPanel.classList.contains('hidden')) {
+			      if (!addChaptersPanel.classList.contains('submitted')) {
+			        addGuideAnnotation(
+			          document.getElementById('cutTriggersSelect'),
+			          'Scene-based entrypoint',
+			          'Opening AMC from the scene rail keeps the default active-speaker trigger, then lets users tune the setup.',
+			        );
+			        addGuideAnnotation(
+			          document.getElementById('camSetupModule'),
+			          'Camera setup stays open',
+			          'Keep this open so users can confirm the speaker-to-camera mapping before running AMC from this contextual entrypoint.',
+			          { actions: false },
+			        );
+			        return;
+			      }
+			      addGuideAnnotation(
+			        document.getElementById('cutTriggersSelect'),
+			        'Cut trigger: At chapters',
+		        '',
+		      );
+		      addGuideAnnotation(
+		        document.getElementById('camSetupModule'),
+		        'Camera setup stays open',
+		        'Keep this open so users can confirm the speaker-to-camera mapping before running AMC.',
+		        { actions: false },
+		      );
+		    }
+		  }
+
+		  function placeModalInViewport(modal) {
+		    if (!modal || modal.classList.contains('dismissed') || modal.classList.contains('away')) return;
+		    const hostScreen = modal.closest('.app-screen') || screenEditor;
+		    if (!hostScreen) return;
+		    modal.style.removeProperty('--modal-top');
+		    modal.style.removeProperty('--modal-y');
+		    modal.style.removeProperty('--modal-left');
+		    modal.classList.remove('viewport-placed');
+		    const screenRect = hostScreen.getBoundingClientRect();
+		    const modalRect = modal.getBoundingClientRect();
+		    const margin = 24;
+		    const visibleTop = Math.max(screenRect.top, 0) + margin;
+		    const visibleBottom = Math.min(screenRect.bottom, window.innerHeight) - margin;
+		    const centeredTop = screenRect.top + screenRect.height / 2 - modalRect.height / 2;
+		    const maxTop = Math.max(visibleTop, visibleBottom - modalRect.height);
+		    const topInViewport = Math.max(visibleTop, Math.min(centeredTop, maxTop));
+		    modal.classList.add('viewport-placed');
+		    modal.style.setProperty('--modal-left', `${screenRect.left + screenRect.width / 2}px`);
+		    modal.style.setProperty('--modal-top', `${topInViewport}px`);
+		    modal.style.setProperty('--modal-y', '0');
+		  }
+
+		  function placeVisibleModals() {
+		    placeModalInViewport(roomImportModal);
+		    placeModalInViewport(multicamModal);
+		    placeModalInViewport(audioModal);
+		  }
+
+		  function completeRoomImportGuideStep() {
+		    running = false;
+		    hideRoomImport();
+		    showEditor();
+		    requestAnimationFrame(placeVisibleModals);
+		    requestAnimationFrame(renderGuideAnnotations);
+		  }
+
+			  function guideNextStep() {
+			    guideBeforeExpanded = false;
+			    if (entrySource === 'manual') {
+			      if (!screenEmpty.classList.contains('hidden')) {
+			        running = false;
+			        supertoast.classList.remove('visible');
+			        manualGuideStage = 'sequence';
+			        showEditor();
+			        requestAnimationFrame(placeVisibleModals);
+			        requestAnimationFrame(renderGuideAnnotations);
+			      } else if (!screenEditor.classList.contains('hidden') && !multicamModal.classList.contains('dismissed')) {
+			        if (manualGuideStage === 'sequence') {
+			          manualGuideStage = 'cta';
+			          renderGuideAnnotations();
+			        } else if (manualGuideStage === 'cta') {
+			          fillManualGuideSpeakers();
+			          manualGuideStage = 'speakers';
+			          renderGuideAnnotations();
+			        } else if (manualGuideStage === 'speakers') {
+			          manualGuideStage = 'contextual';
+			          dismissModal();
+			          setTimeout(() => {
+			            showCallout();
+			            requestAnimationFrame(renderGuideAnnotations);
+			          }, 350);
+			        }
+			      } else if (manualGuideStage === 'contextual') {
+			        if (!amcCallout.classList.contains('hidden')) {
+			          manualGuideStage = 'amc';
+			          openAmcPanel(false);
+			        } else {
+			          showCallout();
+			          requestAnimationFrame(renderGuideAnnotations);
+			        }
+			      }
+			      return;
+			    }
+			    if (entrySource === 'zoom') {
+			      if (!screenEmpty.classList.contains('hidden') && roomImportModal.classList.contains('dismissed')) {
+			        startImportDialogFlow();
+			        return;
+			      }
+			      if (!roomImportModal.classList.contains('dismissed')) {
+			        completeRoomImportGuideStep();
+			        return;
+			      }
+			      return;
+			    }
+			    if (entrySource === 'zoomMulti') {
+			      if (!screenEmpty.classList.contains('hidden') && roomImportModal.classList.contains('dismissed')) {
+			        startImportDialogFlow();
+			        return;
+			      }
+			      if (!roomImportModal.classList.contains('dismissed')) {
+			        completeRoomImportGuideStep();
+			        return;
+			      }
+			      if (!screenEditor.classList.contains('hidden') && !multicamModal.classList.contains('dismissed')) {
+			        if (zoomMultiGuideStage === 'speakers') {
+			          zoomMultiGuideStage = 'labels';
+			          renderGuideAnnotations();
+			        } else if (zoomMultiGuideStage === 'labels') {
+			          zoomMultiGuideStage = 'amcSetup';
+			          dismissModal();
+			          setTimeout(() => openAmcPanel(false), 350);
+			        }
+			        return;
+			      }
+			      return;
+			    }
+			    if (entrySource === 'room') {
+		      if (!screenEmpty.classList.contains('hidden') && roomImportModal.classList.contains('dismissed')) {
+		        startImportDialogFlow();
+		        return;
+		      }
+		      if (!roomImportModal.classList.contains('dismissed')) {
+		        completeRoomImportGuideStep();
+		        return;
+		      }
+			      if (!screenEditor.classList.contains('hidden') && !multicamModal.classList.contains('dismissed')) {
+				        roomGuideCutawaysStep = false;
+				        roomGuideCanvasToolbarStep = false;
+				        roomGuideCamAnnotationDismissed = false;
+				        document.getElementById('mmRunAmc').click();
+			        setTimeout(renderGuideAnnotations, 420);
+			        return;
+			      }
+			      if (!amcPanel.classList.contains('hidden')) {
+			        if (!roomGuideCutawaysStep) {
+			          roomGuideCutawaysStep = true;
+			          activeOnlySwitch.classList.remove('on');
+			          activeOnlySwitch.setAttribute('aria-checked', 'false');
+			          cutawaysRow.classList.remove('hidden');
+			          renderGuideAnnotations();
+			          return;
+			        }
+				        roomGuideCanvasToolbarStep = true;
+				        roomGuideCamAnnotationDismissed = false;
+				        runAutomaticMulticam();
+			        setTimeout(() => {
+			          const frame = document.querySelector('#screenEditor .cam-frame[data-speaker]');
+			          if (frame) selectLayer(frame);
+			          renderGuideAnnotations();
+			        }, 420 * 5 + 1750);
+			      }
+		      return;
+		    }
+
+		    if (entrySource === 'singleTrack') {
+		      if (screenEditor.classList.contains('hidden')) return;
+		      if (singleTrackGuideStage === 'camButton') {
+		        if (!selectedLayer) {
+		          const frame = document.querySelector('#screenEditor .cam-frame[data-speaker]');
+		          if (frame) selectLayer(frame);
+		        }
+		        openCamPicker();
+		        singleTrackGuideStage = 'camMenu';
+		        renderGuideAnnotations();
+		        return;
+		      }
+		      if (singleTrackGuideStage === 'camMenu') {
+		        if (camPicker.classList.contains('hidden')) openCamPicker();
+		        openAudioModal();
+		        singleTrackGuideStage = 'sequenceDialog';
+		        renderGuideAnnotations();
+		        return;
+		      }
+		      if (singleTrackGuideStage === 'sequenceDialog') {
+		        audioSpeakerIdx = audioOriginalSpeakerIdx === 0 ? 1 : 0;
+		        audioSpeakerLabel.textContent = speakers[audioSpeakerIdx];
+		        singleTrackGuideStage = 'dialogCta';
+		        renderGuideAnnotations();
+		        return;
+		      }
+		      if (singleTrackGuideStage === 'dialogCta') {
+		        if (audioSpeakerIdx === audioOriginalSpeakerIdx) {
+		          audioSpeakerIdx = audioOriginalSpeakerIdx === 0 ? 1 : 0;
+		          audioSpeakerLabel.textContent = speakers[audioSpeakerIdx];
+		        }
+		        document.getElementById('audioVisualOnly').click();
+		        singleTrackGuideStage = 'toast';
+		        setTimeout(renderGuideAnnotations, 80);
+		      }
+		      return;
+		    }
+
+		    if (entrySource === 'chapterTrigger') {
+		      if (addChaptersPanel.classList.contains('hidden') && amcPanel.classList.contains('hidden')) {
+		        if (chapterGuideStage === 'addChaptersStart') {
+		          openAddChaptersPanel();
+		          renderGuideAnnotations();
+		          return;
+		        }
+		        if (isSceneRailEntrypointEligible() && chapterGuideStage === 'sceneButton') {
+		          chapterGuideStage = 'addChaptersStart';
+		          renderGuideAnnotations();
+		          return;
+		        }
+		        return;
+		      }
+		      if (!addChaptersPanel.classList.contains('hidden') && !addChaptersPanel.classList.contains('submitted')) {
+		        chapterGuideStage = 'chaptersSubmitted';
+		        addChaptersPanel.classList.add('submitted');
+		        renderGuideAnnotations();
+		        return;
+		      }
+		      if (!addChaptersPanel.classList.contains('hidden') && addChaptersPanel.classList.contains('submitted')) {
+		        chapterGuideStage = 'chapterAmc';
+		        openAmcPanel(false, addChaptersPanel, true);
+		        setTimeout(renderGuideAnnotations, 80);
+		        return;
+		      }
+		      if (!amcPanel.classList.contains('hidden')) {
+		        if (!addChaptersPanel.classList.contains('submitted')) {
+		          chapterGuideStage = 'addChaptersStart';
+		          swapPanel(amcPanel, aiToolsSidebar);
+		          renderGuideAnnotations();
+		          return;
+		        }
+		        runAutomaticMulticam();
+		      }
+		    }
+		  }
+
+			  function guidePrevStep() {
+			    guideBeforeExpanded = false;
+			    if (entrySource === 'manual') {
+			      if (!screenEditor.classList.contains('hidden')) {
+			        if (manualGuideStage === 'amc' && !amcPanel.classList.contains('hidden')) {
+			          manualGuideStage = 'contextual';
+			          swapPanel(amcPanel, aiToolsSidebar);
+			          showCallout();
+			          requestAnimationFrame(renderGuideAnnotations);
+			          return;
+			        }
+			        if (manualGuideStage === 'contextual') {
+			          hideCallout();
+			          manualGuideStage = 'speakers';
+			          modalScrim.classList.remove('dismissed');
+			          multicamModal.classList.remove('dismissed', 'away');
+			          requestAnimationFrame(placeVisibleModals);
+			          requestAnimationFrame(renderGuideAnnotations);
+			          return;
+			        }
+			        if (!multicamModal.classList.contains('dismissed') && manualGuideStage === 'speakers') {
+			          clearManualGuideSpeakers();
+			          manualGuideStage = 'cta';
+			          renderGuideAnnotations();
+			          return;
+			        }
+			        if (!multicamModal.classList.contains('dismissed') && manualGuideStage === 'cta') {
+			          manualGuideStage = 'sequence';
+			          renderGuideAnnotations();
+			          return;
+			        }
+			        resetToEmpty();
+			        renderGuideAnnotations();
+			      }
+			      return;
+			    }
+			    if (entrySource === 'zoom') {
+			      if (!roomImportModal.classList.contains('dismissed')) {
+			        running = false;
+			        hideRoomImport();
+			        renderGuideAnnotations();
+			        return;
+			      }
+			      if (!screenEditor.classList.contains('hidden')) {
+			        resetToEmpty();
+			        renderGuideAnnotations();
+			      }
+			      return;
+			    }
+			    if (entrySource === 'zoomMulti') {
+			      if (!amcPanel.classList.contains('hidden')) {
+			        zoomMultiGuideStage = 'labels';
+			        swapPanel(amcPanel, aiToolsSidebar);
+			        modalScrim.classList.remove('dismissed');
+			        multicamModal.classList.remove('dismissed', 'away');
+			        applySourceIntercept();
+			        renderGuideAnnotations();
+			        return;
+			      }
+			      if (!screenEditor.classList.contains('hidden') && !multicamModal.classList.contains('dismissed')) {
+			        if (zoomMultiGuideStage === 'labels') {
+			          zoomMultiGuideStage = 'speakers';
+			          renderGuideAnnotations();
+			        } else {
+			          resetToEmpty();
+			          startImportDialogFlow();
+			        }
+			        return;
+			      }
+			      if (!roomImportModal.classList.contains('dismissed')) {
+			        zoomMultiGuideStage = 'speakers';
+			        running = false;
+			        hideRoomImport();
+			        renderGuideAnnotations();
+			        return;
+			      }
+			      if (!screenEditor.classList.contains('hidden')) {
+			        zoomMultiGuideStage = 'speakers';
+			        resetToEmpty();
+			        renderGuideAnnotations();
+			      }
+			      return;
+			    }
+			    if (entrySource === 'singleTrack') {
+			      if (singleTrackGuideStage === 'toast') {
+			        clearTimeout(singleTrackToastTimer);
+			        singleTrackToast.classList.remove('visible');
+			        singleTrackGuideStage = 'dialogCta';
+			        openAudioModal();
+			        audioSpeakerIdx = audioOriginalSpeakerIdx === 0 ? 1 : 0;
+			        audioSpeakerLabel.textContent = speakers[audioSpeakerIdx];
+			        renderGuideAnnotations();
+			        return;
+			      }
+			      if (singleTrackGuideStage === 'dialogCta') {
+			        singleTrackGuideStage = 'sequenceDialog';
+			        renderGuideAnnotations();
+			        return;
+			      }
+			      if (singleTrackGuideStage === 'sequenceDialog') {
+			        closeAudioModal();
+			        if (selectedLayer) openCamPicker();
+			        singleTrackGuideStage = 'camMenu';
+			        renderGuideAnnotations();
+			        return;
+			      }
+			      if (singleTrackGuideStage === 'camMenu') {
+			        closeCamPicker();
+			        singleTrackGuideStage = 'camButton';
+			        renderGuideAnnotations();
+			      }
+			      return;
+			    }
+			    if (entrySource === 'room') {
+				      if (!roomImportModal.classList.contains('dismissed')) {
+					        roomGuideCutawaysStep = false;
+					        roomGuideCanvasToolbarStep = false;
+					        roomGuideCamAnnotationDismissed = false;
+					        running = false;
+				        hideRoomImport();
+			        renderGuideAnnotations();
+			        return;
+			      }
+				      if (!screenEditor.classList.contains('hidden') && !multicamModal.classList.contains('dismissed')) {
+				        roomGuideCutawaysStep = false;
+				        roomGuideCanvasToolbarStep = false;
+				        roomGuideCamAnnotationDismissed = false;
+				        resetToEmpty();
+				        startImportDialogFlow();
+			        return;
+			      }
+			      if (!amcPanel.classList.contains('hidden')) {
+				        if (roomGuideCutawaysStep) {
+				          roomGuideCutawaysStep = false;
+				          roomGuideCanvasToolbarStep = false;
+				          roomGuideCamAnnotationDismissed = false;
+				          activeOnlySwitch.classList.add('on');
+			          activeOnlySwitch.setAttribute('aria-checked', 'true');
+			          cutawaysRow.classList.add('hidden');
+			          renderGuideAnnotations();
+			          return;
+			        }
+			        swapPanel(amcPanel, aiToolsSidebar);
+		        modalScrim.classList.remove('dismissed');
+		        multicamModal.classList.remove('dismissed', 'away');
+		        applySourceIntercept();
+		        renderGuideAnnotations();
+		      }
+		      return;
+		    }
+
+		    if (entrySource === 'chapterTrigger') {
+		      if (addChaptersPanel.classList.contains('hidden') && amcPanel.classList.contains('hidden')) {
+		        if (chapterGuideStage === 'sceneButton') {
+		          chapterGuideStage = 'sceneButton';
+		          renderGuideAnnotations();
+		        }
+		        return;
+		      }
+		      if (!addChaptersPanel.classList.contains('hidden')) {
+		        if (addChaptersPanel.classList.contains('submitted')) {
+		          chapterGuideStage = 'addChaptersPanel';
+		          addChaptersPanel.classList.remove('submitted');
+		          renderGuideAnnotations();
+		        } else {
+		          chapterGuideStage = 'addChaptersStart';
+		          swapPanel(addChaptersPanel, aiToolsSidebar);
+		        }
+		        return;
+		      }
+		      if (!amcPanel.classList.contains('hidden')) {
+		        if (addChaptersPanel.classList.contains('submitted')) {
+		          chapterGuideStage = 'chaptersSubmitted';
+		          swapPanel(amcPanel, addChaptersPanel);
+		        } else {
+		          chapterGuideStage = 'sceneButton';
+		          swapPanel(amcPanel, aiToolsSidebar);
+		        }
+		      }
+		    }
+		  }
+
+		  document.addEventListener('click', e => {
+		    if (e.target.closest('.guide-before summary')) {
+		      setTimeout(() => {
+		        const before = e.target.closest('.guide-before');
+		        guideBeforeExpanded = !!(before && before.open);
+		        renderGuideAnnotations();
+		      }, 0);
+		      return;
+		    }
+		    const stepBtn = e.target.closest('.guide-step-btn');
+		    if (!stepBtn || stepBtn.disabled) return;
+		    e.preventDefault();
+		    e.stopPropagation();
+		    if (stepBtn.dataset.guideAction === 'next') guideNextStep();
+		    else guidePrevStep();
+		  });
+
+		  function setRightDockActive(active) {
+    dockAiTools.classList.toggle('active', active === 'ai');
+    dockProperties.classList.toggle('active', active === 'properties');
   }
+
+	  function swapPanel(hide, show) {
+	    hide.classList.add('hidden');
+	    show.classList.remove('hidden');
+	    if (show === aiToolsSidebar || show === addChaptersPanel || show === amcPanel) {
+	      layerPropertiesPanel.classList.add('hidden');
+	      setRightDockActive('ai');
+	    }
+	    show.classList.remove('panel-anim');
+	    void show.offsetWidth;
+	    show.classList.add('panel-anim');
+	    requestAnimationFrame(renderGuideAnnotations);
+	  }
+
+  function showLayerPropertiesPanel() {
+    hideCallout();
+	    closePopover();
+	    closeLayoutPopover();
+	    aiToolsSidebar.classList.add('hidden');
+	    addChaptersPanel.classList.add('hidden');
+	    amcPanel.classList.add('hidden');
+	    layerPropertiesPanel.classList.remove('hidden');
+	    dockHiddenPanel = null;
+	    setRightDockActive('properties');
+	    renderGuideAnnotations();
+	    requestAnimationFrame(placeVisibleModals);
+	  }
+
+  function restoreAiToolsPanelFromProperties() {
+	    if (layerPropertiesPanel.classList.contains('hidden')) return;
+	    layerPropertiesPanel.classList.add('hidden');
+	    aiToolsSidebar.classList.remove('hidden');
+	    setRightDockActive('ai');
+	    renderGuideAnnotations();
+	  }
+
+    // The canvas's "Multicam" layout tag should only appear once AMC has been applied.
+    const layoutTbTagEl = document.getElementById('layoutTbTag');
+    function updateLayoutTagVisibility() {
+      const applied = document.getElementById('amcTimeline').classList.contains('applied');
+      layoutTbTagEl.classList.toggle('hidden', !applied);
+    }
+  new MutationObserver(updateLayoutTagVisibility).observe(amcPanel, { attributes: true, attributeFilter: ['class'] });
 
   // Camera setup rows carry the tokens assigned in the sequence intercept
   const camThumbs = [0, 1, 2, 3].map(camSVGHTML);
   const camSetupRows = document.getElementById('camSetupRows');
+  const camSetupHint = document.getElementById('camSetupHint');
 
-  function renderCamSetup() {
-    camSetupRows.innerHTML = '';
-    cameraNames.forEach((nameEl, i) => {
+  // Zoom-multi track carries two imported tracks from Zoom. In AMC setup we keep
+  // the same track thumbnails/names from the intercept, then prefill the speaker
+  // assignment for review.
+	  const ZOOM_MULTI_TRACKS = [
+	    { key: 'gallery', label: 'Gallery', cam: 3, speaker: 0 },
+	    { key: 'active', label: 'Active speakers', cam: 1, speaker: 1 },
+	  ];
+	  const CHAPTER_TRIGGER_TRACKS = [
+	    { label: 'Cam 1', cam: 0, speaker: 0 },
+	    { label: 'Cam 2', cam: 1, speaker: 1 },
+	  ];
+	  let zoomMultiAssign = { gallery: 0, active: 1 };
+
+  function renderZoomMultiCamSetup() {
+    ZOOM_MULTI_TRACKS.forEach(track => {
+      const speakerIdx = zoomMultiAssign[track.key];
+      const speakerLabel = speakers[speakerIdx] || speakers[track.speaker] || 'Assign speaker';
+
+      const row = document.createElement('div');
+      row.className = 'amc-row';
+      row.innerHTML = `
+        <div class="mm-filename grow"><span class="mm-thumb">${camSVGHTML(track.cam)}</span><span class="mm-name">${escapeHtml(track.label)}</span></div>
+        <button class="mm-select assigned" aria-label="${escapeHtml(track.label)} speaker"><span class="mm-select-label">${escapeHtml(speakerLabel)}</span>
+          <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+        </button>`;
+
+      const sel = row.querySelector('.mm-select');
+      sel.addEventListener('click', e => {
+        e.stopPropagation();
+        if (openAnchor === sel) { closePopover(); return; }
+        openSinglePopover({
+          get: () => zoomMultiAssign[track.key],
+          set: i => {
+            zoomMultiAssign[track.key] = i;
+            sel.querySelector('.mm-select-label').textContent = speakers[i];
+          },
+        }, sel);
+      });
+      camSetupRows.appendChild(row);
+    });
+  }
+
+	  function renderCamSetup() {
+	    camSetupRows.innerHTML = '';
+	    camSetupHint.classList.toggle('hidden', entrySource !== 'zoomMulti');
+	    if (entrySource === 'zoomMulti') { renderZoomMultiCamSetup(); return; }
+	    if (entrySource === 'chapterTrigger') {
+	      CHAPTER_TRIGGER_TRACKS.forEach(track => {
+	        const row = document.createElement('div');
+	        row.className = 'amc-row';
+	        row.innerHTML = `
+	          <div class="mm-filename grow"><span class="mm-thumb">${camSVGHTML(track.cam)}</span><span class="mm-name">${escapeHtml(track.label)}</span></div>
+	          <button class="mm-select assigned"><span class="mm-select-label">${escapeHtml(speakers[track.speaker])}</span>
+	            <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.75 6 7.75l3-3"/></svg>
+	          </button>`;
+	        camSetupRows.appendChild(row);
+	      });
+	      return;
+	    }
+
+	    cameraNames.forEach((nameEl, i) => {
       const renamed = nameEl.textContent !== originalCameraNames[i];
       const camName = renamed ? nameEl.textContent : `Cam ${i + 1}`;
       const assigned = [...assignments[i]].sort().map(s => speakers[s]);
@@ -4908,35 +7511,95 @@
     if (instant) requestAnimationFrame(() => amcPages.classList.remove('instant'));
   }
 
-  rowAutoMulticam.addEventListener('click', () => {
-    hideCallout();
-    renderCamSetup();
-    setAmcPage('settings', true);
-    swapPanel(aiToolsSidebar, amcPanel);
+  // Open the AMC panel. Camera setup for speakers defaults to expanded when the
+  // user opens it manually from the AI Tools sidebar, and collapsed when it opens
+  // automatically from an intercept's "Run automatic multi-cam" (Room), where
+  // cameras are already matched to speakers. Zoom-multi track is an exception:
+  // its two tracks were only auto-guessed (see renderZoomMultiCamSetup), so it
+  // stays expanded even on the automatic path to invite a quick double-check.
+	  let amcBackPanel = aiToolsSidebar;
+	  function openAmcPanel(collapseCamSetup, backPanel = aiToolsSidebar, chapterDefaults = false) {
+	    hideCallout();
+	    renderCamSetup();
+	    amcBackPanel = backPanel;
+	    if (chapterDefaults) {
+	      setCutTrigger('At chapters');
+	      const activeOnlySwitch = document.getElementById('activeOnlySwitch');
+	      activeOnlySwitch.classList.add('on');
+	      activeOnlySwitch.setAttribute('aria-checked', 'true');
+	      cutawaysRow.classList.add('hidden');
+	    }
+	    const collapse = collapseCamSetup && entrySource !== 'zoomMulti';
+	    document.getElementById('camSetupModule').classList.toggle('collapsed', !!collapse);
+	    setAmcPage('settings', true);
+	    swapPanel(backPanel, amcPanel);
+	    requestAnimationFrame(renderGuideAnnotations);
+	  }
+
+	  function openAddChaptersPanel() {
+	    if (prototypeMode === 'guide' && entrySource === 'chapterTrigger') chapterGuideStage = 'addChaptersPanel';
+	    addChaptersPanel.classList.remove('submitted');
+	    swapPanel(aiToolsSidebar, addChaptersPanel);
+	  }
+
+	  document.getElementById('rowAddChapters').addEventListener('click', openAddChaptersPanel);
+	  document.getElementById('chaptersBack').addEventListener('click', () => {
+	    swapPanel(addChaptersPanel, aiToolsSidebar);
+	  });
+	  document.getElementById('chaptersSubmit').addEventListener('click', () => {
+	    if (prototypeMode === 'guide' && entrySource === 'chapterTrigger') chapterGuideStage = 'chaptersSubmitted';
+	    addChaptersPanel.classList.add('submitted');
+	    renderGuideAnnotations();
+	  });
+	  document.getElementById('rowChaptersToAmc').addEventListener('click', () => {
+	    if (prototypeMode === 'guide' && entrySource === 'chapterTrigger') chapterGuideStage = 'chapterAmc';
+	    openAmcPanel(false, addChaptersPanel, true);
+	    if (prototypeMode === 'guide') setTimeout(renderGuideAnnotations, 80);
+	  });
+
+	  rowAutoMulticam.addEventListener('click', () => openAmcPanel(false));
+
+  // Contextual entrypoint proposal: the "Autocut scenes" button surfaces from
+  // the scene rail in the guided Contextual entrypoints flow.
+  document.getElementById('tlAutocutBtn').addEventListener('click', e => {
+    e.stopPropagation();
+	    if (prototypeMode === 'guide' && entrySource === 'chapterTrigger') chapterGuideStage = 'amcFromScene';
+    openAmcPanel(false);
+	    if (prototypeMode === 'guide') setTimeout(renderGuideAnnotations, 80);
   });
 
+	  document.querySelector('.tl-scene-group').addEventListener('mouseenter', () => {
+	    if (isSceneRailEntrypointEligible()) {
+	      chapterGuideStage = 'sceneButton';
+	      renderGuideAnnotations();
+	    }
+	  });
+
   // The AI Tools dock tile toggles the side panel
-  const dockAiTools = document.getElementById('dockAiTools');
   let dockHiddenPanel = null;
 
   dockAiTools.addEventListener('click', () => {
     if (dockHiddenPanel) {
-      dockHiddenPanel.classList.remove('hidden');
+      const panelToRestore = dockHiddenPanel;
+      panelToRestore.classList.remove('hidden');
       dockHiddenPanel = null;
-      dockAiTools.classList.add('active');
+      setRightDockActive(panelToRestore === layerPropertiesPanel ? 'properties' : 'ai');
       return;
     }
     hideCallout();
     closePopover();
-    dockHiddenPanel = [aiToolsSidebar, amcPanel].find(p => !p.classList.contains('hidden')) || aiToolsSidebar;
+	    dockHiddenPanel = [aiToolsSidebar, addChaptersPanel, amcPanel, layerPropertiesPanel].find(p => !p.classList.contains('hidden')) || aiToolsSidebar;
     dockHiddenPanel.classList.add('hidden');
-    dockAiTools.classList.remove('active');
+    setRightDockActive(null);
   });
-  document.getElementById('amcBack').addEventListener('click', () => {
-    if (amcPage === 'create') setAmcPage('preview');
-    else if (amcPage === 'preview') setAmcPage('settings');
-    else swapPanel(amcPanel, aiToolsSidebar);
+  dockProperties.addEventListener('click', () => {
+    if (selectedLayer) showLayerPropertiesPanel();
   });
+	  document.getElementById('amcBack').addEventListener('click', () => {
+	    if (amcPage === 'create') setAmcPage('preview');
+	    else if (amcPage === 'preview') setAmcPage('settings');
+	    else swapPanel(amcPanel, amcBackPanel || aiToolsSidebar);
+	  });
 
   // Switches, segmented tabs, and the camera-setup collapse
   amcPanel.querySelectorAll('.switch').forEach(sw => {
@@ -4964,6 +7627,84 @@
   });
   document.querySelectorAll('#settingsPage .num-field input').forEach(inp =>
     inp.addEventListener('input', markDirty));
+
+  // Manually editing Min/Max scene count switches "Cut frequency" to a 4th
+  // "Custom" tab; picking a preset again hides it.
+  const cutFreqCustomTab = document.getElementById('cutFreqCustomTab');
+  const cutFreqTabs = document.getElementById('cutFreqTabs');
+  [document.getElementById('cutFreqMin'), document.getElementById('cutFreqMax')].forEach(inp => {
+    inp.addEventListener('input', () => {
+      cutFreqCustomTab.classList.remove('hidden');
+      cutFreqTabs.querySelectorAll('.seg-tab').forEach(t => t.classList.remove('selected'));
+      cutFreqCustomTab.classList.add('selected');
+    });
+  });
+  cutFreqTabs.querySelectorAll('.seg-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (tab !== cutFreqCustomTab) cutFreqCustomTab.classList.add('hidden');
+    });
+  });
+
+  /* Cut triggers / Cutaways dropdowns: same small select-with-checkmark pattern */
+  const ctDropdownClosers = [];
+  function closeAllCtDropdowns(except) {
+    ctDropdownClosers.forEach(close => { if (close !== except) close(); });
+  }
+  function initCtDropdown(selectId, menuId, labelId) {
+    const select = document.getElementById(selectId);
+    const menu = document.getElementById(menuId);
+    const label = document.getElementById(labelId);
+
+    function close() {
+      menu.classList.add('hidden');
+      select.setAttribute('aria-expanded', 'false');
+    }
+    ctDropdownClosers.push(close);
+
+    select.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = menu.classList.contains('hidden');
+      closeAllCtDropdowns();
+      if (open) {
+        menu.classList.remove('hidden');
+        select.setAttribute('aria-expanded', 'true');
+      }
+    });
+    menu.querySelectorAll('.ct-menu-item').forEach(item => {
+      item.addEventListener('click', e => {
+        e.stopPropagation();
+        menu.querySelectorAll('.ct-menu-item').forEach(i => i.classList.remove('selected'));
+        item.classList.add('selected');
+        label.textContent = item.textContent;
+        close();
+        markDirty();
+      });
+    });
+  }
+  initCtDropdown('cutTriggersSelect', 'cutTriggersMenu', 'cutTriggersLabel');
+  initCtDropdown('cutawaysSelect', 'cutawaysMenu', 'cutawaysLabel');
+  document.addEventListener('click', () => closeAllCtDropdowns());
+
+	  function resetCtDropdown(menuId, labelId, defaultText) {
+	    const menu = document.getElementById(menuId);
+	    menu.querySelectorAll('.ct-menu-item').forEach(item => {
+	      item.classList.toggle('selected', item.textContent === defaultText);
+	    });
+	    document.getElementById(labelId).textContent = defaultText;
+	  }
+
+	  function setCutTrigger(labelText) {
+	    resetCtDropdown('cutTriggersMenu', 'cutTriggersLabel', labelText);
+	    document.getElementById('cutTriggersSelect').setAttribute('aria-expanded', 'false');
+	    document.getElementById('cutTriggersMenu').classList.add('hidden');
+	  }
+
+  // Cutaways only applies once "Show only active speakers" is off — it's the
+  // toggle that decides whether non-active speakers appear at all.
+  const cutawaysRow = document.getElementById('cutawaysRow');
+  document.getElementById('activeOnlySwitch').addEventListener('click', e => {
+    cutawaysRow.classList.toggle('hidden', e.currentTarget.classList.contains('on'));
+  });
 
   /* Preview page: speaker layouts */
   const pvCarousel = document.getElementById('pvCarousel');
@@ -5253,10 +7994,12 @@
     attachChipEditing(pvTrack);
   }
 
+  // "Run" goes straight from settings to applying — no separate speaker-layouts
+  // review step in between.
   document.getElementById('checkPreviewBtn').addEventListener('click', () => {
     if (!combos.length) seedCombos();
     renderCombos();
-    setAmcPage('preview');
+    runAutomaticMulticam();
   });
   document.getElementById('pvBackBtn').addEventListener('click', () => setAmcPage('settings'));
 
@@ -5450,8 +8193,24 @@
   // The canvas mirrors the currently applied layout for the selected scene
   function renderCanvasLayout() {
     const framesEl = document.querySelector('#screenEditor .artboard .frames');
-    if (!amcTimelineEl.classList.contains('applied')) {
-      framesEl.classList.add('frames-grid');
+	    if (entrySource === 'singleTrack') {
+	      framesEl.classList.remove('frames-grid');
+	      framesEl.innerHTML = `<div class="cam-frame" data-speaker="0" data-pos="0" style="flex:1">${camSVGHTML(singleTrackCam)}</div>`;
+      if (selectedLayer) {
+        const el = framesEl.querySelector('.cam-frame[data-pos="0"]');
+        if (el) el.classList.add('layer-selected');
+	      }
+	      return;
+	    }
+	    if (entrySource === 'chapterTrigger' && !amcTimelineEl.classList.contains('applied')) {
+	      framesEl.classList.remove('frames-grid');
+	      framesEl.innerHTML = `
+	        <div class="cam-frame" data-speaker="0" data-pos="0" style="flex:1">${camSVGHTML(0)}</div>
+	        <div class="cam-frame" data-speaker="1" data-pos="1" style="flex:1">${camSVGHTML(1)}</div>`;
+	      return;
+	    }
+	    if (!amcTimelineEl.classList.contains('applied')) {
+	      framesEl.classList.add('frames-grid');
       framesEl.innerHTML = [0, 1, 2, 3].map(i =>
         `<div class="cam-frame">${camSVGHTML(i)}</div>`).join('');
       return;
@@ -5479,8 +8238,37 @@
   const camPicker = document.getElementById('camPicker');
   const mtGrid = document.getElementById('mtGrid');
   const selMulticamBtn = document.getElementById('selMulticamBtn');
-  const sceneToolbarEl = document.querySelector('#screenEditor .scene-toolbar');
-  let selectedLayer = null; // {pos, speaker}
+  const selCamAvatar = document.getElementById('selCamAvatar');
+  const selCamLabel = document.getElementById('selCamLabel');
+  const propCamThumb = document.getElementById('propCamThumb');
+  const propCamLabel = document.getElementById('propCamLabel');
+	  const sceneToolbarEl = document.querySelector('#screenEditor .scene-toolbar');
+	  let selectedLayer = null; // {pos, speaker}
+		  const SINGLE_TRACK_NEW_CAM = 1;
+		  let singleTrackCam = 0;
+		  let singleTrackHasNewCamera = false;
+		  let singleTrackAmcActivated = false;
+		  let singleTrackAmcPulseTimer = null;
+
+		  function pulseAutoMulticamRow() {
+		    if (aiToolsSidebar.classList.contains('hidden')) {
+		      swapPanel(layerPropertiesPanel.classList.contains('hidden') ? amcPanel : layerPropertiesPanel, aiToolsSidebar);
+		    }
+		    rowAutoMulticam.classList.remove('amc-activated-pulse');
+		    clearTimeout(singleTrackAmcPulseTimer);
+		    requestAnimationFrame(() => {
+		      void rowAutoMulticam.offsetWidth;
+		      rowAutoMulticam.classList.add('amc-activated-pulse');
+		      singleTrackAmcPulseTimer = setTimeout(() => {
+		        rowAutoMulticam.classList.remove('amc-activated-pulse');
+		      }, 1200);
+		    });
+		  }
+
+		  function updateSingleTrackAmcAvailability() {
+		    if (entrySource !== 'singleTrack') return;
+		    document.body.classList.toggle('amc-disabled', !singleTrackAmcActivated);
+		  }
 
   // cameras assigned to a speaker in the sequence intercept
   function camsForSpeaker(s) {
@@ -5493,11 +8281,17 @@
     deselectLayer();
     selectedLayer = { pos: Number(el.dataset.pos), speaker: Number(el.dataset.speaker) };
     el.classList.add('layer-selected');
+    updateSelectedLayerToolbar();
     selToolbar.classList.remove('hidden');
     // the canvas toolbar replaces the scene toolbar while a layer is selected
     sceneToolbarEl.classList.add('hidden');
     closeLayoutPopover();
     hideLayoutCallout();
+    showLayerPropertiesPanel();
+	    if (prototypeMode === 'guide' && entrySource === 'singleTrack') {
+	      singleTrackGuideStage = 'camButton';
+	      requestAnimationFrame(renderGuideAnnotations);
+	    }
   }
 
   function deselectLayer() {
@@ -5506,16 +8300,54 @@
     selToolbar.classList.add('hidden');
     sceneToolbarEl.classList.remove('hidden');
     closeCamPicker();
+    restoreAiToolsPanelFromProperties();
   }
 
   function currentLayerCam() {
+    if (entrySource === 'singleTrack') return singleTrackCam;
     return camForSpeaker(selectedLayer.speaker, lpComboIdx, selectedLayer.pos);
+  }
+
+  function updateSelectedLayerToolbar() {
+    if (!selectedLayer) return;
+    const cam = currentLayerCam();
+    selCamAvatar.innerHTML = camSVGHTML(cam);
+    selCamLabel.textContent = `Cam ${cam + 1}`;
+    propCamThumb.innerHTML = camSVGHTML(cam);
+    propCamLabel.textContent = `Cam ${cam + 1}`;
   }
 
   // The Switch cameras panel offers every available camera angle (not just the
   // ones this speaker is assigned to) so you can cut to any of them.
   const ALL_CAMS = [0, 1, 2, 3, 4, 5, 6, 7];
-  function renderCamPicker() {
+	  function renderCamPicker() {
+	    if (entrySource === 'singleTrack') {
+	      camPicker.classList.add('single-track-picker');
+	      const availableCams = singleTrackHasNewCamera ? [0, SINGLE_TRACK_NEW_CAM] : [0];
+	      mtGrid.innerHTML = availableCams.map(camIdx => `
+	        <button class="mt-tile${camIdx === singleTrackCam ? ' selected' : ''}" data-cam="${camIdx}">
+	          <span class="mt-img">${camSVGHTML(camIdx)}</span>
+	          <span class="mt-name">Cam ${camIdx + 1}</span>
+	        </button>`).join('') + `
+	        <button class="mt-new-camera" id="singleTrackNewCamera">
+	          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+	            <path d="M8 3v10M3 8h10"/>
+	          </svg>
+	          <span>New cameras</span>
+	        </button>`;
+	      mtGrid.querySelectorAll('.mt-tile').forEach(tile => tile.addEventListener('click', () => {
+	        singleTrackCam = Number(tile.dataset.cam);
+	        renderCanvasLayout();
+	        updateSelectedLayerToolbar();
+	        closeCamPicker();
+	      }));
+	      mtGrid.querySelector('#singleTrackNewCamera').addEventListener('click', e => {
+	        e.stopPropagation();
+	        openAudioModal();
+	      });
+	      return;
+    }
+    camPicker.classList.remove('single-track-picker');
     const current = currentLayerCam();
     mtGrid.innerHTML = ALL_CAMS.map(camIdx => {
       const isCurrent = camIdx === current;
@@ -5531,6 +8363,7 @@
         layerCamOverride[`${lpComboIdx}:${selectedLayer.pos}`] = Number(tile.dataset.cam);
         renderCanvasLayout();
         renderTimelineScenes();
+        updateSelectedLayerToolbar();
         renderCamPicker();
         markDirty();
       });
@@ -5541,6 +8374,7 @@
     renderCamPicker();
     camPicker.classList.remove('hidden');
     selMulticamBtn.classList.add('active');
+    selMulticamBtn.setAttribute('aria-expanded', 'true');
     const baseRect = selToolbar.offsetParent.getBoundingClientRect();
     const bRect = selMulticamBtn.getBoundingClientRect();
     camPicker.style.left = `${Math.max(8, bRect.left + bRect.width / 2 - baseRect.left - camPicker.offsetWidth / 2)}px`;
@@ -5549,14 +8383,24 @@
 
   function closeCamPicker() {
     camPicker.classList.add('hidden');
+    camPicker.classList.remove('single-track-picker');
     selMulticamBtn.classList.remove('active');
+    selMulticamBtn.setAttribute('aria-expanded', 'false');
   }
 
-  selMulticamBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    if (camPicker.classList.contains('hidden')) openCamPicker();
-    else closeCamPicker();
-  });
+	  selMulticamBtn.addEventListener('click', e => {
+	    e.stopPropagation();
+	    if (prototypeMode === 'guide' && entrySource === 'room' && roomGuideCanvasToolbarStep) {
+	      roomGuideCamAnnotationDismissed = true;
+	      clearGuideAnnotations();
+	    }
+	    if (camPicker.classList.contains('hidden')) openCamPicker();
+	    else closeCamPicker();
+	    if (prototypeMode === 'guide' && entrySource === 'singleTrack') {
+	      singleTrackGuideStage = camPicker.classList.contains('hidden') ? 'camButton' : 'camMenu';
+	      requestAnimationFrame(renderGuideAnnotations);
+	    }
+	  });
   selToolbar.addEventListener('click', e => e.stopPropagation());
   camPicker.addEventListener('click', e => e.stopPropagation());
 
@@ -5575,33 +8419,88 @@
   const audioModal = document.getElementById('audioModal');
   const audioSpeakerSelect = document.getElementById('audioSpeakerSelect');
   const audioSpeakerLabel = document.getElementById('audioSpeakerLabel');
-  let audioScrimWasDismissed = false;
-  let audioSpeakerIdx = 0;
+  const audioThumb = document.getElementById('audioThumb');
+  const audioName = document.getElementById('audioName');
+	  const audioDefaultName = audioName.textContent;
+	  let audioScrimWasDismissed = false;
+	  let audioSpeakerIdx = 0;
+	  let audioOriginalSpeakerIdx = 0;
 
-  function openAudioModal() {
-    closeCamPicker();
-    audioSpeakerIdx = selectedLayer ? selectedLayer.speaker : 0;
-    audioSpeakerLabel.textContent = speakers[audioSpeakerIdx];
-    document.getElementById('audioThumb').innerHTML =
-      camSVGHTML(selectedLayer ? currentLayerCam() : 0);
-    audioScrimWasDismissed = modalScrim.classList.contains('dismissed');
-    modalScrim.classList.remove('dismissed');
-    audioModal.classList.remove('dismissed');
-  }
+	  function openAudioModal() {
+	    closeCamPicker();
+	    if (prototypeMode === 'guide' && entrySource === 'singleTrack') singleTrackGuideStage = 'sequenceDialog';
+	    const singleTrackUpload = entrySource === 'singleTrack';
+	    audioOriginalSpeakerIdx = selectedLayer ? selectedLayer.speaker : 0;
+	    audioSpeakerIdx = audioOriginalSpeakerIdx;
+	    audioSpeakerLabel.textContent = speakers[audioSpeakerIdx];
+	    audioModal.classList.toggle('single-track-upload', singleTrackUpload);
+	    audioName.textContent = singleTrackUpload ? 'New camera · Screen Recording…-51.39.48 AM.mp4' : audioDefaultName;
+	    audioThumb.innerHTML =
+	      camSVGHTML(singleTrackUpload ? SINGLE_TRACK_NEW_CAM : selectedLayer ? currentLayerCam() : 0);
+	    audioScrimWasDismissed = modalScrim.classList.contains('dismissed');
+	    modalScrim.classList.remove('dismissed');
+	    audioModal.classList.remove('dismissed');
+	    requestAnimationFrame(placeVisibleModals);
+	  }
 
-  function closeAudioModal() {
+	  function closeAudioModal() {
     closePopover();
     audioModal.classList.add('dismissed');
     if (audioScrimWasDismissed) modalScrim.classList.add('dismissed');
   }
 
-  document.getElementById('mtUpload').addEventListener('click', e => {
-    e.stopPropagation();
-    openAudioModal();
+  const singleTrackToast = document.getElementById('singleTrackToast');
+  const singleTrackToastTitle = document.getElementById('singleTrackToastTitle');
+  let singleTrackToastTimer = null;
+
+	  function showSingleTrackToast(title, showAmcSuggestion) {
+	    singleTrackToastTitle.textContent = title;
+	    singleTrackToast.classList.toggle('amc-suggested', !!showAmcSuggestion);
+	    singleTrackToast.classList.add('visible');
+	    clearTimeout(singleTrackToastTimer);
+	    singleTrackToastTimer = setTimeout(() => singleTrackToast.classList.remove('visible'), 8000);
+	  }
+
+			  function finishSingleTrackCameraAdd(title) {
+			    const assignedDifferentSpeaker = audioSpeakerIdx !== audioOriginalSpeakerIdx;
+			    singleTrackHasNewCamera = true;
+			    singleTrackAmcActivated = assignedDifferentSpeaker;
+			    singleTrackCam = SINGLE_TRACK_NEW_CAM;
+			    closeAudioModal();
+				    renderCanvasLayout();
+				    if (selectedLayer) updateSelectedLayerToolbar();
+				    updateSingleTrackAmcAvailability();
+				    if (assignedDifferentSpeaker) pulseAutoMulticamRow();
+			    showSingleTrackToast(title, assignedDifferentSpeaker);
+			    if (prototypeMode === 'guide' && entrySource === 'singleTrack') {
+			      singleTrackGuideStage = 'toast';
+			      setTimeout(renderGuideAnnotations, 80);
+			    }
+			  }
+
+	  document.getElementById('mtUpload').addEventListener('click', e => {
+	    e.stopPropagation();
+	    openAudioModal();
+	  });
+  document.getElementById('audioClose').addEventListener('click', closeAudioModal);
+  document.getElementById('audioEdit').addEventListener('click', () => {
+    if (entrySource === 'singleTrack') finishSingleTrackCameraAdd('Camera added and audio will be transcribed.');
+    else closeAudioModal();
   });
-  ['audioClose', 'audioEdit', 'audioVisualOnly'].forEach(id =>
-    document.getElementById(id).addEventListener('click', closeAudioModal));
+  document.getElementById('audioVisualOnly').addEventListener('click', () => {
+    if (entrySource === 'singleTrack') finishSingleTrackCameraAdd('Camera added without changing your current audio.');
+    else closeAudioModal();
+  });
   audioModal.addEventListener('click', e => e.stopPropagation());
+  document.getElementById('singleTrackToastClose').addEventListener('click', () => {
+    clearTimeout(singleTrackToastTimer);
+    singleTrackToast.classList.remove('visible');
+  });
+  document.getElementById('singleTrackToastCta').addEventListener('click', () => {
+    clearTimeout(singleTrackToastTimer);
+    singleTrackToast.classList.remove('visible');
+    openAmcPanel(false);
+  });
 
   // speaker field follows the standing rule: shared Identified speakers dropdown
   audioSpeakerSelect.addEventListener('click', e => {
@@ -5620,7 +8519,7 @@
   // click a speaker frame to select it; click elsewhere on the canvas to deselect
   document.querySelector('#screenEditor .canvas-pane').addEventListener('click', e => {
     const frame = e.target.closest('.cam-frame[data-speaker]');
-    if (frame && amcTimelineEl.classList.contains('applied')) {
+    if (frame && (amcTimelineEl.classList.contains('applied') || entrySource === 'singleTrack')) {
       e.stopPropagation();
       if (selectedLayer && Number(frame.dataset.pos) === selectedLayer.pos) return;
       selectLayer(frame);
@@ -5788,18 +8687,6 @@
   /* Layout callout: nudges users to the scene toolbar after the toast */
   const layoutCallout = document.getElementById('layoutCallout');
 
-  function showLayoutCallout() {
-    if (!amcTimelineEl.classList.contains('applied')) return;
-    if (!layoutPopover.classList.contains('hidden')) return;
-    const anchor = document.getElementById('layoutTbItem');
-    layoutCallout.classList.remove('hidden');
-    const baseRect = screenEditor.getBoundingClientRect();
-    const aRect = anchor.getBoundingClientRect();
-    layoutCallout.style.left = `${aRect.left + aRect.width / 2 - baseRect.left - layoutCallout.offsetWidth / 2}px`;
-    layoutCallout.style.top = `${aRect.top - baseRect.top - layoutCallout.offsetHeight - 10}px`;
-    requestAnimationFrame(() => layoutCallout.classList.add('visible'));
-  }
-
   function hideLayoutCallout() {
     if (!layoutCallout.classList.contains('visible')) return;
     layoutCallout.classList.remove('visible');
@@ -5825,6 +8712,7 @@
     layerCamOverride = {};
     deselectLayer();
     renderCanvasLayout();
+    updateLayoutTagVisibility();
     layoutPopover.classList.remove('open');
     layoutPopover.classList.add('hidden');
     packPopover.classList.remove('open');
@@ -5852,7 +8740,7 @@
     amcToast.classList.remove('visible');
   }
 
-  pvApply.addEventListener('click', () => {
+  function runAutomaticMulticam() {
     if (pvApply.dataset.state) return;
     pvApply.style.width = `${pvApply.offsetWidth}px`;
     pvApply.dataset.state = 'processing';
@@ -5881,6 +8769,7 @@
       // timeline and canvas reflect the applied multicam
       renderTimelineScenes();
       document.getElementById('amcTimeline').classList.add('applied');
+      updateLayoutTagVisibility();
       renderCanvasLayout();
     }, 420 * STEPS + 300));
     // strictly in order: the supertoast finishes and fades out first,
@@ -5891,20 +8780,17 @@
     applyTimers.push(setTimeout(() => {
       amcToast.classList.add('visible');
     }, 420 * STEPS + 1500));
-    // the toast stays briefly, then hands off to the layout callout
     applyTimers.push(setTimeout(() => {
       amcToast.classList.remove('visible');
     }, 420 * STEPS + 6500));
-    applyTimers.push(setTimeout(() => {
-      showLayoutCallout();
-    }, 420 * STEPS + 6900));
-  });
+  }
+
+  pvApply.addEventListener('click', runAutomaticMulticam);
 
   document.getElementById('amcToastUndo').addEventListener('click', resetApplyState);
   document.getElementById('amcToastClose').addEventListener('click', e => {
     e.stopPropagation();
     amcToast.classList.remove('visible');
-    setTimeout(showLayoutCallout, 350);
   });
   pvPrev.addEventListener('click', () => { comboIdx--; renderCombos(); });
   pvNext.addEventListener('click', () => { comboIdx++; renderCombos(); });
@@ -6296,6 +9182,25 @@
     }
   }
 
+  function fillManualGuideSpeakers() {
+    [0, 1, 2, 3].forEach((speakerIdx, rowIdx) => {
+      if (!assignments[rowIdx]) return;
+      assignments[rowIdx] = new Set([speakerIdx]);
+      updateSelectLabel(rowIdx);
+      updateCamRowLabel(rowIdx);
+    });
+    updateConfirm();
+  }
+
+  function clearManualGuideSpeakers() {
+    assignments.forEach((_, rowIdx) => {
+      assignments[rowIdx] = new Set();
+      updateSelectLabel(rowIdx);
+      updateCamRowLabel(rowIdx);
+    });
+    updateConfirm();
+  }
+
   // Mirror assignment changes into the AMC panel's camera setup rows
   function updateCamRowLabel(rowIdx) {
     const row = camSetupRows.children[rowIdx];
@@ -6671,6 +9576,361 @@
     identifyModal.classList.add('dismissed');
     multicamModal.classList.remove('away');
   };
+
+  /* ═══════════ Prototype source switcher (tester chrome, outside the app UI) ═══════════
+     Three start points — Import from Room / Manually upload / Import from Zoom.
+     Each swaps the empty-screen entry card, the import-progress copy, and the
+     intercept modal the tester lands on after entering the editor. */
+
+  let entrySource = 'manual';
+
+  const mmTitleEl = document.getElementById('mmTitle');
+  const mmDescEl = multicamModal.querySelector('.mm-desc');
+  const origMmTitle = mmTitleEl.textContent;
+  const origMmDesc = mmDescEl.textContent;
+  const origTaskLabel = tasks[0].label;
+  const origTaskDone = tasks[0].doneLabel;
+
+  const SOURCE_FLOWS = {
+    manual: {
+      taskLabel: origTaskLabel,
+      taskDone: origTaskDone,
+      intercept: {
+        title: 'Multiple speakers from the same recordings?',
+        descHTML: 'A <strong>sequence</strong> will be created to <strong>allow</strong> you to <strong>switch camera angles</strong> while editing.',
+        manualStyle: true,   // X close, plain combine button; assign speakers yourself
+        createLabel: 'Yes, combine into a sequence',
+        rows: [
+          { speaker: null },
+          { speaker: null },
+          { speaker: null },
+          { speaker: null },
+        ],
+      },
+    },
+		    singleTrack: {
+		      taskLabel: origTaskLabel,
+		      taskDone: 'Imported 1 recording',
+		      intercept: { none: true, amcDisabled: true },
+		    },
+	    chapterTrigger: {
+	      taskLabel: origTaskLabel,
+	      taskDone: 'Ready to show contextual entrypoints',
+	      intercept: { none: true, amcDisabled: true },
+	    },
+	    room: {
+      taskLabel: p => `Importing from Room (${Math.max(1, Math.round(20 - p / 5))}m remaining)`,
+      taskDone: 'Imported 4 camera tracks from Room',
+      importDialog: {
+        title: 'Importing your files from Room',
+        descHTML: 'A <strong>sequence</strong> will be created to <strong>allow</strong> you to <strong>switch camera angles</strong> while editing, which is helpful for <strong>multiple speakers recording</strong>.',
+        link: false,
+        labelAt: p => p < 20 ? 'Importing 2 files' : p < 30 ? 'Identifying speakers' : 'Creating sequence',
+	      },
+	      intercept: {
+	        title: 'Review speakers and cameras from Room',
+	        descHTML: 'Room matched each camera to a speaker. Review the setup, then run <strong>automatic multi-cam</strong> if you want scenes cut by active conversation.',
+	        roomStyle: true,   // X close + "Edit by myself" / "Run automatic multi-cam" footer
+        rows: [
+          { speaker: 0 },
+          { speaker: 1 },
+          { speaker: 2 },
+          { speaker: 3 },
+        ],
+      },
+    },
+    zoom: {
+      taskLabel: p => `Importing from Zoom (${Math.max(1, Math.round(20 - p / 5))}m remaining)`,
+      taskDone: 'Imported 2 recordings from Zoom',
+      importDialog: {
+        title: 'Importing your files from Zoom',
+        descHTML: 'A <strong>sequence</strong> will be created for your <strong>one audio file</strong> and <strong>one camera track of all speakers</strong>.',
+        link: true,
+        labelAt: p => p < 30 ? 'Importing 2 files' : 'Creating sequence',
+      },
+      // Single track: no intercept, and AMC is deactivated in the sidebar
+      intercept: { none: true, amcDisabled: true },
+    },
+    zoomMulti: {
+      taskLabel: p => `Importing from Zoom (${Math.max(1, Math.round(20 - p / 5))}m remaining)`,
+      taskDone: 'Imported 2 recordings from Zoom',
+      importDialog: {
+        title: 'Importing your files from Zoom',
+        descHTML: 'A <strong>sequence</strong> will be created to <strong>allow</strong> you to <strong>switch camera angles</strong> while editing, which is helpful for <strong>multiple speakers recording</strong>.',
+        link: false,
+        labelAt: p => p < 20 ? 'Importing 2 files' : p < 30 ? 'Identifying speakers' : 'Creating sequence',
+      },
+      intercept: {
+        title: 'Multiple speakers from the same recordings?',
+        descHTML: 'If so, you can use <strong>automatic multi-cam</strong> to cut scenes to show <strong>active conversations</strong> to save you some time!',
+        roomStyle: true,
+        rowCount: 2,
+	        rows: [
+	          { tag: 'Gallery', cam: 3, speakers: [0, 1, 2, 3] },   // cam 3 = gallery-view art
+	          { tag: 'Active speakers', cam: 1, speakers: [0, 1, 2, 3] },
+	        ],
+      },
+    },
+  };
+
+  const mmRowEls = Array.from(document.querySelectorAll('#mmRows .mm-row'));
+  const mmScrollbarEl = document.querySelector('#mmRows .mm-scrollbar');
+  const mmCreateLabel = document.getElementById('mmCreateLabel');
+  const origCreateLabel = mmCreateLabel.textContent;
+
+  function applySourceIntercept() {
+    const conf = SOURCE_FLOWS[entrySource].intercept;
+    multicamModal.classList.toggle('room-style', !!(conf && conf.roomStyle));
+    multicamModal.classList.toggle('manual-style', !!(conf && conf.manualStyle));
+	    document.body.classList.toggle('amc-disabled', !!(conf && conf.amcDisabled));
+	    updateSingleTrackAmcAvailability();
+    mmCreateLabel.textContent = (conf && conf.createLabel) || origCreateLabel;
+
+	    // Room / Manually upload / Zoom-multi track: one scene, multi-speaker track.
+	    // Zoom-single, Single track, and chapter trigger keep the plain timeline skeleton.
+	    document.getElementById('amcTimeline').classList.toggle('solo-scene', !['zoom', 'singleTrack', 'chapterTrigger'].includes(entrySource));
+    updateLayoutTagVisibility();
+
+    // Row count, per-row track tags, and per-row thumbnail art
+    // (defaults: all 4 rows, no tags, art from the row's data-cam)
+    const rowCount = (conf && conf.rowCount) || mmRowEls.length;
+    mmRowEls.forEach((el, i) => {
+      el.style.display = i < rowCount ? '' : 'none';
+      const row = conf && conf.rows && conf.rows[i];
+      const tagEl = el.querySelector('.mm-tag');
+      tagEl.textContent = (row && row.tag) || '';
+      tagEl.classList.toggle('hidden', !(row && row.tag));
+      const thumbEl = el.querySelector('.mm-thumb');
+      const cam = row && row.cam !== undefined ? row.cam : Number(thumbEl.dataset.cam);
+      thumbEl.innerHTML = camSVGHTML(cam);
+    });
+    mmScrollbarEl.style.display = rowCount < mmRowEls.length ? 'none' : '';
+
+    if (!conf) {
+      mmTitleEl.textContent = origMmTitle;
+      mmDescEl.textContent = origMmDesc;
+      return;
+    }
+
+    // No intercept for this source: land in the editor with the modal dismissed
+    if (conf.none) {
+      modalScrim.classList.add('dismissed');
+      multicamModal.classList.add('dismissed');
+      mmTitleEl.textContent = origMmTitle;
+      mmDescEl.textContent = origMmDesc;
+      return;
+    }
+
+    mmTitleEl.textContent = conf.title;
+    if (conf.descHTML) mmDescEl.innerHTML = conf.descHTML;
+    else mmDescEl.textContent = conf.desc;
+    conf.rows.forEach((row, i) => {
+      if (row.name && cameraNames[i]) cameraNames[i].textContent = row.name;
+      assignments[i] = new Set(row.speakers ? row.speakers : row.speaker === null || row.speaker === undefined ? [] : [row.speaker]);
+    });
+    selects.forEach((_, r) => updateSelectLabel(r));
+    updateAllCamLabels();
+    updateConfirm();
+  }
+
+  const preSourceResetModalState = resetModalState;
+  resetModalState = function () {
+    preSourceResetModalState();
+    applySourceIntercept();
+  };
+
+	  const PROTO_GROUP_DEFAULTS = {
+	    amc: 'manual',
+	    canvas: 'singleTrack',
+	    more: 'chapterTrigger',
+	  };
+
+	  function setProtoGroup(group) {
+	    document.querySelectorAll('.proto-group-tab').forEach(tab => {
+	      const active = tab.dataset.protoGroup === group;
+	      tab.classList.toggle('active', active);
+	      tab.setAttribute('aria-selected', active);
+	    });
+	    document.querySelectorAll('.proto-flow-tabs .proto-tab').forEach(tab => {
+	      tab.classList.toggle('hidden', tab.dataset.protoGroup !== group);
+	    });
+	  }
+
+	  function setProtoFlowActive(src) {
+	    document.querySelectorAll('.proto-flow-tabs .proto-tab').forEach(tab => {
+	      const active = tab.dataset.source === src;
+	      tab.classList.toggle('active', active);
+	      tab.setAttribute('aria-selected', active);
+	    });
+	  }
+
+		  function setPrototypeMode(mode) {
+	    prototypeMode = mode;
+	    if (mode !== 'guide') chapterGuideStage = 'sceneButton';
+	    if (mode !== 'guide') singleTrackGuideStage = 'camButton';
+	    document.body.classList.toggle('guide-mode', mode === 'guide');
+	    document.body.classList.toggle('test-mode', mode === 'test');
+	    document.querySelectorAll('.proto-mode-tab').forEach(tab => {
+	      const active = tab.dataset.protoMode === mode;
+	      tab.classList.toggle('active', active);
+	      tab.setAttribute('aria-selected', active);
+	    });
+	    if (mode === 'test' && !['room', 'manual', 'zoom', 'zoomMulti'].includes(entrySource)) {
+	      switchPrototypeSource('manual');
+	      return;
+	    }
+	    if (mode === 'guide' && entrySource === 'singleTrack' && !screenEditor.classList.contains('hidden')) {
+	      const frame = document.querySelector('#screenEditor .cam-frame[data-speaker]');
+	      if (frame && !selectedLayer) selectLayer(frame);
+	    }
+	    renderGuideAnnotations();
+	  }
+
+		  function switchPrototypeSource(src) {
+		    const tab = document.querySelector(`.proto-flow-tabs .proto-tab[data-source="${src}"]`);
+		    if (!tab) return;
+		    roomGuideCutawaysStep = false;
+		    roomGuideCanvasToolbarStep = false;
+		    roomGuideCamAnnotationDismissed = false;
+		    manualGuideStage = 'sequence';
+		    chapterGuideStage = 'sceneButton';
+		    singleTrackGuideStage = 'camButton';
+		    zoomMultiGuideStage = 'speakers';
+		    const group = tab.dataset.protoGroup;
+	    setProtoGroup(group);
+	    setProtoFlowActive(src);
+	    if (src === entrySource) return;
+	    entrySource = src;
+	    document.body.classList.toggle('start-room', src === 'room');
+	    document.body.classList.toggle('start-zoom', src === 'zoom');
+	    document.body.classList.toggle('start-zoom-multi', src === 'zoomMulti');
+	    document.body.classList.toggle('start-single-track', src === 'singleTrack');
+	    document.body.classList.toggle('start-chapter-trigger', src === 'chapterTrigger');
+	    const flow = SOURCE_FLOWS[src];
+	    tasks[0].label = flow.taskLabel;
+	    tasks[0].doneLabel = flow.taskDone;
+	    hideRoomImport();
+	    resetToEmpty();
+	    if (src === 'singleTrack' || src === 'chapterTrigger') showEditor();
+	    if (src === 'singleTrack' && prototypeMode === 'guide') {
+	      requestAnimationFrame(() => {
+	        const frame = document.querySelector('#screenEditor .cam-frame[data-speaker]');
+	        if (frame && !selectedLayer) selectLayer(frame);
+	        renderGuideAnnotations();
+	      });
+	    }
+	    renderGuideAnnotations();
+	  }
+
+	  document.querySelectorAll('.proto-mode-tab').forEach(tab => {
+	    tab.addEventListener('click', () => setPrototypeMode(tab.dataset.protoMode));
+	  });
+	  document.querySelectorAll('.proto-group-tab').forEach(tab => {
+	    tab.addEventListener('click', () => switchPrototypeSource(PROTO_GROUP_DEFAULTS[tab.dataset.protoGroup]));
+	  });
+	  document.querySelectorAll('.proto-flow-tabs .proto-tab').forEach(tab => {
+	    tab.addEventListener('click', () => switchPrototypeSource(tab.dataset.source));
+	  });
+	  setProtoGroup('amc');
+	  setProtoFlowActive(entrySource);
+	  setPrototypeMode('test');
+	  window.addEventListener('resize', () => {
+	    placeVisibleModals();
+	    renderGuideAnnotations();
+	  });
+
+  /* Import dialog (Room / Zoom): one progress line whose content changes as the
+     number climbs (per design: 9% importing, 20% identifying, 30%+ creating).
+     The whole run takes ~20 seconds. */
+  const roomScrim = document.getElementById('roomScrim');
+  const roomImportModal = document.getElementById('roomImportModal');
+  const riSteps = document.getElementById('riSteps');
+  const riTitleEl = document.getElementById('riTitle');
+  const riDescEl = document.getElementById('riDesc');
+  const riLinkEl = document.getElementById('riLink');
+  riLinkEl.addEventListener('click', e => e.preventDefault());
+
+  const RI_DURATION = 20000;
+
+  let riToken = 0;
+
+  function startImportDialogFlow() {
+    if (running) return;
+    const conf = SOURCE_FLOWS[entrySource].importDialog;
+    if (!conf) return;
+    running = true;
+    const token = ++riToken;
+    riTitleEl.textContent = conf.title;
+    riDescEl.innerHTML = conf.descHTML;
+    riLinkEl.classList.toggle('hidden', !conf.link);
+	    riSteps.innerHTML = `<div class="ri-step"><span class="ri-progress">${ringSVG(0)}</span><span class="ri-label">${conf.labelAt(0)}</span><span class="ri-pct">0%</span></div>`;
+	    roomScrim.classList.remove('dismissed');
+	    roomImportModal.classList.remove('dismissed');
+	    requestAnimationFrame(placeVisibleModals);
+
+	    const row = riSteps.firstElementChild;
+	    const fill = row.querySelector('.ring-fill');
+	    const labelEl = row.querySelector('.ri-label');
+	    const pctEl = row.querySelector('.ri-pct');
+	    const t0 = performance.now();
+
+	    if (prototypeMode === 'guide' && (entrySource === 'room' || entrySource === 'zoom' || entrySource === 'zoomMulti')) {
+	      const guideProgress = 75;
+	      fill.style.strokeDashoffset = RING_C * (1 - guideProgress / 100);
+	      labelEl.textContent = conf.labelAt(guideProgress);
+	      pctEl.textContent = `${guideProgress}%`;
+	      renderGuideAnnotations();
+	      return;
+	    }
+
+	    function tick(now) {
+      if (token !== riToken) return;
+      const p = Math.min(100, 100 * ((now - t0) / RI_DURATION));
+      fill.style.strokeDashoffset = RING_C * (1 - p / 100);
+      labelEl.textContent = conf.labelAt(p);
+      pctEl.textContent = `${Math.round(p)}%`;
+      if (p < 100) {
+        requestAnimationFrame(tick);
+      } else {
+        row.querySelector('.ri-progress').innerHTML = checkSVG;
+        pctEl.textContent = '';
+        setTimeout(() => {
+          if (token !== riToken) return;
+          hideRoomImport();
+          showEditor();
+        }, 600);
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function hideRoomImport() {
+    riToken++;
+    roomScrim.classList.add('dismissed');
+    roomImportModal.classList.add('dismissed');
+  }
+
+  // Home button also cancels an in-flight Room import
+  document.querySelectorAll('.js-home').forEach(btn => btn.addEventListener('click', hideRoomImport));
+
+  /* Room-style intercept footer */
+  document.getElementById('mmClose').addEventListener('click', e => {
+    e.stopPropagation();
+    dismissModal();
+  });
+  document.getElementById('mmEditMyself').addEventListener('click', dismissModal);
+  document.getElementById('mmRunAmc').addEventListener('click', e => {
+    e.stopPropagation();
+    dismissModal();
+    setTimeout(() => openAmcPanel(true), 350);   // automatic path: camera setup collapsed
+  });
+
+  // Entry buttons: Room and Zoom both run the import dialog (with per-source copy)
+  document.getElementById('roomPicker').addEventListener('click', startImportDialogFlow);
+  document.getElementById('zoomPicker').addEventListener('click', startImportDialogFlow);
+
+  // Stage the default source's intercept for the first run
+  applySourceIntercept();
 })();
 </script>
 
