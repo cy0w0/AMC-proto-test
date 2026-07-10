@@ -2656,6 +2656,25 @@
     color: var(--fg-secondary);
     margin-left: 4px;
   }
+  .scene-count-label {
+    font-weight: 600;
+  }
+  .cut-frequency-preset {
+    width: 100%;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 4px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--fg-primary);
+  }
+  .cut-frequency-preset .muted {
+    color: var(--fg-secondary);
+    white-space: nowrap;
+  }
   .amc-hint {
     width: 100%;
     padding: 0 4px;
@@ -5398,17 +5417,21 @@
                 <button class="seg-tab selected" role="tab" data-preset="chill">Chill</button>
                 <button class="seg-tab" role="tab" data-preset="casual">Casual</button>
                 <button class="seg-tab" role="tab" data-preset="hype">Hype</button>
-                <button class="seg-tab hidden" role="tab" id="cutFreqCustomTab" data-preset="custom">Custom</button>
+                <button class="seg-tab" role="tab" id="cutFreqCustomTab" data-preset="custom">Custom</button>
               </div>
               <div class="amc-row">
-                <span class="amc-row-label">Scene count</span>
+                <span class="amc-row-label scene-count-label">Scene count</span>
                 <span class="amc-row-sublabel">(for your video)</span>
               </div>
-              <div class="amc-row">
+              <div class="cut-frequency-preset" id="cutFreqPresetSummary">
+                <span id="cutFreqPresetRange">5-10 scenes</span>
+                <span class="muted" id="cutFreqPresetHint">≈ 2-4 scenes per minute</span>
+              </div>
+              <div class="amc-row hidden" id="cutFreqCustomFields">
                 <div class="num-field"><span class="nf-label">Min</span><input type="text" value="5" aria-label="Minimum scenes" id="cutFreqMin"></div>
                 <div class="num-field"><span class="nf-label">Max</span><input type="text" value="10" aria-label="Maximum scenes" id="cutFreqMax"></div>
               </div>
-              <p class="amc-hint">≈ 2–4 scenes per minute</p>
+              <p class="amc-hint hidden" id="cutFreqCustomHint">Set a custom scene count range for this video.</p>
             </div>
 
             <div class="amc-module">
@@ -6416,11 +6439,7 @@
 	    if (typeof singleTrackHasNewCamera !== 'undefined') singleTrackHasNewCamera = false;
 	    if (typeof singleTrackAmcActivated !== 'undefined') singleTrackAmcActivated = false;
 	    if (typeof singleTrackGuideStage !== 'undefined') singleTrackGuideStage = 'camButton';
-	    document.getElementById('cutFreqCustomTab').classList.add('hidden');
-    document.querySelectorAll('#cutFreqTabs .seg-tab').forEach(t => t.classList.remove('selected'));
-    document.querySelector('#cutFreqTabs .seg-tab[data-preset="chill"]').classList.add('selected');
-    document.getElementById('cutFreqMin').value = '5';
-    document.getElementById('cutFreqMax').value = '10';
+	    setCutFrequencyPreset('chill');
     const activeOnlySwitch = document.getElementById('activeOnlySwitch');
     activeOnlySwitch.classList.add('on');
     activeOnlySwitch.setAttribute('aria-checked', 'true');
@@ -7628,20 +7647,41 @@
   document.querySelectorAll('#settingsPage .num-field input').forEach(inp =>
     inp.addEventListener('input', markDirty));
 
-  // Manually editing Min/Max scene count switches "Cut frequency" to a 4th
-  // "Custom" tab; picking a preset again hides it.
-  const cutFreqCustomTab = document.getElementById('cutFreqCustomTab');
+  const CUT_FREQUENCY_PRESETS = {
+    chill: { min: '5', max: '10', range: '5-10 scenes', hint: '≈ 2-4 scenes per minute' },
+    casual: { min: '10', max: '16', range: '10-16 scenes', hint: '≈ 4-6 scenes per minute' },
+    hype: { min: '16', max: '24', range: '16-24 scenes', hint: '≈ 6-9 scenes per minute' },
+  };
+
   const cutFreqTabs = document.getElementById('cutFreqTabs');
-  [document.getElementById('cutFreqMin'), document.getElementById('cutFreqMax')].forEach(inp => {
-    inp.addEventListener('input', () => {
-      cutFreqCustomTab.classList.remove('hidden');
-      cutFreqTabs.querySelectorAll('.seg-tab').forEach(t => t.classList.remove('selected'));
-      cutFreqCustomTab.classList.add('selected');
+  const cutFreqPresetSummary = document.getElementById('cutFreqPresetSummary');
+  const cutFreqPresetRange = document.getElementById('cutFreqPresetRange');
+  const cutFreqPresetHint = document.getElementById('cutFreqPresetHint');
+  const cutFreqCustomFields = document.getElementById('cutFreqCustomFields');
+  const cutFreqCustomHint = document.getElementById('cutFreqCustomHint');
+  const cutFreqMin = document.getElementById('cutFreqMin');
+  const cutFreqMax = document.getElementById('cutFreqMax');
+
+  function setCutFrequencyPreset(presetKey) {
+    const isCustom = presetKey === 'custom';
+    cutFreqTabs.querySelectorAll('.seg-tab').forEach(tab => {
+      tab.classList.toggle('selected', tab.dataset.preset === presetKey);
     });
-  });
+    cutFreqPresetSummary.classList.toggle('hidden', isCustom);
+    cutFreqCustomFields.classList.toggle('hidden', !isCustom);
+    cutFreqCustomHint.classList.toggle('hidden', !isCustom);
+    if (!isCustom) {
+      const preset = CUT_FREQUENCY_PRESETS[presetKey] || CUT_FREQUENCY_PRESETS.chill;
+      cutFreqPresetRange.textContent = preset.range;
+      cutFreqPresetHint.textContent = preset.hint;
+      cutFreqMin.value = preset.min;
+      cutFreqMax.value = preset.max;
+    }
+  }
+
   cutFreqTabs.querySelectorAll('.seg-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      if (tab !== cutFreqCustomTab) cutFreqCustomTab.classList.add('hidden');
+      setCutFrequencyPreset(tab.dataset.preset);
     });
   });
 
