@@ -6821,13 +6821,13 @@
 			        }
 			        addGuideAnnotation(
 			          document.getElementById('camSetupModule'),
-			          camSetupCollapsed ? 'Collapsed after intercept' : 'Open when launched manually',
+			          'Camera setup is contextual',
 			          camSetupCollapsed
-			            ? 'The camera setup state is contextual: when AMC opens from the intercept, this stays collapsed because speakers and cameras were just confirmed.'
-			            : 'The camera setup state is contextual: when AMC is opened manually from AI Tools, this stays open so users can review the mapping.',
+			            ? 'When users enter AMC from the Room intercept, Camera setup stays collapsed because the speakers and cameras were just confirmed. If they click AMC manually from AI Tools, this module stays open for review.'
+			            : 'When users click AMC manually from AI Tools, Camera setup stays open because they have not just confirmed the Room mapping. If they enter from the intercept, this module starts collapsed.',
 			          { before: camSetupCollapsed
-			            ? 'Without the proposed intercept, AMC has less context for why camera setup is already handled.'
-			            : 'Manual launch skips the confirmation intercept, so setup should remain visible.' },
+			            ? 'Manual launch skips the confirmation intercept, so setup should remain visible.'
+			            : 'The Room intercept already confirms the mapping, so the automatic path can keep this collapsed.' },
 			        );
 			      }
 		      return;
