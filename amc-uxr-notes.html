@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>App Screen — New Project</title>
+<title>AMC UXR Notes</title>
 <style>
   :root {
     /* Design tokens from Figma */
@@ -36,15 +36,90 @@
   body {
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     background: #d9d4d2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
+    display: grid;
+    grid-template-columns: 300px minmax(820px, 1fr);
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px;
     color: var(--fg-primary);
     -webkit-font-smoothing: antialiased;
+    overflow: hidden;
   }
 
   .hidden { display: none !important; }
+
+  #cueFileInput {
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .prototype-stage {
+    grid-column: 2;
+    min-width: 0;
+    height: calc(100vh - 20px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+  }
+
+  body.uxr-notes-only .proto-bar,
+  body.uxr-notes-only .app-screen {
+    display: none !important;
+  }
+
+  .stage-cue-upload {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 10px;
+    background: var(--chrome-0-elevated);
+    box-shadow:
+      0 8px 16px 0 var(--drop-shadow-medium),
+      0 8px 8px 0 var(--drop-shadow-soft);
+  }
+
+  .stage-cue-upload .cue-upload-title {
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 700;
+    color: var(--fg-primary);
+  }
+
+  .stage-cue-upload .cue-drop {
+    min-height: 0;
+    flex: 1 1 auto;
+    height: auto;
+    border-radius: 10px;
+    font-size: 16px;
+    line-height: 22px;
+    align-content: start;
+    overflow: auto;
+  }
+
+  .stage-cue-upload .cue-drop img {
+    max-height: calc(100vh - 160px);
+  }
+
+  .stage-cue-upload .cue-grid {
+    width: 100%;
+    height: auto;
+    align-items: start;
+  }
+
+  .stage-cue-upload .cue-upload-actions {
+    justify-content: flex-start;
+  }
 
   /* ===== App window ===== */
   .app-screen {
@@ -59,8 +134,8 @@
     padding: var(--gap-2);
     width: 100%;
     max-width: 1280px;
-    height: 100%;
-    max-height: 800px;
+    height: auto;
+    max-height: none;
     overflow: hidden;
     position: relative;
   }
@@ -1613,8 +1688,7 @@
     flex-shrink: 0;
   }
   .tl-autocut-btn:hover { background: #faf8f8; }
-  body.start-manual .tl-scene-group:hover .tl-autocut-btn,
-  body.start-chapter-trigger .tl-scene-group:hover .tl-autocut-btn { display: inline-flex; }
+  body.start-chapter-trigger .tl-scene-group:has(.tl-scene-thumb:hover) .tl-autocut-btn { display: inline-flex; }
   /* Zoom-single track has no automatic multicam at all — never surface this */
   body.amc-disabled .tl-autocut-btn { display: none !important; }
   body.guide-mode.start-chapter-trigger.scene-rail-entry-eligible #amcTimeline:not(.applied) .tl-pre-storyboard { display: block; }
@@ -3995,7 +4069,7 @@
   }
   .pop-add:hover { background: rgba(63, 42, 50, 0.06); }
   /* ===== Prototype source switcher (tester chrome, lives outside the app window) ===== */
-  body { flex-direction: column; gap: 14px; }
+  body { justify-content: stretch; }
   .app-screen { flex: 1 1 auto; min-height: 0; }
 
   .proto-bar {
@@ -4062,6 +4136,494 @@
   body.test-mode .proto-group-tab[data-proto-group="canvas"],
   body.test-mode .proto-group-tab[data-proto-group="more"] {
     display: none;
+  }
+
+  .proto-static-pill {
+    background: #f4f1ef;
+    color: #2b2624;
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-weight: 500;
+    line-height: 16px;
+  }
+
+  .research-panel {
+    grid-column: 1;
+    grid-row: 1;
+    height: calc(100vh - 20px);
+    min-width: 0;
+    background: #fbfaf9;
+    border: 1px solid rgba(63, 42, 50, 0.12);
+    border-radius: 12px;
+    box-shadow: 0 8px 18px rgba(38, 23, 29, 0.14);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .research-header {
+    padding: 14px;
+    border-bottom: 1px solid rgba(63, 42, 50, 0.1);
+    display: grid;
+    gap: 10px;
+  }
+  .research-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .research-title h1 {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 650;
+  }
+  .save-state {
+    font-size: 11px;
+    color: var(--fg-secondary);
+    white-space: nowrap;
+  }
+  .research-field {
+    display: grid;
+    gap: 4px;
+  }
+  .research-field label {
+    font-size: 11px;
+    line-height: 14px;
+    color: var(--fg-secondary);
+    font-weight: 550;
+  }
+  .research-field input,
+  .research-field select,
+  .research-field textarea {
+    width: 100%;
+    border: 1px solid rgba(63, 42, 50, 0.16);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--fg-primary);
+    font: inherit;
+    font-size: 12px;
+  }
+  .research-field input,
+  .research-field select {
+    height: 32px;
+    padding: 0 9px;
+  }
+  .research-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .research-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .research-btn {
+    height: 30px;
+    border: 1px solid rgba(63, 42, 50, 0.14);
+    border-radius: 7px;
+    background: #f4f1ef;
+    color: var(--fg-primary);
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .research-btn:hover { background: #ece6e4; }
+  .research-btn.danger {
+    color: #8d2f43;
+    background: #fff5f6;
+  }
+  .step-tabs {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    align-content: flex-start;
+    gap: 6px;
+    padding: 10px;
+    overflow: visible;
+    border-bottom: 1px solid rgba(63, 42, 50, 0.1);
+  }
+  .step-tab {
+    flex: 0 0 auto;
+    min-height: 32px;
+    border: 0;
+    border-radius: 7px;
+    background: #f8f5f3;
+    color: var(--fg-secondary);
+    font: inherit;
+    font-size: 11px;
+    line-height: 13px;
+    padding: 7px 10px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .step-tab.active {
+    background: #ede7e5;
+    color: var(--fg-primary);
+    font-weight: 650;
+  }
+  .note-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: 12px 14px 14px;
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 12px;
+  }
+  .reference-column,
+  .notes-column {
+    min-width: 0;
+    display: grid;
+    align-content: start;
+    gap: 12px;
+  }
+  .step-prompt {
+    padding: 10px;
+    border-radius: 8px;
+    background: #f4f1ef;
+    font-size: 12px;
+    line-height: 17px;
+    color: rgba(38, 23, 29, 0.78);
+  }
+  .step-prompt strong {
+    display: block;
+    color: var(--fg-primary);
+    margin-bottom: 4px;
+  }
+  .step-prompt p {
+    margin: 0;
+  }
+  .step-prompt .prompt-notes {
+    margin-top: 4px;
+  }
+  .step-prompt .prompt-notes span {
+    display: block;
+    color: var(--fg-primary);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 650;
+    margin-bottom: 4px;
+  }
+  .step-prompt .prompt-questions:empty {
+    display: none;
+  }
+  .step-prompt .prompt-questions {
+    margin-top: 8px;
+  }
+  .step-prompt .prompt-questions span {
+    display: block;
+    color: var(--fg-primary);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 650;
+    margin-bottom: 4px;
+  }
+  .step-prompt ul {
+    margin-left: 16px;
+    display: grid;
+    gap: 3px;
+  }
+  .cue-upload { display: grid; gap: 8px; }
+  .cue-upload-title {
+    font-size: 11px;
+    line-height: 14px;
+    color: var(--fg-secondary);
+    font-weight: 650;
+  }
+  .cue-drop {
+    min-height: 132px;
+    border: 1px dashed rgba(93, 59, 69, 0.32);
+    border-radius: 8px;
+    background: #fff;
+    color: rgba(38, 23, 29, 0.62);
+    display: grid;
+    place-items: start stretch;
+    padding: 12px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 17px;
+    cursor: pointer;
+    overflow: auto;
+  }
+  .cue-drop > #cueDropText {
+    place-self: center;
+  }
+  .cue-drop.drag-over {
+    border-color: #5d3b45;
+    background: #f8f5f3;
+  }
+  .cue-drop img {
+    width: 100%;
+    max-height: 260px;
+    object-fit: contain;
+    border-radius: 6px;
+  }
+  .cue-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 10px;
+    align-items: start;
+  }
+  .cue-card {
+    min-width: 0;
+    align-self: start;
+    display: grid;
+    grid-template-rows: auto minmax(0, auto);
+    gap: 8px;
+    padding: 8px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid rgba(63, 42, 50, 0.1);
+  }
+  .cue-card img {
+    width: 100%;
+    height: auto;
+    min-height: 180px;
+    max-height: 360px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #f8f5f3;
+  }
+  .cue-card.no-image {
+    grid-template-rows: auto;
+  }
+  body.note-step-control .cue-card {
+    grid-template-rows: 140px minmax(0, auto);
+  }
+  body.note-step-control .cue-card img {
+    min-height: 0;
+    max-height: 140px;
+  }
+  .cue-tags,
+  .cue-step-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .cue-step-tags {
+    padding-top: 2px;
+    border-top: 1px solid rgba(63, 42, 50, 0.08);
+  }
+  .cue-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .cue-card-status {
+    color: var(--fg-secondary);
+    font-size: 10px;
+    line-height: 12px;
+  }
+  .cue-tag,
+  .cue-step-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 24px;
+    border-radius: 999px;
+    padding: 3px 8px;
+    background: #f4f1ef;
+    color: var(--fg-secondary);
+    font-size: 10px;
+    line-height: 12px;
+    cursor: pointer;
+  }
+  .cue-step-tag {
+    background: #fbfaf9;
+  }
+  .cue-tag input,
+  .cue-step-tag input {
+    accent-color: #5d3b45;
+  }
+  .cue-remove-flow {
+    height: 24px;
+    border: 1px solid rgba(141, 47, 67, 0.18);
+    border-radius: 999px;
+    background: #fff5f6;
+    color: #8d2f43;
+    font: inherit;
+    font-size: 10px;
+    line-height: 12px;
+    padding: 3px 8px;
+    cursor: pointer;
+  }
+  .cue-add-question {
+    width: fit-content;
+    min-height: 30px;
+    border: 1px solid rgba(63, 42, 50, 0.14);
+    border-radius: 8px;
+    background: #f8f5f3;
+    color: var(--fg-primary);
+    font: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 650;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .cue-add-question:hover {
+    background: #f1ece9;
+  }
+  .cue-question-list {
+    display: grid;
+    gap: 8px;
+    max-height: min(520px, calc(100vh - 220px));
+    overflow: auto;
+    padding-right: 4px;
+    overscroll-behavior: contain;
+  }
+  .cue-question-card {
+    display: grid;
+    gap: 5px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(63, 42, 50, 0.08);
+  }
+  .cue-question-text {
+    width: 100%;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--fg-primary);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    padding: 4px 6px;
+    min-height: 0 !important;
+    height: auto;
+    overflow: hidden;
+    resize: none;
+  }
+  .cue-question-text:focus {
+    border-color: rgba(63, 42, 50, 0.18);
+    background: #fff;
+    outline: none;
+  }
+  .cue-question-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px;
+    align-items: start;
+  }
+  .cue-delete-question {
+    width: 24px;
+    height: 24px;
+    border: 1px solid rgba(141, 47, 67, 0.18);
+    border-radius: 6px;
+    background: #fff5f6;
+    color: #8d2f43;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .cue-question-card textarea {
+    width: 100%;
+    min-height: 64px;
+    resize: vertical;
+    border: 1px solid rgba(63, 42, 50, 0.16);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--fg-primary);
+    font: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    padding: 8px;
+  }
+  .cue-upload-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .cue-organize-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 30px;
+    padding: 0 8px;
+    border-radius: 7px;
+    background: #f8f5f3;
+    color: var(--fg-secondary);
+    font-size: 11px;
+    line-height: 14px;
+    cursor: pointer;
+  }
+  .cue-organize-toggle input {
+    accent-color: #5d3b45;
+  }
+  .note-grid {
+    display: grid;
+    gap: 10px;
+  }
+  .note-body.opening-only {
+    grid-template-columns: 1fr;
+  }
+  .note-body.opening-only .notes-column {
+    display: none;
+  }
+  .notes-column {
+    display: none;
+  }
+  .note-body.opening-only .reference-column {
+    max-width: none;
+  }
+  .note-grid textarea {
+    min-height: 92px;
+    resize: vertical;
+    padding: 9px;
+    line-height: 17px;
+  }
+  .confidence-row {
+    display: grid;
+    grid-template-columns: 1fr 54px;
+    gap: 8px;
+    align-items: center;
+  }
+  .confidence-row input[type="range"] {
+    width: 100%;
+    accent-color: #5d3b45;
+  }
+  .confidence-value {
+    height: 30px;
+    border-radius: 7px;
+    background: #f4f1ef;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 650;
+  }
+  .flow-chip {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 22px;
+    border-radius: 999px;
+    padding: 2px 8px;
+    background: #3f2a32;
+    color: #fff;
+    font-size: 11px;
+  }
+  @media (max-width: 1100px) {
+    body {
+      grid-template-columns: 1fr;
+      overflow: auto;
+    }
+    .prototype-stage,
+    .research-panel {
+      height: auto;
+      min-height: 620px;
+    }
+    .note-body {
+      grid-template-columns: 1fr;
+    }
   }
 
   /* Guide mode annotations */
@@ -4470,15 +5032,29 @@
   .multicam-modal.manual-style .mm-split .mm-create { border-radius: 6px; }
 </style>
 </head>
-<body class="test-mode start-manual">
+<body class="test-mode uxr-notes-only">
 
 <!-- ════════════════ Prototype chrome · start-point switcher (not part of the product UI) ════════════════ -->
+<main class="prototype-stage">
+<section class="cue-upload stage-cue-upload" aria-label="Screenshot cue">
+  <div class="cue-upload-title">Screenshot cue</div>
+  <div class="cue-drop" id="cueDrop" role="button" tabindex="0">
+    <span id="cueDropText">Drop a screenshot here<br>or click to upload</span>
+    <div class="cue-grid hidden" id="cuePreviewGrid"></div>
+  </div>
+  <div class="cue-upload-actions">
+    <button class="research-btn" id="cueUploadBtn" type="button">Upload screenshot</button>
+    <button class="research-btn danger" id="cueClearBtn" type="button">Clear shown screenshots</button>
+    <label class="cue-organize-toggle">
+      <input id="cueShowAllToggle" type="checkbox">
+      Tagging mode
+    </label>
+  </div>
+  <input id="cueFileInput" type="file" accept="image/*" multiple>
+</section>
 <nav class="proto-bar" aria-label="Prototype start point">
   <span class="proto-label">Mode</span>
-  <div class="proto-tabs proto-mode-tabs" role="tablist" aria-label="Prototype mode">
-    <button class="proto-tab proto-mode-tab active" role="tab" data-proto-mode="test" aria-selected="true">Test</button>
-    <button class="proto-tab proto-mode-tab" role="tab" data-proto-mode="guide" aria-selected="false">With guide</button>
-  </div>
+  <span class="proto-static-pill">Test</span>
   <span class="proto-divider" aria-hidden="true"></span>
   <span class="proto-label">Start from</span>
   <div class="proto-tabs proto-groups" role="tablist" aria-label="Prototype group">
@@ -4496,7 +5072,6 @@
     <button class="proto-tab hidden" role="tab" data-proto-group="more" data-source="chapterTrigger" aria-selected="false">Contextual entrypoints</button>
   </div>
 </nav>
-
 <!-- ════════════════ SCREEN 1 · Empty project ════════════════ -->
 <div class="app-screen" id="screenEmpty">
 
@@ -6213,6 +6788,94 @@
     </div>
   </div>
 </div>
+
+</main>
+
+<aside class="research-panel" aria-label="UXR notes panel">
+  <section class="research-header">
+    <div class="research-title">
+      <h1>AMC UXR notes</h1>
+      <span class="save-state" id="noteSaveState">Not saved yet</span>
+    </div>
+    <div class="research-row">
+      <div class="research-field">
+        <label for="participantId">Participant ID</label>
+        <input id="participantId" type="text" placeholder="P01" autocomplete="off">
+      </div>
+      <div class="research-field">
+        <label for="sessionDate">Session date</label>
+        <input id="sessionDate" type="date">
+      </div>
+    </div>
+    <div class="research-row">
+      <div class="research-field">
+        <label for="participantSegment">Participant type</label>
+        <select id="participantSegment">
+          <option value="">Select</option>
+          <option>Current AMC user</option>
+          <option>Lapsed AMC user</option>
+          <option>High-intent non-user</option>
+        </select>
+      </div>
+      <div class="research-field">
+        <label for="noteFlowSelect">Current flow</label>
+        <select id="noteFlowSelect">
+          <option value="manual">Manually upload</option>
+          <option value="room">Import from Room</option>
+          <option value="zoom">Import from Zoom-single track</option>
+          <option value="zoomMulti">Import from Zoom-multi track</option>
+        </select>
+      </div>
+    </div>
+    <div class="research-actions">
+      <button class="research-btn" id="newParticipantBtn" type="button">New ID</button>
+      <button class="research-btn" id="exportNotesBtn" type="button">Export</button>
+      <button class="research-btn danger" id="clearNotesBtn" type="button">Clear</button>
+    </div>
+  </section>
+
+  <div class="step-tabs" role="tablist" aria-label="Note sections">
+    <button class="step-tab active" type="button" data-note-step="opening">Opening</button>
+    <button class="step-tab" type="button" data-note-step="background">Background</button>
+    <button class="step-tab" type="button" data-note-step="entrypoint">Entrypoint</button>
+    <button class="step-tab" type="button" data-note-step="control">Cut controls</button>
+    <button class="step-tab" type="button" data-note-step="repair">Repair</button>
+    <button class="step-tab" type="button" data-note-step="closing">Closing</button>
+  </div>
+
+  <section class="note-body" id="noteBody">
+    <div class="reference-column">
+      <div class="step-prompt" id="stepPrompt"></div>
+    </div>
+    <div class="notes-column">
+      <div class="note-grid">
+        <div class="research-field">
+          <label for="noteObserved">Observed behavior / first action</label>
+          <textarea id="noteObserved" placeholder="What did they do first? Where did they hesitate?"></textarea>
+        </div>
+        <div class="research-field">
+          <label for="noteExpectation">Expectation / interpretation</label>
+          <textarea id="noteExpectation" placeholder="What did they think would happen? Why did they think AMC was available or unavailable?"></textarea>
+        </div>
+        <div class="research-field">
+          <label for="noteQuotes">Quotes / exact language</label>
+          <textarea id="noteQuotes" placeholder="Capture exact phrases, especially around control, trust, and repair."></textarea>
+        </div>
+        <div class="research-field">
+          <label for="noteSynthesis">Quick synthesis</label>
+          <textarea id="noteSynthesis" placeholder="Pass/fail signal, why, and what this may imply for next iteration."></textarea>
+        </div>
+        <div class="research-field">
+          <label for="noteConfidence">Confidence</label>
+          <div class="confidence-row">
+            <input id="noteConfidence" type="range" min="0" max="5" step="1" value="0">
+            <span class="confidence-value" id="confidenceValue">N/A</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</aside>
 
 <script>
 (function () {
@@ -9950,7 +10613,6 @@
 	    setProtoFlowActive(src);
 	    if (src === entrySource) return;
 	    entrySource = src;
-	    document.body.classList.toggle('start-manual', src === 'manual');
 	    document.body.classList.toggle('start-room', src === 'room');
 	    document.body.classList.toggle('start-zoom', src === 'zoom');
 	    document.body.classList.toggle('start-zoom-multi', src === 'zoomMulti');
@@ -9969,6 +10631,7 @@
 	        renderGuideAnnotations();
 	      });
 	    }
+	    updateResearchFlow();
 	    renderGuideAnnotations();
 	  }
 
@@ -9988,6 +10651,916 @@
 	    placeVisibleModals();
 	    renderGuideAnnotations();
 	  });
+
+  const NOTE_STORAGE_PREFIX = 'amc-uxr-notes:';
+  const FLOW_LABELS = {
+    manual: 'Manually upload',
+    room: 'Import from Room',
+    zoom: 'Import from Zoom-single track',
+    zoomMulti: 'Import from Zoom-multi track',
+    singleTrack: 'Single track',
+    chapterTrigger: 'Contextual entrypoints',
+  };
+  const NOTE_STEPS = {
+    opening: {
+      title: 'Opening',
+      prompt: 'We’re going to show you a prototype for Automatic Multicam. Some parts are interactive and some parts may be simulated. As you move through it, please say what you notice, what you think will happen next, and anything that feels confusing or missing. We’re testing the design, so there are no right or wrong answers.',
+      questions: [],
+    },
+    background: {
+      title: 'Background',
+      prompt: 'Before we look at the prototype, I want to understand how multicam work usually happens for you today.',
+      questions: [
+        'What kinds of multicam videos do you usually edit?',
+        'How do your multicam projects usually start: Room, Zoom, local/manual uploads, or something else?',
+        'Have you used Automatic Multicam before? What worked well or broke down?',
+        'After AMC runs, what cleanup do you usually need to do?',
+        'When you want a good multicam edit, what are you trying to control?',
+      ],
+    },
+    entrypoint: {
+      title: 'Entrypoint relevance',
+      prompt: 'You’ve just brought in a multicam recording and want to see whether Descript can help create a first pass edit.',
+      questions: [
+        'What do you think this entrypoint is offering?',
+        'Why does AMC feel available or unavailable in this moment?',
+        'Would you start AMC from here in a real project? Why or why not?',
+        'What would need to be clearer before you trust this next step?',
+      ],
+    },
+    control: {
+      title: 'Cut / scene control',
+      prompt: 'Before running AMC, set this up so the edit matches the kind of pacing and camera switching you would want for this project.',
+      questions: [
+        'What kind of edit are you trying to create with these controls?',
+        'Which setting controls how many cuts you get? Which setting controls what causes a cut?',
+        'If the result felt too busy or too slow, where would you adjust it?',
+        'What do you still wish you could control before running AMC?',
+      ],
+    },
+    repair: {
+      title: 'Post-apply repair',
+      prompt: 'AMC has been applied, but one scene uses the wrong camera for a speaker. Please fix it the way you naturally would.',
+      questions: [
+        'What looks wrong in this result?',
+        'Where would you go first to fix the camera choice?',
+        'Do you expect this fix to affect only this scene or all scenes?',
+        'After this, would AMC mistakes feel recoverable enough to keep using the feature?',
+      ],
+    },
+    closing: {
+      title: 'Closing reflection',
+      prompt: 'To wrap up, I want to ask a few reflection questions about what felt clear, what felt risky, and what would need to change before you would use this in a real project.',
+      questions: [
+        'Which part felt most convincing: starting AMC, setting up the edit, or fixing the result?',
+        'Which part would still stop you from trusting AMC in a real project?',
+        'What should be controlled before generation vs. fixed after generation?',
+        'What is the most important change before this would feel ready to use?',
+      ],
+    },
+  };
+  const NOTE_FIELDS = ['observed', 'expectation', 'quotes', 'synthesis', 'confidence'];
+  const CUE_DB_NAME = 'amc-uxr-screenshot-cues';
+  const CUE_DB_VERSION = 1;
+  const CUE_IMAGE_STORE = 'images';
+  let activeNoteStep = 'opening';
+  let activeParticipantId = '';
+  let noteSaveTimer = null;
+  let noteHydrating = false;
+
+  function noteEls() {
+    return {
+      participantId: document.getElementById('participantId'),
+      sessionDate: document.getElementById('sessionDate'),
+      participantSegment: document.getElementById('participantSegment'),
+      flowSelect: document.getElementById('noteFlowSelect'),
+      saveState: document.getElementById('noteSaveState'),
+      noteBody: document.getElementById('noteBody'),
+      stepPrompt: document.getElementById('stepPrompt'),
+      cueDrop: document.getElementById('cueDrop'),
+      cueDropText: document.getElementById('cueDropText'),
+      cuePreviewGrid: document.getElementById('cuePreviewGrid'),
+      cueUploadBtn: document.getElementById('cueUploadBtn'),
+      cueClearBtn: document.getElementById('cueClearBtn'),
+      cueShowAllToggle: document.getElementById('cueShowAllToggle'),
+      cueFileInput: document.getElementById('cueFileInput'),
+      observed: document.getElementById('noteObserved'),
+      expectation: document.getElementById('noteExpectation'),
+      quotes: document.getElementById('noteQuotes'),
+      synthesis: document.getElementById('noteSynthesis'),
+      confidence: document.getElementById('noteConfidence'),
+      confidenceValue: document.getElementById('confidenceValue'),
+    };
+  }
+
+  function todayISO() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function noteKey(id) {
+    return `${NOTE_STORAGE_PREFIX}${id}`;
+  }
+
+  function openCueDb() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(CUE_DB_NAME, CUE_DB_VERSION);
+      request.addEventListener('upgradeneeded', () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(CUE_IMAGE_STORE)) db.createObjectStore(CUE_IMAGE_STORE);
+      });
+      request.addEventListener('success', () => resolve(request.result));
+      request.addEventListener('error', () => reject(request.error));
+    });
+  }
+
+  async function putCueImage(id, src) {
+    const db = await openCueDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(CUE_IMAGE_STORE, 'readwrite');
+      tx.objectStore(CUE_IMAGE_STORE).put(src, id);
+      tx.addEventListener('complete', resolve);
+      tx.addEventListener('error', () => reject(tx.error));
+    });
+  }
+
+  async function getCueImage(id) {
+    const db = await openCueDb();
+    return new Promise(resolve => {
+      const tx = db.transaction(CUE_IMAGE_STORE, 'readonly');
+      const request = tx.objectStore(CUE_IMAGE_STORE).get(id);
+      request.addEventListener('success', () => resolve(request.result || ''));
+      request.addEventListener('error', () => resolve(''));
+    });
+  }
+
+  async function deleteCueImage(id) {
+    const db = await openCueDb();
+    return new Promise(resolve => {
+      const tx = db.transaction(CUE_IMAGE_STORE, 'readwrite');
+      tx.objectStore(CUE_IMAGE_STORE).delete(id);
+      tx.addEventListener('complete', resolve);
+      tx.addEventListener('error', resolve);
+    });
+  }
+
+  function nextParticipantId() {
+    let max = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(NOTE_STORAGE_PREFIX)) continue;
+      const id = key.slice(NOTE_STORAGE_PREFIX.length);
+      const match = id.match(/^P(\d+)$/i);
+      if (match) max = Math.max(max, Number(match[1]));
+    }
+    return `P${String(max + 1 || 1).padStart(2, '0')}`;
+  }
+
+  function emptyNotes(id) {
+    const steps = {};
+    Object.keys(NOTE_STEPS).forEach(step => {
+      steps[step] = {
+        observed: '',
+        expectation: '',
+        quotes: '',
+        synthesis: '',
+        confidence: '0',
+      };
+    });
+    return {
+      participantId: id,
+      sessionDate: todayISO(),
+      participantSegment: '',
+      currentFlow: 'manual',
+      screenshots: [],
+      customQuestions: {},
+      steps,
+      updatedAt: null,
+    };
+  }
+
+  function readNotes(id) {
+    try {
+      const raw = localStorage.getItem(noteKey(id));
+      if (!raw) return emptyNotes(id);
+      const data = normalizeNotes({ ...emptyNotes(id), ...JSON.parse(raw) });
+      try {
+        localStorage.setItem(noteKey(id), JSON.stringify(data));
+      } catch {
+        // Keep the in-memory cleaned version even if the browser is still freeing quota.
+      }
+      return data;
+    } catch {
+      return emptyNotes(id);
+    }
+  }
+
+  function normalizeNotes(data) {
+    data.currentFlow = data.currentFlow || 'manual';
+    data.customQuestions = data.customQuestions && typeof data.customQuestions === 'object' ? data.customQuestions : {};
+    data.screenshots = Array.isArray(data.screenshots) ? data.screenshots : [];
+    Object.keys(data.steps || {}).forEach(stepKey => {
+      const step = data.steps[stepKey] || {};
+      normalizedCueImages(step).forEach(src => {
+        if (data.screenshots.some(item => item.src === src)) return;
+        data.screenshots.push({
+          id: `cue-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          src,
+          flows: [data.currentFlow],
+          steps: [stepKey],
+        });
+      });
+      delete step.cueImage;
+      delete step.cueImages;
+    });
+    data.screenshots = data.screenshots
+      .filter(item => item && (item.id || item.src))
+      .map(item => {
+        const id = item.id || `cue-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const legacySrc = item.src || '';
+        if (legacySrc) putCueImage(id, legacySrc).catch(() => {});
+        return {
+          id,
+          flows: Array.isArray(item.flows) && item.flows.length ? item.flows : [data.currentFlow],
+          steps: Array.isArray(item.steps) && item.steps.length ? item.steps : Object.keys(NOTE_STEPS),
+          questionNotes: item.questionNotes && typeof item.questionNotes === 'object' ? item.questionNotes : {},
+          questionTexts: item.questionTexts && typeof item.questionTexts === 'object' ? item.questionTexts : {},
+        };
+      });
+    return data;
+  }
+
+  async function migrateScreenshotImages(data) {
+    let changed = false;
+    await Promise.all((data.screenshots || []).map(async item => {
+      if (!item.src) return;
+      await putCueImage(item.id, item.src);
+      delete item.src;
+      changed = true;
+    }));
+    if (changed) {
+      try {
+        localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+      } catch {
+        // If old image data filled localStorage, the next metadata-only save will recover.
+      }
+    }
+    return data;
+  }
+
+  function collectNotes() {
+    const els = noteEls();
+    const id = (els.participantId.value || '').trim() || activeParticipantId || nextParticipantId();
+    const data = readNotes(id);
+    data.participantId = id;
+    data.sessionDate = els.sessionDate.value || todayISO();
+    data.participantSegment = els.participantSegment.value;
+    data.currentFlow = els.flowSelect.value || data.currentFlow || 'manual';
+    data.updatedAt = new Date().toISOString();
+    data.steps[activeNoteStep] = {
+      ...(data.steps[activeNoteStep] || {}),
+      observed: els.observed.value,
+      expectation: els.expectation.value,
+      quotes: els.quotes.value,
+      synthesis: els.synthesis.value,
+      confidence: els.confidence.value,
+    };
+    syncVisibleCueQuestionNotes(data);
+    return data;
+  }
+
+  function syncVisibleCueQuestionNotes(data) {
+    const els = noteEls();
+    if (!els.cuePreviewGrid) return data;
+    els.cuePreviewGrid.querySelectorAll('.cue-card').forEach(card => {
+      const cueId = card.dataset.cueId;
+      const questionNotes = {};
+      card.querySelectorAll('textarea[data-cue-question-index]').forEach(textarea => {
+        questionNotes[textarea.dataset.cueQuestionIndex] = textarea.value;
+      });
+      if (cueId === '__background__') {
+        if (!data.steps[activeNoteStep]) data.steps[activeNoteStep] = {};
+        data.steps[activeNoteStep].questionNotes = {
+          ...(data.steps[activeNoteStep].questionNotes || {}),
+          ...questionNotes,
+        };
+        return;
+      }
+      const item = (data.screenshots || []).find(candidate => candidate.id === cueId);
+      if (!item) return;
+      if (!item.questionNotes || typeof item.questionNotes !== 'object') item.questionNotes = {};
+      item.questionNotes[activeNoteStep] = {
+        ...(item.questionNotes[activeNoteStep] || {}),
+        ...questionNotes,
+      };
+    });
+    return data;
+  }
+
+  function saveNotesNow() {
+    if (noteHydrating) return;
+    const els = noteEls();
+    const data = collectNotes();
+    activeParticipantId = data.participantId;
+    els.participantId.value = activeParticipantId;
+    localStorage.setItem(noteKey(activeParticipantId), JSON.stringify(data));
+    els.saveState.textContent = 'Saved';
+  }
+
+  function scheduleNoteSave() {
+    if (noteHydrating) return;
+    const els = noteEls();
+    els.saveState.textContent = 'Saving...';
+    clearTimeout(noteSaveTimer);
+    noteSaveTimer = setTimeout(saveNotesNow, 120);
+  }
+
+  function renderConfidence(value) {
+    const els = noteEls();
+    els.confidenceValue.textContent = Number(value) > 0 ? `${value}/5` : 'N/A';
+  }
+
+  function annotationList(items) {
+    return `<ul>${items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+  }
+
+  function normalizedCueImages(step) {
+    if (Array.isArray(step.cueImages)) return step.cueImages.filter(Boolean);
+    return step.cueImage ? [step.cueImage] : [];
+  }
+
+  function screenshotFlows(item, fallbackFlow) {
+    return Array.isArray(item.flows) && item.flows.length ? item.flows : [fallbackFlow || 'manual'];
+  }
+
+  function screenshotSteps(item) {
+    return Array.isArray(item.steps) && item.steps.length ? item.steps : Object.keys(NOTE_STEPS);
+  }
+
+  function screenshotQuestionNotes(item, step) {
+    if (!item.questionNotes || typeof item.questionNotes !== 'object') item.questionNotes = {};
+    if (!item.questionNotes[step] || typeof item.questionNotes[step] !== 'object') item.questionNotes[step] = {};
+    return item.questionNotes[step];
+  }
+
+  function stepQuestions(data, step) {
+    const custom = data.customQuestions && Array.isArray(data.customQuestions[step])
+      ? data.customQuestions[step]
+      : null;
+    return (custom || NOTE_STEPS[step].questions || []).filter(question => question !== null && question !== undefined);
+  }
+
+  function screenshotQuestions(item, data, step) {
+    if (!item.questionTexts || typeof item.questionTexts !== 'object') item.questionTexts = {};
+    if (Array.isArray(item.questionTexts[step])) return item.questionTexts[step];
+    return stepQuestions(data, step);
+  }
+
+  function resizeQuestionEditors() {
+    document.querySelectorAll('.cue-question-text').forEach(textarea => {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    });
+  }
+
+  async function renderCueImages(data) {
+    const els = noteEls();
+    if (!els.cuePreviewGrid || !els.cueDropText) return;
+    const selectedFlow = data.currentFlow || els.flowSelect.value || 'manual';
+    const taggingMode = Boolean(els.cueShowAllToggle?.checked);
+    const showsStepQuestionsWithoutScreenshot = ['background', 'closing'].includes(activeNoteStep);
+    const screenshots = taggingMode
+      ? (data.screenshots || [])
+      : (data.screenshots || []).filter(item =>
+          (activeNoteStep === 'background' || screenshotFlows(item, selectedFlow).includes(selectedFlow)) &&
+          screenshotSteps(item).includes(activeNoteStep)
+        );
+    if (screenshots.length || (!taggingMode && showsStepQuestionsWithoutScreenshot)) {
+      const renderedItems = await Promise.all(screenshots.map(async item => ({
+        item,
+        src: item.src || await getCueImage(item.id),
+      })));
+      const cardsHTML = renderedItems
+        .filter(({ src }) => Boolean(src))
+        .map(({ item, src }, index) => `
+          <figure class="cue-card" data-cue-id="${escapeHtml(item.id)}">
+            <img src="${src}" alt="Uploaded screenshot cue ${index + 1}">
+            ${taggingMode ? `
+              <figcaption class="cue-tags">
+                ${Object.entries(FLOW_LABELS)
+                  .filter(([flow]) => ['manual', 'room', 'zoom', 'zoomMulti'].includes(flow))
+                  .map(([flow, label]) => `
+                    <label class="cue-tag">
+                      <input type="checkbox" data-cue-flow="${flow}" ${screenshotFlows(item, selectedFlow).includes(flow) ? 'checked' : ''}>
+                      ${escapeHtml(label)}
+                    </label>
+                  `).join('')}
+              </figcaption>
+              <figcaption class="cue-step-tags">
+                ${Object.entries(NOTE_STEPS)
+                  .map(([step, meta]) => `
+                    <label class="cue-step-tag">
+                      <input type="checkbox" data-cue-step="${step}" ${screenshotSteps(item).includes(step) ? 'checked' : ''}>
+                      ${escapeHtml(meta.title)}
+                    </label>
+                  `).join('')}
+              </figcaption>
+              <div class="cue-card-actions">
+                <span class="cue-card-status">
+                  ${screenshotFlows(item, selectedFlow).includes(selectedFlow) && screenshotSteps(item).includes(activeNoteStep) ? 'In current bucket' : 'Hidden in normal view'}
+                </span>
+                <button class="cue-remove-flow" type="button" data-remove-current-flow="true">
+                  Remove from this flow + step
+                </button>
+              </div>
+            ` : `
+              <div class="cue-question-list">
+                ${screenshotQuestions(item, data, activeNoteStep).map((question, questionIndex) => `
+                  <label class="cue-question-card">
+                    <span class="cue-question-header">
+                      <textarea class="cue-question-text" data-cue-question-edit-index="${questionIndex}" rows="2">${escapeHtml(question)}</textarea>
+                      <button class="cue-delete-question" type="button" data-cue-question-delete-index="${questionIndex}" aria-label="Delete question">×</button>
+                    </span>
+                    <textarea data-cue-question-index="${questionIndex}" placeholder="Notes for this question">${escapeHtml(screenshotQuestionNotes(item, activeNoteStep)[questionIndex] || '')}</textarea>
+                  </label>
+                `).join('')}
+                <button class="cue-add-question" type="button" data-cue-question-add="true">Add question</button>
+              </div>
+            `}
+          </figure>
+        `)
+        .join('');
+      const stepFallbackHTML = !taggingMode && showsStepQuestionsWithoutScreenshot && !cardsHTML ? `
+        <figure class="cue-card no-image" data-cue-id="__background__">
+          <div class="cue-question-list">
+            ${stepQuestions(data, activeNoteStep).map((question, questionIndex) => `
+              <label class="cue-question-card">
+                <span class="cue-question-header">
+                  <textarea class="cue-question-text" data-cue-question-edit-index="${questionIndex}" rows="2">${escapeHtml(question)}</textarea>
+                  <button class="cue-delete-question" type="button" data-cue-question-delete-index="${questionIndex}" aria-label="Delete question">×</button>
+                </span>
+                <textarea data-cue-question-index="${questionIndex}" placeholder="Notes for this question">${escapeHtml((data.steps[activeNoteStep]?.questionNotes || {})[questionIndex] || '')}</textarea>
+              </label>
+            `).join('')}
+            <button class="cue-add-question" type="button" data-cue-question-add="true">Add question</button>
+          </div>
+        </figure>
+      ` : '';
+      els.cuePreviewGrid.innerHTML = cardsHTML || stepFallbackHTML;
+      const hasRenderedImages = els.cuePreviewGrid.innerHTML.trim().length > 0;
+      els.cuePreviewGrid.classList.toggle('hidden', !hasRenderedImages);
+      els.cueDropText.classList.toggle('hidden', hasRenderedImages);
+      resizeQuestionEditors();
+    } else {
+      els.cuePreviewGrid.innerHTML = '';
+      els.cuePreviewGrid.classList.add('hidden');
+      els.cueDropText.classList.remove('hidden');
+    }
+  }
+
+  function hydrateStep(data) {
+    const els = noteEls();
+    migrateScreenshotImages(data).then(migratedData => renderCueImages(migratedData));
+    const step = data.steps[activeNoteStep] || emptyNotes(data.participantId).steps[activeNoteStep];
+    const stepMeta = NOTE_STEPS[activeNoteStep];
+    noteHydrating = true;
+    els.observed.value = step.observed || '';
+    els.expectation.value = step.expectation || '';
+    els.quotes.value = step.quotes || '';
+    els.synthesis.value = step.synthesis || '';
+    els.confidence.value = step.confidence || '0';
+    renderConfidence(els.confidence.value);
+    if (els.noteBody) els.noteBody.classList.toggle('opening-only', activeNoteStep === 'opening');
+    document.body.classList.toggle('note-step-control', activeNoteStep === 'control');
+    els.stepPrompt.innerHTML = `
+      <strong>${escapeHtml(stepMeta.title)}</strong>
+      <div class="prompt-notes">
+        <span>Say to participant</span>
+        <p>${escapeHtml(stepMeta.prompt)}</p>
+      </div>
+    `;
+    document.querySelectorAll('.step-tab').forEach(tab => {
+      const active = tab.dataset.noteStep === activeNoteStep;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-selected', active);
+    });
+    noteHydrating = false;
+  }
+
+  function loadParticipant(id) {
+    const els = noteEls();
+    activeParticipantId = id;
+    const data = readNotes(id);
+    noteHydrating = true;
+    els.participantId.value = id;
+    els.sessionDate.value = data.sessionDate || todayISO();
+    els.participantSegment.value = data.participantSegment || '';
+    els.flowSelect.value = data.currentFlow || 'manual';
+    noteHydrating = false;
+    hydrateStep(data);
+    els.saveState.textContent = data.updatedAt ? 'Loaded' : 'New';
+  }
+
+  function switchNoteStep(step) {
+    saveNotesNow();
+    activeNoteStep = step;
+    hydrateStep(readNotes(activeParticipantId));
+  }
+
+  function updateResearchFlow() {
+    const els = noteEls();
+    if (!els.flowSelect || noteHydrating) return;
+    scheduleNoteSave();
+  }
+
+  async function saveCueImages(dataUrls, options = {}) {
+    const data = collectNotes();
+    const currentFlow = data.currentFlow || 'manual';
+    if (options.replace) {
+      const removed = (data.screenshots || []).filter(item =>
+        screenshotFlows(item, currentFlow).includes(currentFlow) && screenshotSteps(item).includes(activeNoteStep)
+      );
+      data.screenshots = (data.screenshots || []).filter(item =>
+        !(screenshotFlows(item, currentFlow).includes(currentFlow) && screenshotSteps(item).includes(activeNoteStep))
+      );
+      await Promise.all(removed.map(item => deleteCueImage(item.id)));
+    }
+    const newItems = await Promise.all(dataUrls.map(async src => {
+      const id = `cue-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      await putCueImage(id, src);
+      return {
+        id,
+        flows: [currentFlow],
+        steps: [activeNoteStep],
+        questionNotes: {},
+      };
+    }));
+    data.screenshots = [
+      ...(data.screenshots || []),
+      ...newItems,
+    ];
+    data.updatedAt = new Date().toISOString();
+    activeParticipantId = data.participantId;
+    try {
+      localStorage.setItem(noteKey(activeParticipantId), JSON.stringify(data));
+      hydrateStep(data);
+      noteEls().saveState.textContent = 'Saved';
+    } catch (error) {
+      noteEls().saveState.textContent = 'Could not save image';
+      window.alert('The note metadata could not be saved. Try clearing old participants or exporting notes, then clearing this participant.');
+    }
+  }
+
+  function compressCueImage(file) {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        const img = new Image();
+        img.addEventListener('load', () => {
+          const maxEdge = 1400;
+          const scale = Math.min(1, maxEdge / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          const context = canvas.getContext('2d');
+          context.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.78));
+        });
+        img.addEventListener('error', () => resolve(reader.result));
+        img.src = reader.result;
+      });
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function handleCueFiles(fileList) {
+    const files = Array.from(fileList || []).filter(file => file.type.startsWith('image/'));
+    if (!files.length) return;
+    const els = noteEls();
+    els.saveState.textContent = 'Saving...';
+    Promise.all(files.map(compressCueImage))
+      .then(dataUrls => saveCueImages(dataUrls))
+      .catch(() => {
+        els.saveState.textContent = 'Could not save image';
+        window.alert('The screenshot could not be saved. Try a smaller image or refresh the page.');
+      });
+  }
+
+  function initCueUpload() {
+    const els = noteEls();
+    if (!els.cueDrop || !els.cueFileInput) return;
+    const openPicker = () => els.cueFileInput.click();
+    els.cueDrop.addEventListener('click', openPicker);
+    els.cueUploadBtn.addEventListener('click', openPicker);
+    els.cueDrop.addEventListener('keydown', event => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      openPicker();
+    });
+    els.cueFileInput.addEventListener('change', () => {
+      handleCueFiles(els.cueFileInput.files);
+      els.cueFileInput.value = '';
+    });
+    els.cueShowAllToggle.addEventListener('change', () => {
+      hydrateStep(readNotes(activeParticipantId));
+    });
+    els.cueDrop.addEventListener('dragover', event => {
+      event.preventDefault();
+      els.cueDrop.classList.add('drag-over');
+    });
+    els.cueDrop.addEventListener('dragleave', () => {
+      els.cueDrop.classList.remove('drag-over');
+    });
+    els.cueDrop.addEventListener('drop', event => {
+      event.preventDefault();
+      els.cueDrop.classList.remove('drag-over');
+      handleCueFiles(event.dataTransfer.files);
+    });
+    els.cuePreviewGrid.addEventListener('click', event => {
+      event.stopPropagation();
+    });
+    els.cuePreviewGrid.addEventListener('input', event => {
+      const questionEditor = event.target.closest('textarea[data-cue-question-edit-index]');
+      if (questionEditor) {
+        const card = questionEditor.closest('.cue-card');
+        const data = collectNotes();
+        if (card.dataset.cueId === '__background__') {
+          if (!data.customQuestions || typeof data.customQuestions !== 'object') data.customQuestions = {};
+          if (!Array.isArray(data.customQuestions[activeNoteStep])) {
+            data.customQuestions[activeNoteStep] = [...stepQuestions(data, activeNoteStep)];
+          }
+          data.customQuestions[activeNoteStep][Number(questionEditor.dataset.cueQuestionEditIndex)] = questionEditor.value;
+          data.updatedAt = new Date().toISOString();
+          localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+          noteEls().saveState.textContent = 'Saved';
+          return;
+        }
+        const item = (data.screenshots || []).find(candidate => candidate.id === card.dataset.cueId);
+        if (!item) return;
+        if (!item.questionTexts || typeof item.questionTexts !== 'object') item.questionTexts = {};
+        if (!Array.isArray(item.questionTexts[activeNoteStep])) {
+          item.questionTexts[activeNoteStep] = [...screenshotQuestions(item, data, activeNoteStep)];
+        }
+        item.questionTexts[activeNoteStep][Number(questionEditor.dataset.cueQuestionEditIndex)] = questionEditor.value;
+        resizeQuestionEditors();
+        data.updatedAt = new Date().toISOString();
+        localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+        noteEls().saveState.textContent = 'Saved';
+        return;
+      }
+      const textarea = event.target.closest('textarea[data-cue-question-index]');
+      if (!textarea) return;
+      const card = textarea.closest('.cue-card');
+      const data = collectNotes();
+      if (card.dataset.cueId === '__background__') {
+        if (!data.steps[activeNoteStep]) data.steps[activeNoteStep] = {};
+        if (!data.steps[activeNoteStep].questionNotes || typeof data.steps[activeNoteStep].questionNotes !== 'object') {
+          data.steps[activeNoteStep].questionNotes = {};
+        }
+        data.steps[activeNoteStep].questionNotes[textarea.dataset.cueQuestionIndex] = textarea.value;
+        data.updatedAt = new Date().toISOString();
+        localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+        noteEls().saveState.textContent = 'Saved';
+        return;
+      }
+      const item = (data.screenshots || []).find(candidate => candidate.id === card.dataset.cueId);
+      if (!item) return;
+      const notes = screenshotQuestionNotes(item, activeNoteStep);
+      notes[textarea.dataset.cueQuestionIndex] = textarea.value;
+      data.updatedAt = new Date().toISOString();
+      localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+      noteEls().saveState.textContent = 'Saved';
+    });
+    els.cuePreviewGrid.addEventListener('change', event => {
+      const checkbox = event.target.closest('input[data-cue-flow], input[data-cue-step]');
+      if (!checkbox) return;
+      const card = checkbox.closest('.cue-card');
+      const data = collectNotes();
+      const item = (data.screenshots || []).find(candidate => candidate.id === card.dataset.cueId);
+      if (!item) return;
+      if (checkbox.dataset.cueFlow) {
+        const flows = new Set(screenshotFlows(item, data.currentFlow));
+        if (checkbox.checked) {
+          flows.add(checkbox.dataset.cueFlow);
+        } else {
+          flows.delete(checkbox.dataset.cueFlow);
+        }
+        item.flows = Array.from(flows);
+      } else {
+        const steps = new Set(screenshotSteps(item));
+        if (checkbox.checked) {
+          steps.add(checkbox.dataset.cueStep);
+        } else {
+          steps.delete(checkbox.dataset.cueStep);
+        }
+        item.steps = Array.from(steps);
+      }
+      const removed = (data.screenshots || []).filter(candidate =>
+        !(candidate.flows && candidate.flows.length && candidate.steps && candidate.steps.length)
+      );
+      data.screenshots = (data.screenshots || []).filter(candidate =>
+        candidate.flows && candidate.flows.length && candidate.steps && candidate.steps.length
+      );
+      removed.forEach(candidate => deleteCueImage(candidate.id));
+      data.updatedAt = new Date().toISOString();
+      localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+      hydrateStep(data);
+      noteEls().saveState.textContent = 'Saved';
+    });
+    els.cuePreviewGrid.addEventListener('click', event => {
+      const addQuestionButton = event.target.closest('button[data-cue-question-add]');
+      if (addQuestionButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        const card = addQuestionButton.closest('.cue-card');
+        const data = collectNotes();
+        const nextQuestion = 'New question';
+        if (card.dataset.cueId === '__background__') {
+          if (!data.customQuestions || typeof data.customQuestions !== 'object') data.customQuestions = {};
+          if (!Array.isArray(data.customQuestions[activeNoteStep])) {
+            data.customQuestions[activeNoteStep] = [...stepQuestions(data, activeNoteStep)];
+          }
+          data.customQuestions[activeNoteStep].push(nextQuestion);
+          data.updatedAt = new Date().toISOString();
+          localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+          hydrateStep(data);
+          noteEls().saveState.textContent = 'Saved';
+          return;
+        }
+        const item = (data.screenshots || []).find(candidate => candidate.id === card.dataset.cueId);
+        if (!item) return;
+        if (!item.questionTexts || typeof item.questionTexts !== 'object') item.questionTexts = {};
+        if (!Array.isArray(item.questionTexts[activeNoteStep])) {
+          item.questionTexts[activeNoteStep] = [...screenshotQuestions(item, data, activeNoteStep)];
+        }
+        item.questionTexts[activeNoteStep].push(nextQuestion);
+        data.updatedAt = new Date().toISOString();
+        localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+        hydrateStep(data);
+        noteEls().saveState.textContent = 'Saved';
+        return;
+      }
+      const deleteQuestionButton = event.target.closest('button[data-cue-question-delete-index]');
+      if (deleteQuestionButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        const card = deleteQuestionButton.closest('.cue-card');
+        const data = collectNotes();
+        if (card.dataset.cueId === '__background__') {
+          if (!data.customQuestions || typeof data.customQuestions !== 'object') data.customQuestions = {};
+          if (!Array.isArray(data.customQuestions[activeNoteStep])) {
+            data.customQuestions[activeNoteStep] = [...stepQuestions(data, activeNoteStep)];
+          }
+          data.customQuestions[activeNoteStep].splice(Number(deleteQuestionButton.dataset.cueQuestionDeleteIndex), 1);
+          data.updatedAt = new Date().toISOString();
+          localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+          hydrateStep(data);
+          noteEls().saveState.textContent = 'Saved';
+          return;
+        }
+        const item = (data.screenshots || []).find(candidate => candidate.id === card.dataset.cueId);
+        if (!item) return;
+        if (!item.questionTexts || typeof item.questionTexts !== 'object') item.questionTexts = {};
+        if (!Array.isArray(item.questionTexts[activeNoteStep])) {
+          item.questionTexts[activeNoteStep] = [...screenshotQuestions(item, data, activeNoteStep)];
+        }
+        item.questionTexts[activeNoteStep].splice(Number(deleteQuestionButton.dataset.cueQuestionDeleteIndex), 1);
+        data.updatedAt = new Date().toISOString();
+        localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+        hydrateStep(data);
+        noteEls().saveState.textContent = 'Saved';
+        return;
+      }
+      const removeButton = event.target.closest('button[data-remove-current-flow]');
+      if (!removeButton) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const card = removeButton.closest('.cue-card');
+      const data = collectNotes();
+      const item = (data.screenshots || []).find(candidate => candidate.id === card.dataset.cueId);
+      if (!item) return;
+      const currentFlow = data.currentFlow || 'manual';
+      item.flows = screenshotFlows(item, currentFlow).filter(flow => flow !== currentFlow);
+      item.steps = screenshotSteps(item).filter(step => step !== activeNoteStep);
+      const removed = (data.screenshots || []).filter(candidate =>
+        !(candidate.flows && candidate.flows.length && candidate.steps && candidate.steps.length)
+      );
+      data.screenshots = (data.screenshots || []).filter(candidate =>
+        candidate.flows && candidate.flows.length && candidate.steps && candidate.steps.length
+      );
+      removed.forEach(candidate => deleteCueImage(candidate.id));
+      data.updatedAt = new Date().toISOString();
+      localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+      hydrateStep(data);
+      noteEls().saveState.textContent = 'Saved';
+    });
+    els.cueClearBtn.addEventListener('click', () => saveCueImages([], { replace: true }));
+  }
+
+  function exportNotes() {
+    saveNotesNow();
+    const data = readNotes(activeParticipantId);
+    const exportData = {
+      ...data,
+      questionResponseSummary: buildQuestionResponseSummary(data),
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${data.participantId || 'participant'}-amc-uxr-notes.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function buildQuestionResponseSummary(data) {
+    const stepResponses = {};
+    Object.keys(NOTE_STEPS).forEach(step => {
+      const notes = data.steps?.[step]?.questionNotes || {};
+      stepResponses[step] = stepQuestions(data, step).map((question, index) => ({
+        question,
+        note: notes[index] || '',
+      }));
+    });
+    const screenshotResponses = (data.screenshots || []).map(item => {
+      const byStep = {};
+      Object.keys(NOTE_STEPS).forEach(step => {
+        if (!screenshotSteps(item).includes(step)) return;
+        const notes = item.questionNotes?.[step] || {};
+        byStep[step] = screenshotQuestions(item, data, step).map((question, index) => ({
+          question,
+          note: notes[index] || '',
+        }));
+      });
+      return {
+        id: item.id,
+        flows: screenshotFlows(item, data.currentFlow),
+        steps: screenshotSteps(item),
+        responsesByStep: byStep,
+      };
+    });
+    return {
+      stepResponses,
+      screenshotResponses,
+    };
+  }
+
+  function clearCurrentNotes() {
+    const id = activeParticipantId || noteEls().participantId.value.trim();
+    if (!id) return;
+    if (!window.confirm(`Clear notes for ${id}?`)) return;
+    localStorage.removeItem(noteKey(id));
+    loadParticipant(id);
+    saveNotesNow();
+  }
+
+  function initResearchNotes() {
+    const els = noteEls();
+    const startingId = localStorage.getItem('amc-uxr-active-participant') || nextParticipantId();
+    activeParticipantId = startingId;
+    els.sessionDate.value = todayISO();
+    loadParticipant(startingId);
+    localStorage.setItem('amc-uxr-active-participant', activeParticipantId);
+
+    document.querySelectorAll('.step-tab').forEach(tab => {
+      tab.addEventListener('click', () => switchNoteStep(tab.dataset.noteStep));
+    });
+    [els.sessionDate, els.participantSegment, els.flowSelect, els.observed, els.expectation, els.quotes, els.synthesis, els.confidence].forEach(el => {
+      el.addEventListener('input', () => {
+        if (el === els.confidence) renderConfidence(el.value);
+        scheduleNoteSave();
+      });
+    });
+    els.flowSelect.addEventListener('change', () => {
+      const data = collectNotes();
+      localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+      hydrateStep(data);
+      els.saveState.textContent = 'Saved';
+    });
+    window.addEventListener('beforeunload', saveNotesNow);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') saveNotesNow();
+    });
+    els.participantId.addEventListener('change', () => {
+      const id = els.participantId.value.trim() || nextParticipantId();
+      loadParticipant(id);
+      localStorage.setItem('amc-uxr-active-participant', id);
+      saveNotesNow();
+    });
+    document.getElementById('newParticipantBtn').addEventListener('click', () => {
+      saveNotesNow();
+      const id = nextParticipantId();
+      localStorage.setItem('amc-uxr-active-participant', id);
+      loadParticipant(id);
+      saveNotesNow();
+    });
+    document.getElementById('exportNotesBtn').addEventListener('click', exportNotes);
+    document.getElementById('clearNotesBtn').addEventListener('click', clearCurrentNotes);
+    initCueUpload();
+  }
+
+  initResearchNotes();
 
   /* Import dialog (Room / Zoom): one progress line whose content changes as the
      number climbs (per design: 9% importing, 20% identifying, 30%+ creating).

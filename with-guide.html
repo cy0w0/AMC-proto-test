@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>App Screen — New Project</title>
+<title>AMC Prototype — With Guide</title>
 <style>
   :root {
     /* Design tokens from Figma */
@@ -4468,9 +4468,14 @@
   .multicam-modal.manual-style #mmCreateCaret { display: none; }
   .multicam-modal.manual-style #mmCreate svg { display: none; }
   .multicam-modal.manual-style .mm-split .mm-create { border-radius: 6px; }
+  body.guide-only .proto-mode-tabs,
+  body.guide-only .proto-bar > .proto-label:first-child,
+  body.guide-only .proto-bar > .proto-divider:first-of-type {
+    display: none;
+  }
 </style>
 </head>
-<body class="test-mode start-manual">
+<body class="guide-mode start-manual guide-only">
 
 <!-- ════════════════ Prototype chrome · start-point switcher (not part of the product UI) ════════════════ -->
 <nav class="proto-bar" aria-label="Prototype start point">
@@ -9983,7 +9988,7 @@
 	  });
 	  setProtoGroup('amc');
 	  setProtoFlowActive(entrySource);
-	  setPrototypeMode('test');
+	  setPrototypeMode('guide');
 	  window.addEventListener('resize', () => {
 	    placeVisibleModals();
 	    renderGuideAnnotations();
