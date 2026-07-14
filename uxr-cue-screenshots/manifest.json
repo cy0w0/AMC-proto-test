@@ -47,5 +47,170 @@
         "Why does AMC feel available or unavailable in this moment?"
       ]
     }
+  },
+  {
+    "id": "cue-1784062627968-dvtks2pwhvs",
+    "src": "uxr-cue-screenshots/04-cue-1784062627968-dvtks2pwhvs.jpg",
+    "flows": [
+      "room"
+    ],
+    "steps": [
+      "entrypoint"
+    ],
+    "questionTexts": {
+      "entrypoint": [
+        "What do you think this entrypoint is offering?",
+        "What would need to be clearer before you trust this next step?",
+        "What do you think creating a sequence will let you do that you could not do before?"
+      ]
+    }
+  },
+  {
+    "id": "cue-1784062637124-i9vq5qlazbt",
+    "src": "uxr-cue-screenshots/05-cue-1784062637124-i9vq5qlazbt.jpg",
+    "flows": [
+      "room"
+    ],
+    "steps": [
+      "entrypoint"
+    ],
+    "questionTexts": {
+      "entrypoint": [
+        "Would you start AMC from here in a real project? Why or why not?",
+        "What would need to be clearer before you trust this next step?"
+      ]
+    }
+  },
+  {
+    "id": "cue-1784062708570-jlq139uv26m",
+    "src": "uxr-cue-screenshots/06-cue-1784062708570-jlq139uv26m.jpg",
+    "flows": [
+      "zoom"
+    ],
+    "steps": [
+      "entrypoint"
+    ],
+    "questionTexts": {
+      "entrypoint": [
+        "Why does AMC feel available or unavailable in this moment?"
+      ]
+    }
+  },
+  {
+    "id": "cue-1784062725063-4b2p8qhgqt2",
+    "src": "uxr-cue-screenshots/07-cue-1784062725063-4b2p8qhgqt2.jpg",
+    "flows": [
+      "zoom"
+    ],
+    "steps": [
+      "entrypoint"
+    ],
+    "questionTexts": {
+      "entrypoint": [
+        "Why AMC is unavailable"
+      ]
+    }
+  },
+  {
+    "id": "cue-1784062759497-iox4l5q4lti",
+    "src": "uxr-cue-screenshots/08-cue-1784062759497-iox4l5q4lti.jpg",
+    "flows": [
+      "zoomMulti"
+    ],
+    "steps": [
+      "entrypoint"
+    ],
+    "questionTexts": {
+      "entrypoint": [
+        "What would need to be clearer before you trust this next step?",
+        "What do you think creating a sequence will let you do that you could not do before?"
+      ]
+    }
+  },
+  {
+    "id": "cue-1784062765756-r15t0n8nys9",
+    "src": "uxr-cue-screenshots/09-cue-1784062765756-r15t0n8nys9.jpg",
+    "flows": [
+      "zoomMulti"
+    ],
+    "steps": [
+      "entrypoint"
+    ],
+    "questionTexts": {
+      "entrypoint": [
+        "Would you start AMC from here in a real project? Why or why not?",
+        "What would need to be clearer before you trust this next step?"
+      ]
+    }
+  },
+  {
+    "id": "cue-1784062866239-8eu1gktyq32",
+    "src": "uxr-cue-screenshots/10-cue-1784062866239-8eu1gktyq32.jpg",
+    "flows": [
+      "manual",
+      "zoomMulti",
+      "room"
+    ],
+    "steps": [
+      "control"
+    ],
+    "questionTexts": {
+      "control": [
+        "What kind of edit are you trying to create with these controls?",
+        "Which setting controls how many cuts you get? Which setting controls what causes a cut?",
+        "If the result felt too busy or too slow, where would you adjust it?",
+        "Which parts of this would you rather describe in words instead of configure manually?"
+      ]
+    }
+  },
+  {
+    "id": "cue-1784062931677-h3ug6zfgfyv",
+    "src": "uxr-cue-screenshots/11-cue-1784062931677-h3ug6zfgfyv.jpg",
+    "flows": [
+      "manual",
+      "room",
+      "zoomMulti"
+    ],
+    "steps": [
+      "control"
+    ],
+    "questionTexts": {
+      "control": []
+    }
+  },
+  {
+    "id": "cue-1784063037730-9icz8qhdqhc",
+    "src": "uxr-cue-screenshots/12-cue-1784063037730-9icz8qhdqhc.jpg",
+    "flows": [
+      "manual",
+      "room",
+      "zoomMulti"
+    ],
+    "steps": [
+      "repair"
+    ],
+    "questionTexts": {
+      "repair": [
+        "Where would you go first to fix the camera choice?"
+      ]
+    }
+  },
+  {
+    "id": "cue-1784063044607-h1snrkuo5x7",
+    "src": "uxr-cue-screenshots/13-cue-1784063044607-h1snrkuo5x7.jpg",
+    "flows": [
+      "manual",
+      "room",
+      "zoomMulti"
+    ],
+    "steps": [
+      "repair"
+    ],
+    "questionTexts": {
+      "repair": [
+        "Do you expect this fix to affect only this scene or all scenes?",
+        "After making this fix, would you trust yourself to clean up the rest of the AMC result? Why or why not?"
+      ]
+    }
   }
 ]
