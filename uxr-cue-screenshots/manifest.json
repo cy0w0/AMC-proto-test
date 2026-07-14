@@ -1,1 +1,51 @@
-[]
+[
+  {
+    "id": "cue-1784062412766-5zze1yzfg9e",
+    "src": "uxr-cue-screenshots/01-cue-1784062412766-5zze1yzfg9e.jpg",
+    "flows": [
+      "manual"
+    ],
+    "steps": [
+      "entrypoint"
+    ],
+    "questionTexts": {
+      "entrypoint": [
+        "What do you think this entrypoint is offering?",
+        "What do you think creating a sequence will let you do that you could not do before?",
+        "What would need to be clearer before you trust this next step?"
+      ]
+    }
+  },
+  {
+    "id": "cue-1784062430502-azzzfmf4l1",
+    "src": "uxr-cue-screenshots/02-cue-1784062430502-azzzfmf4l1.jpg",
+    "flows": [
+      "manual"
+    ],
+    "steps": [
+      "entrypoint"
+    ],
+    "questionTexts": {
+      "entrypoint": [
+        "Observe first - What information in this moment makes AMC feel relevant, or not relevant, to this project?",
+        "Would you start AMC from here in a real project? Why or why not?"
+      ]
+    }
+  },
+  {
+    "id": "cue-1784062448337-k4blhv4sd9",
+    "src": "uxr-cue-screenshots/03-cue-1784062448337-k4blhv4sd9.jpg",
+    "flows": [
+      "manual"
+    ],
+    "steps": [
+      "entrypoint"
+    ],
+    "questionTexts": {
+      "entrypoint": [
+        "What do you think this entrypoint is offering?",
+        "Why does AMC feel available or unavailable in this moment?"
+      ]
+    }
+  }
+]
