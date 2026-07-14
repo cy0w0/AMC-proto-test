@@ -3856,51 +3856,79 @@
     width: 100%;
     border: 1px solid rgba(255, 248, 244, 0.16);
     border-radius: 8px;
-    background: linear-gradient(135deg, #d3b2f7, #b48ef0);
+    background: linear-gradient(135deg, #d6c1ff, #a98df4);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    padding: 10px 14px;
+    gap: 7px;
+    padding: 9px 12px;
     overflow: hidden;
   }
-  .co-card {
+  .co-multicam-preview {
     width: 100%;
-    background: #fff;
+    height: 54px;
     border-radius: 6px;
+    background: #2f2329;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    padding: 3px;
+    position: relative;
     box-shadow: 0 1px 3px rgba(38, 23, 29, 0.18);
-    padding: 6px 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
   }
-  .co-avatar {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #e8a45c, #b06a30);
-    flex-shrink: 0;
-  }
-  .co-script {
-    font-size: 7.5px;
-    line-height: 11px;
-    color: #3a3236;
-  }
-  .co-script .filler {
-    background: #f6d8a8;
-    border-radius: 2px;
-    padding: 0 2px;
-  }
-  .co-delete {
-    background: #fff;
-    border: 1px solid rgba(63, 42, 50, 0.2);
+  .co-camera {
+    position: relative;
+    overflow: hidden;
     border-radius: 4px;
-    box-shadow: 0 1px 2px rgba(38, 23, 29, 0.15);
-    font-size: 8px;
-    line-height: 14px;
-    color: #3a3236;
-    padding: 1px 10px;
+    background: linear-gradient(160deg, #f2c57c, #d78b37);
+  }
+  .co-camera.second {
+    background: linear-gradient(160deg, #8bcf86, #4c9d68);
+  }
+  .co-camera::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 13px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff3e5;
+    transform: translateX(-50%);
+  }
+  .co-camera::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -9px;
+    width: 40px;
+    height: 30px;
+    border-radius: 18px 18px 0 0;
+    background: #fff3e5;
+    transform: translateX(-50%);
+  }
+  .co-active-frame {
+    position: absolute;
+    inset: 3px 3px 3px calc(50% + 1.5px);
+    border: 2px solid #fff8f4;
+    border-radius: 5px;
+    box-shadow: 0 0 0 1px rgba(63, 42, 50, 0.24);
+  }
+  .co-timeline {
+    width: 76%;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(255, 248, 244, 0.46);
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 0.8fr;
+    gap: 2px;
+    padding: 2px;
+  }
+  .co-timeline span {
+    border-radius: 999px;
+    background: #fff8f4;
+    opacity: 0.9;
   }
   .co-title {
     font-size: 12px;
@@ -5983,11 +6011,12 @@
 	  <!-- Automatic multicam callout -->
 	  <div class="callout hidden" id="amcCallout" role="note">
     <div class="co-image" aria-hidden="true">
-      <div class="co-card">
-        <span class="co-avatar"></span>
-        <span class="co-script">Surfing is a journey <span class="filler">um</span> <span class="filler">um</span> <span class="filler">um</span><br>through the <span class="filler">uh</span> waves.</span>
+      <div class="co-multicam-preview">
+        <span class="co-camera"></span>
+        <span class="co-camera second"></span>
+        <span class="co-active-frame"></span>
       </div>
-      <span class="co-delete">Delete</span>
+      <div class="co-timeline"><span></span><span></span><span></span></div>
     </div>
     <div class="co-title">Use Automatic multicam</div>
 	    <div class="co-subtitle">Automatically cut between camera angles based on who's speaking.</div>
