@@ -10752,6 +10752,7 @@
   const CUE_DB_NAME = 'amc-uxr-screenshot-cues';
   const CUE_DB_VERSION = 1;
   const CUE_IMAGE_STORE = 'images';
+  const BUILT_IN_CUE_MANIFEST = 'uxr-cue-screenshots/manifest.json';
   let activeNoteStep = 'opening';
   let activeParticipantId = '';
   let noteSaveTimer = null;
@@ -11239,6 +11240,41 @@
     }
   }
 
+  async function seedBuiltInCueScreenshots() {
+    if (window.location.protocol === 'file:') return;
+    const data = readNotes(activeParticipantId);
+    if ((data.screenshots || []).length) return;
+    let manifest = [];
+    try {
+      const response = await fetch(BUILT_IN_CUE_MANIFEST, { cache: 'no-store' });
+      if (!response.ok) return;
+      manifest = await response.json();
+    } catch {
+      return;
+    }
+    if (!Array.isArray(manifest) || !manifest.length) return;
+    const seededItems = await Promise.all(manifest.map(async (item, index) => {
+      const src = item.src || item.path;
+      if (!src) return null;
+      const id = item.id || `built-in-cue-${index + 1}`;
+      await putCueImage(id, src);
+      return {
+        id,
+        flows: Array.isArray(item.flows) && item.flows.length ? item.flows : Object.keys(FLOW_LABELS),
+        steps: Array.isArray(item.steps) && item.steps.length ? item.steps : ['entrypoint'],
+        questionNotes: {},
+        questionTexts: item.questionTexts && typeof item.questionTexts === 'object' ? item.questionTexts : {},
+      };
+    }));
+    const validItems = seededItems.filter(Boolean);
+    if (!validItems.length) return;
+    data.screenshots = validItems;
+    data.updatedAt = new Date().toISOString();
+    localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+    hydrateStep(data);
+    noteEls().saveState.textContent = 'Loaded built-in cues';
+  }
+
   function compressCueImage(file) {
     return new Promise(resolve => {
       const reader = new FileReader();
@@ -11485,11 +11521,16 @@
     els.cueClearBtn.addEventListener('click', () => saveCueImages([], { replace: true }));
   }
 
-  function exportNotes() {
+  async function exportNotes() {
     saveNotesNow();
     const data = readNotes(activeParticipantId);
+    const screenshotsWithImages = await Promise.all((data.screenshots || []).map(async item => ({
+      ...item,
+      src: await getCueImage(item.id),
+    })));
     const exportData = {
       ...data,
+      screenshots: screenshotsWithImages,
       questionResponseSummary: buildQuestionResponseSummary(data),
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -11587,6 +11628,7 @@
     document.getElementById('exportNotesBtn').addEventListener('click', exportNotes);
     document.getElementById('clearNotesBtn').addEventListener('click', clearCurrentNotes);
     initCueUpload();
+    seedBuiltInCueScreenshots();
   }
 
   initResearchNotes();
