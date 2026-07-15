@@ -10753,6 +10753,7 @@
   const CUE_DB_VERSION = 1;
   const CUE_IMAGE_STORE = 'images';
   const BUILT_IN_CUE_MANIFEST = 'uxr-cue-screenshots/manifest.json?v=full-cues-13-merge';
+  const BUILT_IN_CUE_QUESTION_OVERRIDES = 'amc-uxr-built-in-cue-question-overrides';
   let activeNoteStep = 'opening';
   let activeParticipantId = '';
   let noteSaveTimer = null;
@@ -11187,6 +11188,7 @@
     els.flowSelect.value = data.currentFlow || 'manual';
     noteHydrating = false;
     hydrateStep(data);
+    seedBuiltInCueScreenshots();
     els.saveState.textContent = data.updatedAt ? 'Loaded' : 'New';
   }
 
@@ -11240,9 +11242,69 @@
     }
   }
 
+  function readBuiltInCueQuestionOverrides() {
+    try {
+      const raw = localStorage.getItem(BUILT_IN_CUE_QUESTION_OVERRIDES);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function saveBuiltInCueQuestionOverrides(overrides) {
+    localStorage.setItem(BUILT_IN_CUE_QUESTION_OVERRIDES, JSON.stringify(overrides));
+  }
+
+  function syncBuiltInCueQuestions(item) {
+    if (!item || !item.id || !item.questionTexts) return;
+    const overrides = readBuiltInCueQuestionOverrides();
+    overrides[item.id] = item.questionTexts;
+    saveBuiltInCueQuestionOverrides(overrides);
+  }
+
+  function seedCueScreenshotsFromExistingParticipants(data) {
+    const existingById = new Map((data.screenshots || []).map(item => [item.id, item]));
+    const questionOverrides = readBuiltInCueQuestionOverrides();
+    const candidates = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(NOTE_STORAGE_PREFIX) || key === noteKey(data.participantId)) continue;
+      try {
+        const other = JSON.parse(localStorage.getItem(key) || '{}');
+        (other.screenshots || []).forEach(item => {
+          if (!item || !item.id || existingById.has(item.id)) return;
+          candidates.push({
+            id: item.id,
+            flows: Array.isArray(item.flows) && item.flows.length ? item.flows : [data.currentFlow || 'manual'],
+            steps: Array.isArray(item.steps) && item.steps.length ? item.steps : Object.keys(NOTE_STEPS),
+            questionNotes: {},
+            questionTexts: questionOverrides[item.id] || (item.questionTexts && typeof item.questionTexts === 'object' ? item.questionTexts : {}),
+          });
+          existingById.set(item.id, item);
+        });
+      } catch {
+        // Ignore malformed old notes.
+      }
+    }
+    if (!candidates.length) return false;
+    data.screenshots = [
+      ...(data.screenshots || []),
+      ...candidates,
+    ];
+    data.updatedAt = new Date().toISOString();
+    localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
+    hydrateStep(data);
+    noteEls().saveState.textContent = 'Loaded screenshot cues';
+    return true;
+  }
+
   async function seedBuiltInCueScreenshots() {
-    if (window.location.protocol === 'file:') return;
     const data = readNotes(activeParticipantId);
+    if (window.location.protocol === 'file:') {
+      seedCueScreenshotsFromExistingParticipants(data);
+      return;
+    }
     let manifest = [];
     try {
       const response = await fetch(BUILT_IN_CUE_MANIFEST, { cache: 'no-store' });
@@ -11252,6 +11314,7 @@
       return;
     }
     if (!Array.isArray(manifest) || !manifest.length) return;
+    const questionOverrides = readBuiltInCueQuestionOverrides();
     const seededItems = await Promise.all(manifest.map(async (item, index) => {
       const src = item.src || item.path;
       if (!src) return null;
@@ -11262,7 +11325,7 @@
         flows: Array.isArray(item.flows) && item.flows.length ? item.flows : Object.keys(FLOW_LABELS),
         steps: Array.isArray(item.steps) && item.steps.length ? item.steps : ['entrypoint'],
         questionNotes: {},
-        questionTexts: item.questionTexts && typeof item.questionTexts === 'object' ? item.questionTexts : {},
+        questionTexts: questionOverrides[id] || (item.questionTexts && typeof item.questionTexts === 'object' ? item.questionTexts : {}),
       };
     }));
     const validItems = seededItems.filter(Boolean);
@@ -11375,6 +11438,7 @@
           item.questionTexts[activeNoteStep] = [...screenshotQuestions(item, data, activeNoteStep)];
         }
         item.questionTexts[activeNoteStep][Number(questionEditor.dataset.cueQuestionEditIndex)] = questionEditor.value;
+        syncBuiltInCueQuestions(item);
         resizeQuestionEditors();
         data.updatedAt = new Date().toISOString();
         localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
@@ -11467,6 +11531,7 @@
           item.questionTexts[activeNoteStep] = [...screenshotQuestions(item, data, activeNoteStep)];
         }
         item.questionTexts[activeNoteStep].push(nextQuestion);
+        syncBuiltInCueQuestions(item);
         data.updatedAt = new Date().toISOString();
         localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
         hydrateStep(data);
@@ -11498,6 +11563,7 @@
           item.questionTexts[activeNoteStep] = [...screenshotQuestions(item, data, activeNoteStep)];
         }
         item.questionTexts[activeNoteStep].splice(Number(deleteQuestionButton.dataset.cueQuestionDeleteIndex), 1);
+        syncBuiltInCueQuestions(item);
         data.updatedAt = new Date().toISOString();
         localStorage.setItem(noteKey(data.participantId), JSON.stringify(data));
         hydrateStep(data);
